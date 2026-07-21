@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitPlan — Goal-Based Workout Scheduler</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <span class="logo">💪</span>
+        <span class="brand-name">FitPlan</span>
+      </div>
+      <p class="tagline">Tell us your goal. Get a full weekly workout schedule.</p>
+    </div>
+  </header>
+
+  <main class="wrap main-grid">
+    <section class="panel form-panel">
+      <h1>Build my routine</h1>
+      <form id="goal-form">
+        <label class="field">
+          <span class="field-label">What's your main goal?</span>
+          <select name="goal" required>
+            <option value="muscle">Build muscle</option>
+            <option value="strength">Build strength</option>
+            <option value="fatloss">Lose fat</option>
+            <option value="endurance">Improve endurance</option>
+            <option value="general">General fitness</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Experience level</span>
+          <select name="experience" required>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate" selected>Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Days per week</span>
+          <select name="daysPerWeek" required>
+            <option value="2">2 days</option>
+            <option value="3">3 days</option>
+            <option value="4" selected>4 days</option>
+            <option value="5">5 days</option>
+            <option value="6">6 days</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Available equipment</span>
+          <select name="equipment" required>
+            <option value="gym" selected>Full gym</option>
+            <option value="dumbbell">Dumbbells only</option>
+            <option value="bodyweight">Bodyweight only</option>
+          </select>
+        </label>
+
+        <button type="submit" class="generate-btn">Generate my schedule</button>
+      </form>
+    </section>
+
+    <section class="panel result-panel">
+      <div id="empty-state" class="empty-state">
+        <span class="empty-icon">🏋️</span>
+        <h2>Your plan appears here</h2>
+        <p>Pick your goal and hit <em>Generate</em> to get a personalized, day-by-day training week with sets, reps and rest built in.</p>
+      </div>
+      <div id="result" hidden></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>FitPlan builds a general-purpose training template. It isn't medical advice — check with a professional before starting a new program.</p>
+    </div>
+  </footer>
+
+  <script src="js/exercises.js"></script>
+  <script src="js/scheduler.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
