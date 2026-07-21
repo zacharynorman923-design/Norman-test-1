@@ -1,5 +1,5 @@
 /* SPLIT service worker — offline-capable app shell + font caching. */
-const VERSION = 'split-v1';
+const VERSION = 'split-v2';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
