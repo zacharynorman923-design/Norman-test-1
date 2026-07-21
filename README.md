@@ -44,6 +44,35 @@ python3 -m http.server 8000
 # then visit http://localhost:8000
 ```
 
+## Install it (PWA)
+
+SPLIT is a Progressive Web App: it can be installed to a phone or desktop and
+runs **offline**. A [web manifest](manifest.webmanifest) and a
+[service worker](sw.js) cache the app shell and the web fonts on first visit.
+
+- **Desktop (Chrome/Edge):** open the site and click the install icon in the
+  address bar.
+- **iOS Safari:** Share → *Add to Home Screen*.
+- **Android Chrome:** menu → *Install app* / *Add to Home Screen*.
+
+Installed, it launches full-screen with its own icon and works without a
+connection. (The service worker needs `https://` or `http://localhost` — it is
+inactive on `file://`.)
+
+## Deploy it (GitHub Pages)
+
+The site is fully static, so it hosts for free on GitHub Pages. Two ways:
+
+- **Deploy from a branch (simplest):** Settings → Pages → *Build and deployment*
+  → Source: **Deploy from a branch** → pick the branch and `/ (root)`. Live in a
+  minute at `https://<user>.github.io/<repo>/`.
+- **GitHub Actions:** Settings → Pages → Source: **GitHub Actions**. The included
+  [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) then publishes on
+  every push to the configured branch.
+
+Any static host works too — Netlify, Vercel or Cloudflare Pages: point it at the
+repo (no build command, publish directory `/`).
+
 ## How it works
 
 | File                | Responsibility                                                        |
