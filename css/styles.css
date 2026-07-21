@@ -106,13 +106,20 @@ header{padding:52px 0 30px}
 .rx{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--card-ink);white-space:nowrap;line-height:1.2}
 .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#8f8a7e;white-space:nowrap;margin-top:3px}
 .meta .load{color:var(--blue);font-weight:700}
-.logged{font-family:'JetBrains Mono',monospace;font-size:10px;color:#2e8b57;font-weight:700;white-space:nowrap;margin-top:2px}
+.logged{font-family:'JetBrains Mono',monospace;font-size:10px;color:#2e8b57;font-weight:700;white-space:normal;margin-top:3px;line-height:1.5}
+.logged .e1rm{display:inline-block;background:rgba(51,85,255,.1);color:var(--blue);border-radius:5px;padding:0 5px;margin-left:2px}
 .logbtn{border:none;background:rgba(0,0,0,.05);color:#6a6a62;height:30px;padding:0 9px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .logbtn:hover{background:var(--blue);color:#fff}
 .logbtn.done{background:rgba(46,139,87,.16);color:#2e8b57}
 .swap{border:none;background:rgba(0,0,0,.05);color:#6a6a62;width:30px;height:30px;border-radius:8px;font-size:15px;line-height:1;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .swap:hover{background:var(--blue);color:#fff}
 .swap:active{transform:scale(.9)}
+.lift.loggable{cursor:pointer}
+.lift.loggable:hover{background:#efece1}
+.lift.open{background:#eae7db}
+.liftexp{flex-shrink:0;width:22px;text-align:center;color:#a19c8e;font-size:12px;font-family:'JetBrains Mono',monospace;transition:color .15s}
+.lift.loggable:hover .liftexp{color:var(--blue)}
+.lift.open .liftexp{color:var(--blue)}
 
 .logbox{background:rgba(51,85,255,.05);border-top:1px solid rgba(0,0,0,.06);padding:13px 18px}
 .lb-head{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:10px}
@@ -126,6 +133,17 @@ header{padding:52px 0 30px}
 .logsave:hover{background:var(--blue-bright)}
 .logcancel{background:none;border:1.5px solid rgba(0,0,0,.15);border-radius:9px;padding:9px 13px;font-family:'Archivo';font-weight:600;font-size:13px;color:#54524a;cursor:pointer}
 .logclear{margin-top:10px;background:none;border:none;color:var(--heat);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;padding:2px 0;font-weight:700}
+
+/* per-set logging grid */
+.lb-sets{display:flex;flex-direction:column;gap:7px}
+.lb-set{display:flex;align-items:center;gap:8px}
+.lb-n{flex-shrink:0;width:44px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8a8577}
+.lb-set input{background:#fff;border:1.5px solid rgba(0,0,0,.15);border-radius:9px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--card-ink);min-width:0}
+.lb-set .lw{width:88px}.lb-set .lr{width:72px}
+.lb-set input:focus{outline:none;border-color:var(--blue)}
+.lb-foot{display:flex;align-items:center;gap:10px;margin-top:13px}
+.lb-foot .logclear{margin-top:0}
+.lb-btns{margin-left:auto;display:flex;gap:8px}
 
 .day.rest{background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:14px 18px}
 .day.rest .dow{color:var(--muted-dark)}

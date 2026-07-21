@@ -7,7 +7,22 @@ let PROGRAM = null, WEEK = 1, EDIT = null;
 /* persistence — survives reloads on a served page (https or localhost);
    silent no-op if storage is blocked (e.g. opened directly as a file://). */
 function saveStore(){ try{ localStorage.setItem('split_log_v1', JSON.stringify(LOG.byExercise)); }catch(e){} }
-function loadStore(){ try{ const r=localStorage.getItem('split_log_v1'); if(r){ const o=JSON.parse(r); if(o&&typeof o==='object') LOG.byExercise=o; } }catch(e){} }
+/* Bring any stored entry up to the per-set shape {unit,type,sets:[{w,r}],e1rm}.
+   Older logs held a single {weight,reps,...}; convert them to one set. */
+function normalizeEntry(e){
+  if(!e || typeof e!=='object') return null;
+  if(Array.isArray(e.sets)){
+    const sets=e.sets.filter(s=>s && s.r>0).map(s=>({w:s.w>0?s.w:0, r:s.r}));
+    return sets.length ? {unit:e.unit||'kg', type:e.type, sets, e1rm:e.e1rm!=null?e.e1rm:null} : null;
+  }
+  const r=parseInt(e.reps,10); if(!(r>0)) return null;
+  const w=e.weight>0?e.weight:0;
+  const out={unit:e.unit||'kg', type:e.type, sets:[{w,r}], e1rm:e.e1rm!=null?e.e1rm:null};
+  if(out.e1rm==null) out.e1rm=bestE1RM(out);
+  return out;
+}
+function loadStore(){ try{ const r=localStorage.getItem('split_log_v1'); if(r){ const o=JSON.parse(r);
+  if(o&&typeof o==='object'){ const out={}; for(const k in o){ const n=normalizeEntry(o[k]); if(n) out[k]=n; } LOG.byExercise=out; } } }catch(e){} }
 
 /* Whole-session persistence: the brief, the generated program and the current
    week — so a reload drops you back exactly where you left off. */
@@ -49,9 +64,26 @@ const absBtn=document.getElementById('absToggle');
 absBtn.addEventListener('click',()=>{ state.abs=!state.abs; absBtn.setAttribute('aria-checked', state.abs?'true':'false'); saveSession(); });
 
 /* ===================== RENDER ===================== */
+/* Estimated 1RM of a single set (Epley). Dumbbell weight is per-hand, so the
+   working load is doubled. Returns null for a set with no external load. */
+function setE1RM(entry, s){
+  const total = entry.type==='dumbbell' ? s.w*2 : s.w;
+  return total>0 ? total*(1+s.r/30) : null;
+}
+function bestE1RM(entry){
+  let best=null;
+  entry.sets.forEach(s=>{ const e=setE1RM(entry,s); if(e!=null && (best===null||e>best)) best=e; });
+  return best;
+}
 function loggedText(l, entry){
-  if(l.w && entry.weight>0) return `logged ${fmt(entry.weight)} ${entry.unit}${entry.type==='dumbbell'?'/hand':''} × ${entry.reps}`;
-  return `logged ${entry.weight>0?'+'+fmt(entry.weight)+' '+entry.unit+' × ':''}${entry.reps} reps`;
+  const u=entry.unit, dh=entry.type==='dumbbell'?'/hand':'';
+  const loaded = entry.sets.some(s=>s.w>0);
+  if(loaded){
+    const parts=entry.sets.map(s=> s.w>0 ? `${fmt(s.w)}×${s.r}` : `bw×${s.r}`);
+    return `logged ${parts.join(' · ')} ${u}${dh}`;
+  }
+  // pure bodyweight — just reps per set
+  return `logged ${entry.sets.map(s=>s.r).join(' · ')} reps`;
 }
 function renderProgram(animate){
   const p=PROGRAM, wi=WEEK_INFO[WEEK], factor=WEEK_FACTOR[WEEK];
@@ -78,29 +110,53 @@ function renderProgram(animate){
         const load=suggestLoad(l, v.reps, WEEK, anchors, unit);
         if(load){ metaTxt=`<span class="load">${load.txt}</span> · ${v.rest}`; if(load.num!=null) num=load.num; }
       }
-      const loggedLine = entry ? `<div class="logged">✓ ${loggedText(l,entry)}</div>` : '';
       const key=`${di}:${li}`;
-      const logBtn = v.sets!=='' ? `<button class="logbtn${entry?' done':''}" data-k="${key}" aria-label="Log ${l.name}">${entry?'✓ log':'log'}</button>` : '';
-      liftsHTML+=`<div class="lift">
+      const loggable = v.sets!=='';
+      const open = EDIT===key;
+      let loggedLine='';
+      if(entry){
+        const be=bestE1RM(entry);
+        const beTxt = be!=null ? ` <span class="e1rm">e1RM ${fmt(Math.round(be))} ${entry.unit}</span>` : '';
+        loggedLine = `<div class="logged">✓ ${loggedText(l,entry)}${beTxt}</div>`;
+      }
+      const chevron = loggable ? `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>` : '';
+      const liftAttrs = loggable
+        ? ` data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}"`
+        : '';
+      liftsHTML+=`<div class="lift${loggable?' loggable':''}${open?' open':''}"${liftAttrs}>
         <div class="nm">${l.name}<em>${v.tag}</em></div>
         <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div>${loggedLine}</div>
-        ${logBtn}
+        ${chevron}
         <button class="swap" data-di="${di}" data-li="${li}" aria-label="Swap ${l.name}" title="Swap this exercise">⇄</button>
       </div>`;
-      if(EDIT===key){
-        const wLabel = l.w ? `${unit}${l.w[2]==='dumbbell'?' /hand':''}` : `added ${unit}`;
-        const prefW = num!==''?num:(entry?(entry.weight||''):'');
-        const prefR = entry?entry.reps:repTop(v.reps);
-        liftsHTML+=`<div class="logbox" data-di="${di}" data-li="${li}">
-          <div class="lb-head">Log what you actually hit</div>
-          <div class="lb-row">
-            <label>${wLabel}<input class="lw" type="number" inputmode="decimal" value="${prefW}" placeholder="—"></label>
+      if(open && loggable){
+        const nSets=parseInt(v.sets,10)||1;
+        const rows=Math.max(nSets, entry?entry.sets.length:0);
+        const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
+        const wHdr = l.w ? `weight ${unit}${dh}` : `added ${unit}`;
+        const targetR=repTop(v.reps);
+        let rowsHTML='';
+        for(let i=0;i<rows;i++){
+          const s = entry && entry.sets[i];
+          const pw = s ? (s.w>0?s.w:'') : (num!==''?num:'');
+          const pr = s ? s.r : targetR;
+          rowsHTML+=`<div class="lb-set">
+            <span class="lb-n">Set ${i+1}</span>
+            <input class="lw" type="number" inputmode="decimal" value="${pw}" placeholder="—" aria-label="Set ${i+1} ${wHdr}">
             <span class="lb-x">×</span>
-            <label>reps<input class="lr" type="number" inputmode="numeric" value="${prefR}"></label>
-            <button class="logcancel" type="button">Cancel</button>
-            <button class="logsave" type="button">Save</button>
+            <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">
+          </div>`;
+        }
+        liftsHTML+=`<div class="logbox" data-di="${di}" data-li="${li}">
+          <div class="lb-head">Log each set — ${wHdr} × completed reps</div>
+          <div class="lb-sets">${rowsHTML}</div>
+          <div class="lb-foot">
+            ${entry?`<button class="logclear" data-name="${l.name}">Clear</button>`:'<span></span>'}
+            <div class="lb-btns">
+              <button class="logcancel" type="button">Cancel</button>
+              <button class="logsave" type="button">Save sets</button>
+            </div>
           </div>
-          ${entry?`<button class="logclear" data-name="${l.name}">Clear this log</button>`:''}
         </div>`;
       }
     });
@@ -116,7 +172,7 @@ function renderProgram(animate){
   const weekPills=[1,2,3,4,5].map(w=>`<button class="wk${w===5?' deload':''}" data-wk="${w}" aria-pressed="${w===WEEK}">${w===5?'Deload':'Wk '+w}</button>`).join('');
   const wtNote = anyLog ? `weights <span class="wt">personalised from your logged sets</span>`
       : (anchorsAvail ? `<span class="wt">≈ weights</span> from your numbers, scaled per week`
-      : `tap <span class="wt">log</span> on any lift, or add a max in the brief, for suggested weights`);
+      : `tap a lift to <span class="wt">log every set</span>, or add a max in the brief, for suggested weights`);
   const logCount=Object.keys(LOG.byExercise).length;
 
   prog.innerHTML=`
@@ -133,7 +189,7 @@ function renderProgram(animate){
       <div class="weeks" role="group" aria-label="Progression week">${weekPills}</div>
       <div class="wknote"><b>${wi.tag}</b><span>${wi.note}</span></div>
     </div>
-    <div class="hint">↻ regenerate · ⇄ swap · log a set to make the weights yours · tap a week to progress<br>${wtNote}</div>
+    <div class="hint">↻ regenerate · ⇄ swap · tap a lift to log every set · tap a week to progress<br>${wtNote}</div>
     <div class="week${animate?'':' static'}">${daysHTML}</div>
     <div class="actions">
       <button class="ghost" id="regen">↻ Regenerate exercises</button>
@@ -151,17 +207,21 @@ function renderProgram(animate){
 }
 
 /* ===================== LOGGING + INTERACTIONS ===================== */
-function logLift(di,li, weightStr, repsStr){
+/* Read every set row in the open log box and store them. A set counts only
+   if reps were entered; weight may be blank (bodyweight). Saving with no reps
+   anywhere clears the log. e1RM is taken from the strongest set. */
+function logSets(box){
+  const di=+box.dataset.di, li=+box.dataset.li;
   const l=PROGRAM.weekdays[di].lifts[li];
-  const wnum=parseFloat(weightStr);
-  const reps=parseInt(repsStr,10) || repTop(l.base.reps);
-  const entry={ weight:(wnum>0?wnum:0), reps, unit:state.unit };
-  if(l.w){
-    const type=l.w[2];
-    const total = type==='dumbbell' ? (wnum>0?wnum*2:0) : (wnum>0?wnum:0);
-    entry.type=type;
-    entry.e1rm = total>0 ? total*(1+reps/30) : null;
-  }
+  const sets=[];
+  box.querySelectorAll('.lb-set').forEach(row=>{
+    const w=parseFloat(row.querySelector('.lw').value);
+    const r=parseInt(row.querySelector('.lr').value,10);
+    if(r>0) sets.push({ w:w>0?w:0, r });
+  });
+  if(!sets.length){ clearLift(l.name); return; }
+  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets };
+  entry.e1rm=bestE1RM(entry);
   LOG.byExercise[l.name]=entry; saveStore(); EDIT=null; renderProgram(false);
 }
 function clearLift(name){ delete LOG.byExercise[name]; saveStore(); renderProgram(false); }
@@ -179,15 +239,23 @@ function swapLift(di,li){
   EDIT=null; renderProgram(false);
 }
 document.getElementById('program').addEventListener('click', e=>{
-  const lb=e.target.closest('.logbtn'); if(lb){ const k=lb.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
-  const sv=e.target.closest('.logsave'); if(sv){ const box=sv.closest('.logbox'); logLift(+box.dataset.di,+box.dataset.li, box.querySelector('.lw').value, box.querySelector('.lr').value); return; }
+  const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
   const cl=e.target.closest('.logclear'); if(cl){ clearLift(cl.dataset.name); return; }
   const wk=e.target.closest('.wk'); if(wk){ EDIT=null; WEEK=parseInt(wk.dataset.wk,10); renderProgram(false); return; }
   const sw=e.target.closest('.swap'); if(sw){ swapLift(+sw.dataset.di,+sw.dataset.li); return; }
+  const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
   if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }
   if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.byExercise={}; saveStore(); renderProgram(false); } return; }
+});
+/* Keyboard: Enter/Space toggles a focused lift row (but not while typing in it). */
+document.getElementById('program').addEventListener('keydown', e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  if(e.target.closest('input,button')) return;
+  const lift=e.target.closest('.lift'); if(!lift || !lift.dataset.k) return;
+  e.preventDefault();
+  const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false);
 });
 document.getElementById('build').addEventListener('click',()=>{
   EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true);

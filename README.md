@@ -23,8 +23,11 @@ progression**. Log your real sets and the weights personalise to you.
   suggestions build from your logged e1RM.
 - **Weekly progression.** Toggle through Weeks 1–4 (baseline → add reps → add
   load → peak) plus a Week 5 deload, and the sets/loads adjust automatically.
-- **Log, swap and regenerate.** Record what you actually hit (saved locally),
-  swap any exercise for another in the same group, or regenerate the whole week.
+- **Per-set logging.** Tap any lift to expand it and record the weight and
+  completed reps for *every* set. Your best estimated 1RM across those sets is
+  saved locally and feeds straight back into the suggested loads.
+- **Swap and regenerate.** Swap any exercise for another in the same group, or
+  regenerate the whole week.
 - **Abs finisher.** Optionally append a 2-move core block to every training day.
 
 ## Running it
