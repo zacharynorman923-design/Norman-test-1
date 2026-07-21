@@ -1,26 +1,31 @@
-# FitPlan — Goal-Based Workout Scheduler
+# SPLIT — Build your training week
 
-A lightweight web app that builds a personalized **weekly workout schedule**
-from your training goal. Pick what you're after, how often you can train, your
-experience level and the equipment you have — FitPlan lays out a day-by-day
-plan with the right split, exercises, sets, reps and rest.
+A lightweight web app that builds a personalized **weekly training program**
+from a short brief. Tell it your goal, how often you train, your experience,
+equipment and session length — SPLIT lays out a day-by-day week with the right
+split, exercises, sets, reps, rest, **suggested loads** and a **4-week + deload
+progression**. Log your real sets and the weights personalise to you.
 
-![FitPlan](https://img.shields.io/badge/dependencies-none-brightgreen)
+![SPLIT](https://img.shields.io/badge/dependencies-none-brightgreen)
 
 ## Features
 
 - **Goal-driven programming.** Strength, muscle, fat loss, endurance or general
-  fitness each get their own rep ranges, rest periods, volume and cardio dose —
-  because those goals genuinely train differently.
-- **Smart training splits.** The app picks the split that fits your weekly
-  frequency: full-body (2–3 days), upper/lower (4), PPL + upper/lower (5), or a
-  full push/pull/legs rotation (6).
-- **Equipment aware.** Choose full gym, dumbbells only, or bodyweight only, and
-  every exercise in your plan is one you can actually do.
-- **Experience scaling.** Beginners get leaner sessions; advanced lifters get
-  more volume.
-- **Sensible rest days.** Training days are spread across the week so recovery
-  falls between sessions, and cardio finishers are placed automatically.
+  fitness each get their own rep ranges, rest periods, volume and conditioning
+  dose — because those goals genuinely train differently.
+- **Smart training splits.** Auto mode picks the split that fits your weekly
+  frequency (full-body, upper/lower, PPL, and rotations), or switch to a
+  muscle-group split for one body part per day.
+- **Equipment aware.** Full gym, dumbbells + bands, or bodyweight only — every
+  exercise in your plan is one you can actually do.
+- **Suggested weights.** Enter a recent 1RM (or bodyweight) and SPLIT estimates
+  loads per lift, per rep range, per week. No numbers? Log real sets and the
+  suggestions build from your logged e1RM.
+- **Weekly progression.** Toggle through Weeks 1–4 (baseline → add reps → add
+  load → peak) plus a Week 5 deload, and the sets/loads adjust automatically.
+- **Log, swap and regenerate.** Record what you actually hit (saved locally),
+  swap any exercise for another in the same group, or regenerate the whole week.
+- **Abs finisher.** Optionally append a 2-move core block to every training day.
 
 ## Running it
 
@@ -41,20 +46,22 @@ python3 -m http.server 8000
 
 ## How it works
 
-| File                | Responsibility                                             |
-| ------------------- | ---------------------------------------------------------- |
-| `index.html`        | Page structure and the goal form                           |
-| `css/styles.css`    | Styling (dark theme, responsive layout)                    |
-| `js/exercises.js`   | The exercise database, tagged by muscle group and equipment|
-| `js/scheduler.js`   | The engine: goal profiles, splits, and plan generation     |
-| `js/app.js`         | Wires the form to the scheduler and renders the plan       |
+| File                | Responsibility                                                        |
+| ------------------- | -------------------------------------------------------------------- |
+| `index.html`        | Page structure and the training brief form                           |
+| `css/styles.css`    | Styling (dark theme, responsive layout)                              |
+| `js/exercises.js`   | Data: exercise library, split templates, rep schemes, progression    |
+| `js/scheduler.js`   | The engine: split selection, load suggestion, and week generation    |
+| `js/app.js`         | State, persistence, rendering and all UI interactions                |
 
-The scheduler picks a split based on your weekly frequency, then fills each
-training day by rotating through that day's target muscle groups — leading with
-compound lifts and applying the sets/reps/rest scheme for your goal.
+The scheduler chooses a split from your goal and weekly frequency, fills each
+training day by rotating through that day's target muscle groups (leading with
+compound lifts), applies the sets/reps/rest scheme for your goal, and suggests
+loads scaled to the selected progression week. Logged sets are stored in
+`localStorage` and feed back into the weight suggestions.
 
 ## Disclaimer
 
-FitPlan generates a general-purpose training template and is not medical or
+SPLIT generates a general-purpose training template and is not medical or
 professional fitness advice. Consult a qualified professional before starting
 any new exercise program.

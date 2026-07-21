@@ -1,88 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FitPlan — Goal-Based Workout Scheduler</title>
-  <link rel="stylesheet" href="css/styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPLIT — Build your training week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <div class="brand">
-        <span class="logo">💪</span>
-        <span class="brand-name">FitPlan</span>
-      </div>
-      <p class="tagline">Tell us your goal. Get a full weekly workout schedule.</p>
-    </div>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Training Program Generator</div>
+    <h1 class="wordmark">SPL<span>I</span>T</h1>
+    <p class="tagline">Tell it what you're training for. Get a <b>full week</b> — split, loaded, logged, and progressed to match.</p>
   </header>
 
-  <main class="wrap main-grid">
-    <section class="panel form-panel">
-      <h1>Build my routine</h1>
-      <form id="goal-form">
-        <label class="field">
-          <span class="field-label">What's your main goal?</span>
-          <select name="goal" required>
-            <option value="muscle">Build muscle</option>
-            <option value="strength">Build strength</option>
-            <option value="fatloss">Lose fat</option>
-            <option value="endurance">Improve endurance</option>
-            <option value="general">General fitness</option>
-          </select>
-        </label>
+  <section class="brief" aria-label="Your training brief">
+    <div class="brief-head"><h2>Your brief</h2><span class="step">08 inputs</span></div>
 
-        <label class="field">
-          <span class="field-label">Experience level</span>
-          <select name="experience" required>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate" selected>Intermediate</option>
-            <option value="advanced">Advanced</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span class="field-label">Days per week</span>
-          <select name="daysPerWeek" required>
-            <option value="2">2 days</option>
-            <option value="3">3 days</option>
-            <option value="4" selected>4 days</option>
-            <option value="5">5 days</option>
-            <option value="6">6 days</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span class="field-label">Available equipment</span>
-          <select name="equipment" required>
-            <option value="gym" selected>Full gym</option>
-            <option value="dumbbell">Dumbbells only</option>
-            <option value="bodyweight">Bodyweight only</option>
-          </select>
-        </label>
-
-        <button type="submit" class="generate-btn">Generate my schedule</button>
-      </form>
-    </section>
-
-    <section class="panel result-panel">
-      <div id="empty-state" class="empty-state">
-        <span class="empty-icon">🏋️</span>
-        <h2>Your plan appears here</h2>
-        <p>Pick your goal and hit <em>Generate</em> to get a personalized, day-by-day training week with sets, reps and rest built in.</p>
+    <div class="field">
+      <label class="flabel"><span class="n">01</span> &nbsp;What's the goal</label>
+      <div class="chips" role="group" data-key="goal">
+        <button class="chip" data-val="muscle" aria-pressed="true">Build muscle<small>hypertrophy</small></button>
+        <button class="chip" data-val="strength" aria-pressed="false">Get stronger<small>max force</small></button>
+        <button class="chip" data-val="fatloss" aria-pressed="false">Lose fat<small>conditioning</small></button>
+        <button class="chip" data-val="endurance" aria-pressed="false">Endurance<small>work capacity</small></button>
+        <button class="chip" data-val="general" aria-pressed="false">General fitness<small>balanced</small></button>
       </div>
-      <div id="result" hidden></div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="wrap">
-      <p>FitPlan builds a general-purpose training template. It isn't medical advice — check with a professional before starting a new program.</p>
     </div>
-  </footer>
 
-  <script src="js/exercises.js"></script>
-  <script src="js/scheduler.js"></script>
-  <script src="js/app.js"></script>
+    <div class="field">
+      <label class="flabel"><span class="n">02</span> &nbsp;Split style</label>
+      <div class="chips" role="group" data-key="split">
+        <button class="chip" data-val="auto" aria-pressed="true">Auto<small>matches goal</small></button>
+        <button class="chip" data-val="muscle" aria-pressed="false">Muscle groups<small>one body part / day</small></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flabel"><span class="n">03</span> &nbsp;Days per week</label>
+      <div class="chips" role="group" data-key="days">
+        <button class="chip num" data-val="2" aria-pressed="false">2</button>
+        <button class="chip num" data-val="3" aria-pressed="false">3</button>
+        <button class="chip num" data-val="4" aria-pressed="true">4</button>
+        <button class="chip num" data-val="5" aria-pressed="false">5</button>
+        <button class="chip num" data-val="6" aria-pressed="false">6</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flabel"><span class="n">04</span> &nbsp;Experience</label>
+      <div class="chips" role="group" data-key="exp">
+        <button class="chip" data-val="beginner" aria-pressed="false">Beginner<small>&lt; 1 yr</small></button>
+        <button class="chip" data-val="intermediate" aria-pressed="true">Intermediate<small>1–3 yrs</small></button>
+        <button class="chip" data-val="advanced" aria-pressed="false">Advanced<small>3 yrs +</small></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flabel"><span class="n">05</span> &nbsp;Equipment</label>
+      <div class="chips" role="group" data-key="equip">
+        <button class="chip" data-val="gym" aria-pressed="true">Full gym<small>bars + machines</small></button>
+        <button class="chip" data-val="dumbbell" aria-pressed="false">Dumbbells + bands<small>home setup</small></button>
+        <button class="chip" data-val="bodyweight" aria-pressed="false">Bodyweight<small>no kit</small></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flabel"><span class="n">06</span> &nbsp;Session length</label>
+      <div class="chips" role="group" data-key="length">
+        <button class="chip" data-val="30" aria-pressed="false">30 min<small>quick</small></button>
+        <button class="chip" data-val="45" aria-pressed="true">45 min<small>standard</small></button>
+        <button class="chip" data-val="60" aria-pressed="false">60 min<small>full</small></button>
+        <button class="chip" data-val="75" aria-pressed="false">75+ min<small>long</small></button>
+      </div>
+    </div>
+
+    <div class="field toggle-field">
+      <div class="tf-text">
+        <label class="flabel" style="margin-bottom:0"><span class="n">07</span> &nbsp;Abs finisher</label>
+        <span class="sub">Add a 2-move core block to every training day</span>
+      </div>
+      <button class="switch" id="absToggle" role="switch" aria-checked="false" aria-label="Abs finisher"><span class="knob"></span></button>
+    </div>
+
+    <div class="field">
+      <label class="flabel"><span class="n">08</span> &nbsp;Your numbers <span class="opt">— optional</span></label>
+      <div class="sub2">Enter a recent 1-rep max or heavy top set for suggested weights. Or skip it — log your real sets later and suggestions build from those. Blank lifts are estimated from bodyweight and experience.</div>
+      <div class="chips" role="group" data-key="unit" style="margin-bottom:13px">
+        <button class="chip mini" data-val="kg" aria-pressed="true">kg</button>
+        <button class="chip mini" data-val="lb" aria-pressed="false">lb</button>
+      </div>
+      <div class="numgrid">
+        <label class="numin"><span>Bodyweight</span><input id="bw" type="number" inputmode="decimal" placeholder="—"></label>
+        <label class="numin"><span>Bench 1RM</span><input data-max="bench" type="number" inputmode="decimal" placeholder="—"></label>
+        <label class="numin"><span>Squat 1RM</span><input data-max="squat" type="number" inputmode="decimal" placeholder="—"></label>
+        <label class="numin"><span>Deadlift 1RM</span><input data-max="deadlift" type="number" inputmode="decimal" placeholder="—"></label>
+        <label class="numin"><span>Overhead Press 1RM</span><input data-max="press" type="number" inputmode="decimal" placeholder="—"></label>
+        <label class="numin"><span>Barbell Row 1RM</span><input data-max="row" type="number" inputmode="decimal" placeholder="—"></label>
+      </div>
+    </div>
+
+    <button class="build" id="build">Build my week <span class="arrow">→</span></button>
+  </section>
+
+  <div class="empty" id="empty">Set your brief above, then build your week ↑</div>
+  <section id="program" class="hidden" aria-live="polite"></section>
+
+  <footer>
+    <b>SPLIT</b> &nbsp;·&nbsp; a demo program builder &nbsp;·&nbsp; not medical advice<br>
+    log your real sets to personalise loads &nbsp;·&nbsp; adjust to how the set feels &nbsp;·&nbsp; warm up first
+  </footer>
+</div>
+
+<script src="js/exercises.js"></script>
+<script src="js/scheduler.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
