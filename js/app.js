@@ -4,9 +4,31 @@ const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'
 const LOG = { byExercise:{} };  // name -> {weight, reps, unit, e1rm, type}
 let PROGRAM = null, WEEK = 1, EDIT = null;
 
-/* persistence — survives reloads when opened as a file; silent no-op if blocked */
+/* persistence — survives reloads on a served page (https or localhost);
+   silent no-op if storage is blocked (e.g. opened directly as a file://). */
 function saveStore(){ try{ localStorage.setItem('split_log_v1', JSON.stringify(LOG.byExercise)); }catch(e){} }
 function loadStore(){ try{ const r=localStorage.getItem('split_log_v1'); if(r){ const o=JSON.parse(r); if(o&&typeof o==='object') LOG.byExercise=o; } }catch(e){} }
+
+/* Whole-session persistence: the brief, the generated program and the current
+   week — so a reload drops you back exactly where you left off. */
+function saveSession(){
+  try{ localStorage.setItem('split_session_v1', JSON.stringify({state, program:PROGRAM, week:WEEK})); }catch(e){}
+}
+function loadSession(){
+  try{ const r=localStorage.getItem('split_session_v1'); if(!r) return null;
+       const o=JSON.parse(r); return (o && o.state) ? o : null; }catch(e){ return null; }
+}
+
+/* Reflect the current `state` back onto the brief controls (after a restore). */
+function syncBriefUI(){
+  document.querySelectorAll('.chips').forEach(group=>{
+    const val=String(state[group.dataset.key]);
+    group.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', c.dataset.val===val?'true':'false'));
+  });
+  document.getElementById('bw').value = state.bw || '';
+  document.querySelectorAll('input[data-max]').forEach(inp=>{ inp.value = (state.max&&state.max[inp.dataset.max]) || ''; });
+  absBtn.setAttribute('aria-checked', state.abs?'true':'false');
+}
 
 document.querySelectorAll('.chips').forEach(group=>{
   const key = group.dataset.key;
@@ -16,14 +38,15 @@ document.querySelectorAll('.chips').forEach(group=>{
     btn.setAttribute('aria-pressed','true');
     const v = btn.dataset.val;
     state[key] = (key==='days'||key==='length') ? parseInt(v,10) : v;
+    saveSession();
   });
 });
-document.getElementById('bw').addEventListener('input',e=>{ state.bw=e.target.value; });
+document.getElementById('bw').addEventListener('input',e=>{ state.bw=e.target.value; saveSession(); });
 document.querySelectorAll('input[data-max]').forEach(inp=>{
-  inp.addEventListener('input',e=>{ state.max[e.target.dataset.max]=e.target.value; });
+  inp.addEventListener('input',e=>{ state.max[e.target.dataset.max]=e.target.value; saveSession(); });
 });
 const absBtn=document.getElementById('absToggle');
-absBtn.addEventListener('click',()=>{ state.abs=!state.abs; absBtn.setAttribute('aria-checked', state.abs?'true':'false'); });
+absBtn.addEventListener('click',()=>{ state.abs=!state.abs; absBtn.setAttribute('aria-checked', state.abs?'true':'false'); saveSession(); });
 
 /* ===================== RENDER ===================== */
 function loggedText(l, entry){
@@ -124,6 +147,7 @@ function renderProgram(animate){
     prog.querySelectorAll('.bar i').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
   }));
   if(EDIT){ const box=prog.querySelector('.logbox .lw'); if(box) box.focus(); }
+  saveSession();
 }
 
 /* ===================== LOGGING + INTERACTIONS ===================== */
@@ -170,4 +194,13 @@ document.getElementById('build').addEventListener('click',()=>{
   requestAnimationFrame(()=>document.getElementById('program').scrollIntoView({behavior:'smooth',block:'start'}));
 });
 
+/* On load: restore logs, then the last session (brief + program + week). */
 loadStore();
+(function restore(){
+  const sess = loadSession();
+  if(!sess) return;
+  Object.assign(state, sess.state);
+  if(!state.max) state.max = {bench:'',squat:'',deadlift:'',press:'',row:''};
+  syncBriefUI();
+  if(sess.program){ PROGRAM = sess.program; WEEK = sess.week || 1; renderProgram(false); }
+})();
