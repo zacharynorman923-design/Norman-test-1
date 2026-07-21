@@ -61,14 +61,11 @@ inactive on `file://`.)
 
 ## Deploy it (GitHub Pages)
 
-The site is fully static, so it hosts for free on GitHub Pages. Two ways:
+The site is fully static, so it hosts for free on GitHub Pages:
 
-- **Deploy from a branch (simplest):** Settings → Pages → *Build and deployment*
-  → Source: **Deploy from a branch** → pick the branch and `/ (root)`. Live in a
-  minute at `https://<user>.github.io/<repo>/`.
-- **GitHub Actions:** Settings → Pages → Source: **GitHub Actions**. The included
-  [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) then publishes on
-  every push to the configured branch.
+- Settings → Pages → *Build and deployment* → Source: **Deploy from a branch** →
+  pick the branch and `/ (root)`, then **Save**. Live in a minute at
+  `https://<user>.github.io/<repo>/`.
 
 Any static host works too — Netlify, Vercel or Cloudflare Pages: point it at the
 repo (no build command, publish directory `/`).
