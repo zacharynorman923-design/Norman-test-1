@@ -114,12 +114,35 @@ header{padding:52px 0 30px}
 .swap{border:none;background:rgba(0,0,0,.05);color:#6a6a62;width:30px;height:30px;border-radius:8px;font-size:15px;line-height:1;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .swap:hover{background:var(--blue);color:#fff}
 .swap:active{transform:scale(.9)}
-.lift.loggable{cursor:pointer}
-.lift.loggable:hover{background:#efece1}
+.lift.expandable{cursor:pointer}
+.lift.expandable:hover{background:#efece1}
 .lift.open{background:#eae7db}
 .liftexp{flex-shrink:0;width:22px;text-align:center;color:#a19c8e;font-size:12px;font-family:'JetBrains Mono',monospace;transition:color .15s}
-.lift.loggable:hover .liftexp{color:var(--blue)}
+.lift.expandable:hover .liftexp{color:var(--blue)}
 .lift.open .liftexp{color:var(--blue)}
+
+/* expanded panel: how-to + per-set logger share one tinted container */
+.expando{border-top:1px solid rgba(0,0,0,.08);background:rgba(51,85,255,.045)}
+.howto{display:flex;gap:16px;padding:15px 18px;align-items:flex-start}
+.demo{flex-shrink:0}
+.figwrap{position:relative;width:96px;height:96px;background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.08)}
+.fig{position:absolute;inset:0;width:100%;height:100%;color:#22242b}
+.fig polyline{fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.fig circle{fill:currentColor}
+.fig .ld{stroke:var(--heat);stroke-width:5;stroke-linecap:round}
+.figA{animation:demoA 1.8s ease-in-out infinite}
+.figB{animation:demoB 1.8s ease-in-out infinite}
+.figwrap.hold .figS{animation:demoHold 2.6s ease-in-out infinite}
+@keyframes demoA{0%,44%{opacity:1}56%,100%{opacity:0}}
+@keyframes demoB{0%,44%{opacity:0}56%,100%{opacity:1}}
+@keyframes demoHold{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.howto-txt{flex:1;min-width:0}
+.howto-h{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:9px}
+.howto-h .tg{display:block;color:#8a8577;letter-spacing:.06em;font-weight:400;margin-top:3px}
+.howto-steps{list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:7px}
+.howto-steps li{counter-increment:step;position:relative;padding-left:26px;font-size:13.5px;line-height:1.4;color:#33353c}
+.howto-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.expando .logbox{background:transparent;border-top:1px solid rgba(0,0,0,.07)}
 
 .logbox{background:rgba(51,85,255,.05);border-top:1px solid rgba(0,0,0,.06);padding:13px 18px}
 .lb-head{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:10px}
@@ -168,9 +191,14 @@ footer b{color:var(--muted)}
   .stat:last-child{grid-column:1/-1}
   .lift{gap:7px;padding-left:14px;padding-right:10px}
   .logbtn{padding:0 7px}
+  .howto{gap:12px;padding:14px}
+  .figwrap{width:82px;height:82px}
+  .howto-steps li{font-size:13px}
 }
 @media (prefers-reduced-motion:reduce){
   .day{animation:none;opacity:1;transform:none}
   .bar i{transition:none}
+  .figA,.figwrap.hold .figS{animation:none;opacity:1}
+  .figB{display:none}
   *{scroll-behavior:auto}
 }

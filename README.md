@@ -23,7 +23,10 @@ progression**. Log your real sets and the weights personalise to you.
   suggestions build from your logged e1RM.
 - **Weekly progression.** Toggle through Weeks 1–4 (baseline → add reps → add
   load → peak) plus a Week 5 deload, and the sets/loads adjust automatically.
-- **Per-set logging.** Tap any lift to expand it and record the weight and
+- **Exercise guidance.** Tap any lift to see step-by-step form cues, the
+  muscles it targets, and a looping animated figure demonstrating the movement
+  — all drawn inline, so it works offline with no images to load.
+- **Per-set logging.** The same expanded panel lets you record the weight and
   completed reps for *every* set. Your best estimated 1RM across those sets is
   saved locally and feeds straight back into the suggested loads.
 - **Swap and regenerate.** Swap any exercise for another in the same group, or
@@ -80,6 +83,7 @@ repo (no build command, publish directory `/`).
 | `index.html`        | Page structure and the training brief form                           |
 | `css/styles.css`    | Styling (dark theme, responsive layout)                              |
 | `js/exercises.js`   | Data: exercise library, split templates, rep schemes, progression    |
+| `js/exercise-info.js` | Per-exercise how-to cues + the inline animated movement demos      |
 | `js/scheduler.js`   | The engine: split selection, load suggestion, and week generation    |
 | `js/app.js`         | State, persistence, rendering and all UI interactions                |
 
