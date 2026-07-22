@@ -1,5 +1,5 @@
 /* SPLIT service worker — offline-capable app shell + font caching. */
-const VERSION = 'split-v2';
+const VERSION = 'split-v3';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -10,6 +10,7 @@ const SHELL_ASSETS = [
   './index.html',
   './css/styles.css',
   './js/exercises.js',
+  './js/exercise-info.js',
   './js/scheduler.js',
   './js/app.js',
   './manifest.webmanifest',

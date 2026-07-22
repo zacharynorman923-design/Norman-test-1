@@ -119,45 +119,46 @@ function renderProgram(animate){
         const beTxt = be!=null ? ` <span class="e1rm">e1RM ${fmt(Math.round(be))} ${entry.unit}</span>` : '';
         loggedLine = `<div class="logged">✓ ${loggedText(l,entry)}${beTxt}</div>`;
       }
-      const chevron = loggable ? `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>` : '';
-      const liftAttrs = loggable
-        ? ` data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}"`
-        : '';
-      liftsHTML+=`<div class="lift${loggable?' loggable':''}${open?' open':''}"${liftAttrs}>
+      const chevron = `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>`;
+      liftsHTML+=`<div class="lift expandable${open?' open':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
         <div class="nm">${l.name}<em>${v.tag}</em></div>
         <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div>${loggedLine}</div>
         ${chevron}
         <button class="swap" data-di="${di}" data-li="${li}" aria-label="Swap ${l.name}" title="Swap this exercise">⇄</button>
       </div>`;
-      if(open && loggable){
-        const nSets=parseInt(v.sets,10)||1;
-        const rows=Math.max(nSets, entry?entry.sets.length:0);
-        const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
-        const wHdr = l.w ? `weight ${unit}${dh}` : `added ${unit}`;
-        const targetR=repTop(v.reps);
-        let rowsHTML='';
-        for(let i=0;i<rows;i++){
-          const s = entry && entry.sets[i];
-          const pw = s ? (s.w>0?s.w:'') : (num!==''?num:'');
-          const pr = s ? s.r : targetR;
-          rowsHTML+=`<div class="lb-set">
-            <span class="lb-n">Set ${i+1}</span>
-            <input class="lw" type="number" inputmode="decimal" value="${pw}" placeholder="—" aria-label="Set ${i+1} ${wHdr}">
-            <span class="lb-x">×</span>
-            <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">
+      if(open){
+        let logHTML='';
+        if(loggable){
+          const nSets=parseInt(v.sets,10)||1;
+          const rows=Math.max(nSets, entry?entry.sets.length:0);
+          const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
+          const wHdr = l.w ? `weight ${unit}${dh}` : `added ${unit}`;
+          const targetR=repTop(v.reps);
+          let rowsHTML='';
+          for(let i=0;i<rows;i++){
+            const s = entry && entry.sets[i];
+            const pw = s ? (s.w>0?s.w:'') : (num!==''?num:'');
+            const pr = s ? s.r : targetR;
+            rowsHTML+=`<div class="lb-set">
+              <span class="lb-n">Set ${i+1}</span>
+              <input class="lw" type="number" inputmode="decimal" value="${pw}" placeholder="—" aria-label="Set ${i+1} ${wHdr}">
+              <span class="lb-x">×</span>
+              <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">
+            </div>`;
+          }
+          logHTML=`<div class="logbox" data-di="${di}" data-li="${li}">
+            <div class="lb-head">Log each set — ${wHdr} × completed reps</div>
+            <div class="lb-sets">${rowsHTML}</div>
+            <div class="lb-foot">
+              ${entry?`<button class="logclear" data-name="${l.name}">Clear</button>`:'<span></span>'}
+              <div class="lb-btns">
+                <button class="logcancel" type="button">Cancel</button>
+                <button class="logsave" type="button">Save sets</button>
+              </div>
+            </div>
           </div>`;
         }
-        liftsHTML+=`<div class="logbox" data-di="${di}" data-li="${li}">
-          <div class="lb-head">Log each set — ${wHdr} × completed reps</div>
-          <div class="lb-sets">${rowsHTML}</div>
-          <div class="lb-foot">
-            ${entry?`<button class="logclear" data-name="${l.name}">Clear</button>`:'<span></span>'}
-            <div class="lb-btns">
-              <button class="logcancel" type="button">Cancel</button>
-              <button class="logsave" type="button">Save sets</button>
-            </div>
-          </div>
-        </div>`;
+        liftsHTML+=`<div class="expando">${howtoBlock(l)}${logHTML}</div>`;
       }
     });
     const pct=Math.round(Math.max(.2,Math.min(1,d.inten*factor))*100);
