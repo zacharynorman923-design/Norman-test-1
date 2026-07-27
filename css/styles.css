@@ -162,8 +162,15 @@ header{padding:52px 0 30px}
 .lb-set{display:flex;align-items:center;gap:8px}
 .lb-n{flex-shrink:0;width:44px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8a8577}
 .lb-set input{background:#fff;border:1.5px solid rgba(0,0,0,.15);border-radius:9px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--card-ink);min-width:0}
-.lb-set .lw{width:88px}.lb-set .lr{width:72px}
+.lb-set .lw{width:88px}.lb-set .lr{width:72px}.lb-set .lt{width:88px}
 .lb-set input:focus{outline:none;border-color:var(--blue)}
+.lb-u{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8a8577}
+/* bodyweight: optional added-weight field is de-emphasised and hidden until asked for */
+.lb-set .lw.opt{width:76px;border-style:dashed;color:var(--blue)}
+.logbox:not(.show-weight) .lb-set .lw.opt{display:none}
+.addwt{margin-top:11px;background:none;border:1.5px dashed rgba(0,0,0,.2);border-radius:9px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6a6a62;cursor:pointer;transition:border-color .15s,color .15s}
+.addwt:hover{border-color:var(--blue);color:var(--blue)}
+.logbox.show-weight .addwt{border-style:solid;border-color:var(--blue);color:var(--blue)}
 .lb-foot{display:flex;align-items:center;gap:10px;margin-top:13px}
 .lb-foot .logclear{margin-top:0}
 .lb-btns{margin-left:auto;display:flex;gap:8px}
