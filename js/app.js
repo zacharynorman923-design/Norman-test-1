@@ -12,13 +12,22 @@ function saveStore(){ try{ localStorage.setItem('split_log_v1', JSON.stringify(L
 function normalizeEntry(e){
   if(!e || typeof e!=='object') return null;
   if(Array.isArray(e.sets)){
+    if(e.metric==='time' || (e.sets[0] && e.sets[0].sec!=null)){
+      const sets=e.sets.filter(s=>s && s.sec>0).map(s=>({sec:s.sec}));
+      return sets.length ? {unit:e.unit||'kg', metric:'time', sets, e1rm:null} : null;
+    }
     const sets=e.sets.filter(s=>s && s.r>0).map(s=>({w:s.w>0?s.w:0, r:s.r}));
-    return sets.length ? {unit:e.unit||'kg', type:e.type, sets, e1rm:e.e1rm!=null?e.e1rm:null} : null;
+    if(!sets.length) return null;
+    const metric = e.metric || (sets.some(s=>s.w>0)||e.type ? 'weight' : 'reps');
+    const out={unit:e.unit||'kg', type:e.type, sets, metric, e1rm:null};
+    out.e1rm = metric==='weight' ? (e.e1rm!=null?e.e1rm:bestE1RM(out)) : null;
+    return out;
   }
   const r=parseInt(e.reps,10); if(!(r>0)) return null;
   const w=e.weight>0?e.weight:0;
-  const out={unit:e.unit||'kg', type:e.type, sets:[{w,r}], e1rm:e.e1rm!=null?e.e1rm:null};
-  if(out.e1rm==null) out.e1rm=bestE1RM(out);
+  const metric = (w>0||e.type) ? 'weight' : 'reps';
+  const out={unit:e.unit||'kg', type:e.type, sets:[{w,r}], metric, e1rm:null};
+  out.e1rm = metric==='weight' ? (e.e1rm!=null?e.e1rm:bestE1RM(out)) : null;
   return out;
 }
 function loadStore(){ try{ const r=localStorage.getItem('split_log_v1'); if(r){ const o=JSON.parse(r);
@@ -75,14 +84,26 @@ function bestE1RM(entry){
   entry.sets.forEach(s=>{ const e=setE1RM(entry,s); if(e!=null && (best===null||e>best)) best=e; });
   return best;
 }
+function logMode(l){
+  if(l.w) return 'weight';                                   // external load
+  if(typeof PATTERN!=='undefined' && PATTERN[l.name]==='hold') return 'time'; // isometric hold
+  return 'reps';                                             // bodyweight reps
+}
 function loggedText(l, entry){
   const u=entry.unit, dh=entry.type==='dumbbell'?'/hand':'';
-  const loaded = entry.sets.some(s=>s.w>0);
-  if(loaded){
+  if(entry.metric==='time'){
+    return `logged ${entry.sets.map(s=>s.sec).join(' · ')} s`;
+  }
+  if(entry.metric==='weight' || l.w){
     const parts=entry.sets.map(s=> s.w>0 ? `${fmt(s.w)}×${s.r}` : `bw×${s.r}`);
     return `logged ${parts.join(' · ')} ${u}${dh}`;
   }
-  // pure bodyweight — just reps per set
+  // bodyweight reps — show added weight only if the lifter used some
+  const weighted = entry.sets.some(s=>s.w>0);
+  if(weighted){
+    const parts=entry.sets.map(s=> s.w>0 ? `+${fmt(s.w)}×${s.r}` : `bw×${s.r}`);
+    return `logged ${parts.join(' · ')} reps (+${u})`;
+  }
   return `logged ${entry.sets.map(s=>s.r).join(' · ')} reps`;
 }
 function renderProgram(animate){
@@ -103,7 +124,8 @@ function renderProgram(animate){
       if(l.finisher && !finisherShown){ liftsHTML+=`<div class="finisher-label">＋ Abs finisher</div>`; finisherShown=true; }
       const v=weekAdjust(l.base,WEEK,l.compound);
       if(v.sets) totalSets+=parseInt(v.sets,10);
-      const rxTxt = v.sets ? `${v.sets} × ${v.reps}` : v.reps;
+      const mode = logMode(l);
+      const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × hold` : `${v.sets} × ${v.reps}`) : v.reps;
       const entry=LOG.byExercise[l.name];
       let metaTxt=v.rest, num='';
       if(v.sets!==''){
@@ -132,23 +154,46 @@ function renderProgram(animate){
           const nSets=parseInt(v.sets,10)||1;
           const rows=Math.max(nSets, entry?entry.sets.length:0);
           const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
-          const wHdr = l.w ? `weight ${unit}${dh}` : `added ${unit}`;
           const targetR=repTop(v.reps);
-          let rowsHTML='';
+          let head, rowsHTML='';
           for(let i=0;i<rows;i++){
             const s = entry && entry.sets[i];
-            const pw = s ? (s.w>0?s.w:'') : (num!==''?num:'');
-            const pr = s ? s.r : targetR;
-            rowsHTML+=`<div class="lb-set">
-              <span class="lb-n">Set ${i+1}</span>
-              <input class="lw" type="number" inputmode="decimal" value="${pw}" placeholder="—" aria-label="Set ${i+1} ${wHdr}">
-              <span class="lb-x">×</span>
-              <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">
-            </div>`;
+            if(mode==='time'){
+              const pv = s ? s.sec : '';
+              rowsHTML+=`<div class="lb-set">
+                <span class="lb-n">Set ${i+1}</span>
+                <input class="lt" type="number" inputmode="numeric" value="${pv}" placeholder="—" aria-label="Set ${i+1} hold seconds">
+                <span class="lb-u">sec</span>
+              </div>`;
+            } else if(mode==='weight'){
+              const pw = s ? (s.w>0?s.w:'') : (num!==''?num:'');
+              const pr = s ? s.r : targetR;
+              rowsHTML+=`<div class="lb-set">
+                <span class="lb-n">Set ${i+1}</span>
+                <input class="lw" type="number" inputmode="decimal" value="${pw}" placeholder="—" aria-label="Set ${i+1} weight ${unit}${dh}">
+                <span class="lb-x">×</span>
+                <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">
+              </div>`;
+            } else { // reps (bodyweight) — reps first, added weight optional/hidden
+              const pr = s ? s.r : targetR;
+              const pw = s ? (s.w>0?s.w:'') : '';
+              rowsHTML+=`<div class="lb-set">
+                <span class="lb-n">Set ${i+1}</span>
+                <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="—" aria-label="Set ${i+1} reps">
+                <span class="lb-u">reps</span>
+                <input class="lw opt" type="number" inputmode="decimal" value="${pw}" placeholder="+${unit}" aria-label="Set ${i+1} added weight ${unit}">
+              </div>`;
+            }
           }
-          logHTML=`<div class="logbox" data-di="${di}" data-li="${li}">
-            <div class="lb-head">Log each set — ${wHdr} × completed reps</div>
+          head = mode==='time' ? 'Log each set — hold time in seconds'
+               : mode==='weight' ? `Log each set — weight ${unit}${dh} × completed reps`
+               : 'Log each set — completed reps';
+          const showWeight = mode==='reps' && entry && entry.metric!=='time' && entry.sets.some(s=>s.w>0);
+          const addWtBtn = mode==='reps' ? `<button class="addwt" type="button">＋ Add weight (vest / belt)</button>` : '';
+          logHTML=`<div class="logbox${showWeight?' show-weight':''}" data-di="${di}" data-li="${li}">
+            <div class="lb-head">${head}</div>
             <div class="lb-sets">${rowsHTML}</div>
+            ${addWtBtn}
             <div class="lb-foot">
               ${entry?`<button class="logclear" data-name="${l.name}">Clear</button>`:'<span></span>'}
               <div class="lb-btns">
@@ -203,7 +248,7 @@ function renderProgram(animate){
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     prog.querySelectorAll('.bar i').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
   }));
-  if(EDIT){ const box=prog.querySelector('.logbox .lw'); if(box) box.focus(); }
+  if(EDIT){ const box=prog.querySelector('.logbox .lb-set input'); if(box) box.focus(); }
   saveSession();
 }
 
@@ -214,15 +259,23 @@ function renderProgram(animate){
 function logSets(box){
   const di=+box.dataset.di, li=+box.dataset.li;
   const l=PROGRAM.weekdays[di].lifts[li];
+  const mode=logMode(l);
   const sets=[];
   box.querySelectorAll('.lb-set').forEach(row=>{
-    const w=parseFloat(row.querySelector('.lw').value);
-    const r=parseInt(row.querySelector('.lr').value,10);
-    if(r>0) sets.push({ w:w>0?w:0, r });
+    if(mode==='time'){
+      const sec=parseInt(row.querySelector('.lt').value,10);
+      if(sec>0) sets.push({ sec });
+    } else {
+      const r=parseInt(row.querySelector('.lr').value,10);
+      if(!(r>0)) return;
+      const wi=row.querySelector('.lw');
+      const w=wi?parseFloat(wi.value):NaN;
+      sets.push({ w:w>0?w:0, r });
+    }
   });
   if(!sets.length){ clearLift(l.name); return; }
-  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets };
-  entry.e1rm=bestE1RM(entry);
+  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode };
+  entry.e1rm = mode==='weight' ? bestE1RM(entry) : null;
   LOG.byExercise[l.name]=entry; saveStore(); EDIT=null; renderProgram(false);
 }
 function clearLift(name){ delete LOG.byExercise[name]; saveStore(); renderProgram(false); }
@@ -240,6 +293,7 @@ function swapLift(di,li){
   EDIT=null; renderProgram(false);
 }
 document.getElementById('program').addEventListener('click', e=>{
+  const aw=e.target.closest('.addwt'); if(aw){ aw.closest('.logbox').classList.toggle('show-weight'); return; }
   const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
   const cl=e.target.closest('.logclear'); if(cl){ clearLift(cl.dataset.name); return; }
