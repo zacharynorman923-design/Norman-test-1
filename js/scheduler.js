@@ -31,7 +31,7 @@ function weekAdjust(base, week, compound){
 }
 
 /* ===================== WEIGHTS + PERSONALISATION ===================== */
-function exE1RM(name){ const e=LOG.byExercise[name]; return e && e.e1rm ? e.e1rm : null; }
+function exE1RM(name){ const e=lastForName(name); return e && e.e1rm ? e.e1rm : null; }
 function anchorMaxes(){
   const bw=parseFloat(state.bw)||0, ef=EXP_F[state.exp], out={};
   for(const a in BW_MULT){
