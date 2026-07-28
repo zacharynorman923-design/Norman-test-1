@@ -108,6 +108,7 @@ header{padding:52px 0 30px}
 .meta .load{color:var(--blue);font-weight:700}
 .logged{font-family:'JetBrains Mono',monospace;font-size:10px;color:#2e8b57;font-weight:700;white-space:normal;margin-top:3px;line-height:1.5}
 .logged .e1rm{display:inline-block;background:rgba(51,85,255,.1);color:var(--blue);border-radius:5px;padding:0 5px;margin-left:2px}
+.suggest{font-family:'JetBrains Mono',monospace;font-size:10px;color:#a7743a;font-weight:700;white-space:normal;margin-top:3px;line-height:1.5}
 .logbtn{border:none;background:rgba(0,0,0,.05);color:#6a6a62;height:30px;padding:0 9px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .logbtn:hover{background:var(--blue);color:#fff}
 .logbtn.done{background:rgba(46,139,87,.16);color:#2e8b57}

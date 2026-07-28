@@ -1,12 +1,26 @@
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, unit:'kg', bw:'', max:{bench:'',squat:'',deadlift:'',press:'',row:''} };
-const LOG = { byExercise:{} };  // name -> {weight, reps, unit, e1rm, type}
+/* Each log is stored against the specific occurrence you did it on
+   (week + day + slot + exercise), so it never bleeds onto other days or
+   weeks. History for the same exercise drives suggestions for next time. */
+const LOG = { sets:{} };  // `${week}:${di}:${li}:${name}` (or `hist:name`) -> entry
 let PROGRAM = null, WEEK = 1, EDIT = null;
+
+function occKey(di,li,name){ return `${WEEK}:${di}:${li}:${name}`; }
+/* Most recent logged entry for an exercise, across every day/week — used to
+   suggest a starting weight/reps the next time it comes up. */
+function lastForName(name){
+  let best=null;
+  for(const k in LOG.sets){ const e=LOG.sets[k];
+    if(e && e.name===name && (!best || (e.ts||0)>=(best.ts||0))) best=e; }
+  return best;
+}
+function loggedNames(){ const s=new Set(); for(const k in LOG.sets){ const e=LOG.sets[k]; if(e&&e.name) s.add(e.name); } return s; }
 
 /* persistence — survives reloads on a served page (https or localhost);
    silent no-op if storage is blocked (e.g. opened directly as a file://). */
-function saveStore(){ try{ localStorage.setItem('split_log_v1', JSON.stringify(LOG.byExercise)); }catch(e){} }
+function saveStore(){ try{ localStorage.setItem('split_log_v2', JSON.stringify(LOG.sets)); }catch(e){} }
 /* Bring any stored entry up to the per-set shape {unit,type,sets:[{w,r}],e1rm}.
    Older logs held a single {weight,reps,...}; convert them to one set. */
 function normalizeEntry(e){
@@ -30,8 +44,18 @@ function normalizeEntry(e){
   out.e1rm = metric==='weight' ? (e.e1rm!=null?e.e1rm:bestE1RM(out)) : null;
   return out;
 }
-function loadStore(){ try{ const r=localStorage.getItem('split_log_v1'); if(r){ const o=JSON.parse(r);
-  if(o&&typeof o==='object'){ const out={}; for(const k in o){ const n=normalizeEntry(o[k]); if(n) out[k]=n; } LOG.byExercise=out; } } }catch(e){} }
+function loadStore(){ try{
+  const r2=localStorage.getItem('split_log_v2');
+  if(r2){ const o=JSON.parse(r2);
+    if(o&&typeof o==='object'){ const out={};
+      for(const k in o){ const n=normalizeEntry(o[k]); if(n){ n.name=o[k].name; n.ts=o[k].ts||0; out[k]=n; } }
+      LOG.sets=out; }
+    return; }
+  // migrate the old name-keyed store: those become history-only suggestions
+  const r1=localStorage.getItem('split_log_v1');
+  if(r1){ const o=JSON.parse(r1);
+    if(o&&typeof o==='object'){ for(const name in o){ const n=normalizeEntry(o[name]); if(n){ n.name=name; n.ts=0; LOG.sets['hist:'+name]=n; } } } }
+}catch(e){} }
 
 /* Whole-session persistence: the brief, the generated program and the current
    week — so a reload drops you back exactly where you left off. */
@@ -109,7 +133,8 @@ function loggedText(l, entry){
 function renderProgram(animate){
   const p=PROGRAM, wi=WEEK_INFO[WEEK], factor=WEEK_FACTOR[WEEK];
   const anchors=anchorMaxes(), unit=state.unit;
-  const anchorsAvail=Object.values(anchors).some(v=>v), anyLog=Object.keys(LOG.byExercise).length>0;
+  const logNames=loggedNames(), anyLog=logNames.size>0;
+  const anchorsAvail=Object.values(anchors).some(v=>v);
   const prog=document.getElementById('program');
   let totalSets=0, daysHTML='', delay=0;
 
@@ -126,7 +151,9 @@ function renderProgram(animate){
       if(v.sets) totalSets+=parseInt(v.sets,10);
       const mode = logMode(l);
       const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × hold` : `${v.sets} × ${v.reps}`) : v.reps;
-      const entry=LOG.byExercise[l.name];
+      const done = LOG.sets[occKey(di,li,l.name)];       // logged on THIS day/week
+      const suggest = done ? null : lastForName(l.name);  // else: last time you did it
+      const src = done || suggest;                        // prefill source for the logger
       let metaTxt=v.rest, num='';
       if(v.sets!==''){
         const load=suggestLoad(l, v.reps, WEEK, anchors, unit);
@@ -136,10 +163,12 @@ function renderProgram(animate){
       const loggable = v.sets!=='';
       const open = EDIT===key;
       let loggedLine='';
-      if(entry){
-        const be=bestE1RM(entry);
-        const beTxt = be!=null ? ` <span class="e1rm">e1RM ${fmt(Math.round(be))} ${entry.unit}</span>` : '';
-        loggedLine = `<div class="logged">✓ ${loggedText(l,entry)}${beTxt}</div>`;
+      if(done){
+        const be=bestE1RM(done);
+        const beTxt = be!=null ? ` <span class="e1rm">e1RM ${fmt(Math.round(be))} ${done.unit}</span>` : '';
+        loggedLine = `<div class="logged">✓ ${loggedText(l,done)}${beTxt}</div>`;
+      } else if(suggest){
+        loggedLine = `<div class="suggest">↝ last: ${loggedText(l,suggest).replace(/^logged /,'')}</div>`;
       }
       const chevron = `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>`;
       liftsHTML+=`<div class="lift expandable${open?' open':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
@@ -152,12 +181,12 @@ function renderProgram(animate){
         let logHTML='';
         if(loggable){
           const nSets=parseInt(v.sets,10)||1;
-          const rows=Math.max(nSets, entry?entry.sets.length:0);
+          const rows=Math.max(nSets, src?src.sets.length:0);
           const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
           const targetR=repTop(v.reps);
           let head, rowsHTML='';
           for(let i=0;i<rows;i++){
-            const s = entry && entry.sets[i];
+            const s = src && src.sets[i];
             if(mode==='time'){
               const pv = s ? s.sec : '';
               rowsHTML+=`<div class="lb-set">
@@ -188,14 +217,14 @@ function renderProgram(animate){
           head = mode==='time' ? 'Log each set — hold time in seconds'
                : mode==='weight' ? `Log each set — weight ${unit}${dh} × completed reps`
                : 'Log each set — completed reps';
-          const showWeight = mode==='reps' && entry && entry.metric!=='time' && entry.sets.some(s=>s.w>0);
+          const showWeight = mode==='reps' && src && src.metric!=='time' && src.sets.some(s=>s.w>0);
           const addWtBtn = mode==='reps' ? `<button class="addwt" type="button">＋ Add weight (vest / belt)</button>` : '';
           logHTML=`<div class="logbox${showWeight?' show-weight':''}" data-di="${di}" data-li="${li}">
             <div class="lb-head">${head}</div>
             <div class="lb-sets">${rowsHTML}</div>
             ${addWtBtn}
             <div class="lb-foot">
-              ${entry?`<button class="logclear" data-name="${l.name}">Clear</button>`:'<span></span>'}
+              ${done?`<button class="logclear" data-di="${di}" data-li="${li}">Clear</button>`:'<span></span>'}
               <div class="lb-btns">
                 <button class="logcancel" type="button">Cancel</button>
                 <button class="logsave" type="button">Save sets</button>
@@ -219,7 +248,7 @@ function renderProgram(animate){
   const wtNote = anyLog ? `weights <span class="wt">personalised from your logged sets</span>`
       : (anchorsAvail ? `<span class="wt">≈ weights</span> from your numbers, scaled per week`
       : `tap a lift to <span class="wt">log every set</span>, or add a max in the brief, for suggested weights`);
-  const logCount=Object.keys(LOG.byExercise).length;
+  const logCount=logNames.size;
 
   prog.innerHTML=`
     <div class="prog-head">
@@ -253,9 +282,9 @@ function renderProgram(animate){
 }
 
 /* ===================== LOGGING + INTERACTIONS ===================== */
-/* Read every set row in the open log box and store them. A set counts only
-   if reps were entered; weight may be blank (bodyweight). Saving with no reps
-   anywhere clears the log. e1RM is taken from the strongest set. */
+/* Read every set row in the open log box and store them against THIS
+   occurrence (week + day + slot + exercise). A set counts only if reps (or
+   seconds) were entered. Saving with nothing clears this occurrence's log. */
 function logSets(box){
   const di=+box.dataset.di, li=+box.dataset.li;
   const l=PROGRAM.weekdays[di].lifts[li];
@@ -273,12 +302,13 @@ function logSets(box){
       sets.push({ w:w>0?w:0, r });
     }
   });
-  if(!sets.length){ clearLift(l.name); return; }
-  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode };
+  const key=occKey(di,li,l.name);
+  if(!sets.length){ delete LOG.sets[key]; saveStore(); EDIT=null; renderProgram(false); return; }
+  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode, name:l.name, ts:Date.now() };
   entry.e1rm = mode==='weight' ? bestE1RM(entry) : null;
-  LOG.byExercise[l.name]=entry; saveStore(); EDIT=null; renderProgram(false);
+  LOG.sets[key]=entry; saveStore(); EDIT=null; renderProgram(false);
 }
-function clearLift(name){ delete LOG.byExercise[name]; saveStore(); renderProgram(false); }
+function clearLog(di,li){ const l=PROGRAM.weekdays[di].lifts[li]; delete LOG.sets[occKey(di,li,l.name)]; saveStore(); renderProgram(false); }
 function swapLift(di,li){
   const day=PROGRAM.weekdays[di]; if(!day||day.rest) return;
   const cur=day.lifts[li], group=cur.group;
@@ -296,13 +326,13 @@ document.getElementById('program').addEventListener('click', e=>{
   const aw=e.target.closest('.addwt'); if(aw){ aw.closest('.logbox').classList.toggle('show-weight'); return; }
   const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
-  const cl=e.target.closest('.logclear'); if(cl){ clearLift(cl.dataset.name); return; }
+  const cl=e.target.closest('.logclear'); if(cl){ clearLog(+cl.dataset.di,+cl.dataset.li); return; }
   const wk=e.target.closest('.wk'); if(wk){ EDIT=null; WEEK=parseInt(wk.dataset.wk,10); renderProgram(false); return; }
   const sw=e.target.closest('.swap'); if(sw){ swapLift(+sw.dataset.di,+sw.dataset.li); return; }
   const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
   if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }
-  if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.byExercise={}; saveStore(); renderProgram(false); } return; }
+  if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.sets={}; saveStore(); renderProgram(false); } return; }
 });
 /* Keyboard: Enter/Space toggles a focused lift row (but not while typing in it). */
 document.getElementById('program').addEventListener('keydown', e=>{
