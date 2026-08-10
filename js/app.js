@@ -177,9 +177,10 @@ function renderProgram(animate){
       const chevron = `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>`;
       liftsHTML+=`<div class="lift expandable${open?' open':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
         <div class="nm">${l.name}<em>${v.tag}</em></div>
-        <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div>${loggedLine}</div>
+        <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div></div>
         ${chevron}
         <button class="swap" data-di="${di}" data-li="${li}" aria-label="Swap ${l.name}" title="Swap this exercise">⇄</button>
+        ${loggedLine}
       </div>`;
       if(open){
         let logHTML='';
