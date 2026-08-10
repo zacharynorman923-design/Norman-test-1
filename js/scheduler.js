@@ -110,22 +110,30 @@ function dayIntensity(lifts, goal){
   return Math.max(.28, Math.min(1, size*.45 + cr*.4 + bump));
 }
 function intensityLabel(v){ return v<0.5?'Light':v<0.72?'Moderate':'Hard'; }
-function generate(){
-  const {goal,days,exp,equip,length,split,abs}=state;
-  const layout = (split==='muscle') ? muscleSplit(days) : chooseSplit(days,goal,exp);
-  const queues=buildQueues(equip);
-  const count=targetCount(length,exp);
-  const slots=DAY_SLOTS[days];
+/* Build one week of training days for a fixed structure. The queues are shared
+   across weeks and keep advancing, so each week draws different exercises for
+   the same day focus — cycling through the library rather than repeating. */
+function buildWeekdays(layout, slots, count, queues, goal, equip, abs){
   const weekdays=WEEKDAYS.map(l=>({label:l,rest:true}));
-  const types=[];
   layout.forEach((type,k)=>{
     const {lifts,used}=pickLifts(type,count,queues,goal);
     if(abs && type!=='Conditioning'){ absFinisher(used,equip,goal).forEach(l=>lifts.push(l)); }
-    const slot=slots[k]; types.push(type);
+    const slot=slots[k];
     weekdays[slot]={label:WEEKDAYS[slot],rest:false,type,lifts,inten:dayIntensity(lifts,goal)};
   });
-  const uniq=[...new Set(types)];
+  return weekdays;
+}
+const PROG_WEEKS = 5;
+function generate(){
+  const {goal,days,exp,equip,length,split,abs}=state;
+  const layout = (split==='muscle') ? muscleSplit(days) : chooseSplit(days,goal,exp);
+  const queues=buildQueues(equip);           // shared across weeks -> week-to-week variation
+  const count=targetCount(length,exp);
+  const slots=DAY_SLOTS[days];
+  const weeks={};
+  for(let w=1; w<=PROG_WEEKS; w++){ weeks[w]=buildWeekdays(layout, slots, count, queues, goal, equip, abs); }
+  const uniq=[...new Set(layout)];
   const splitName = split==='muscle' ? 'Body-part split'
       : (uniq.length<=2 ? uniq.join(' / ') : (days===6?'Push · Pull · Legs ×2':uniq.slice(0,3).join(' · ')));
-  return {meta:GOAL_META[goal],weekdays,days,length,splitName,goal,equip,abs};
+  return {meta:GOAL_META[goal], weeks, weekdays:weeks[1], days, length, splitName, goal, equip, abs};
 }

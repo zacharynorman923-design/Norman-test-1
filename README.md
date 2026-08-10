@@ -23,6 +23,9 @@ progression**. Log your real sets and the weights personalise to you.
   suggestions build from your logged e1RM.
 - **Weekly progression.** Toggle through Weeks 1–4 (baseline → add reps → add
   load → peak) plus a Week 5 deload, and the sets/loads adjust automatically.
+- **Fresh exercises each week.** Your split and weekly structure stay fixed, but
+  every week draws a different selection of exercises for each day — cycling
+  through the library instead of repeating the same lifts.
 - **Exercise guidance.** Tap any lift to see step-by-step form cues, the
   muscles it targets, and a looping animated figure demonstrating the movement
   — all drawn inline, so it works offline with no images to load.

@@ -130,6 +130,10 @@ function loggedText(l, entry){
   }
   return `logged ${entry.sets.map(s=>s.r).join(' · ')} reps`;
 }
+/* The current week's training days (each week has its own exercise picks over
+   the same fixed structure). Falls back to the single-week shape for sessions
+   saved before week-to-week variation existed. */
+function curWeekdays(){ return (PROGRAM.weeks && PROGRAM.weeks[WEEK]) || PROGRAM.weekdays; }
 function renderProgram(animate){
   const p=PROGRAM, wi=WEEK_INFO[WEEK], factor=WEEK_FACTOR[WEEK];
   const anchors=anchorMaxes(), unit=state.unit;
@@ -138,7 +142,7 @@ function renderProgram(animate){
   const prog=document.getElementById('program');
   let totalSets=0, daysHTML='', delay=0;
 
-  p.weekdays.forEach((d,di)=>{
+  curWeekdays().forEach((d,di)=>{
     if(d.rest){
       daysHTML+=`<div class="day rest"><span class="dow">${d.label}</span><span class="rfocus">Rest</span>
         <span class="rnote">${restNotes[d.label.charCodeAt(0)%restNotes.length]}</span></div>`;
@@ -264,7 +268,7 @@ function renderProgram(animate){
       <div class="weeks" role="group" aria-label="Progression week">${weekPills}</div>
       <div class="wknote"><b>${wi.tag}</b><span>${wi.note}</span></div>
     </div>
-    <div class="hint">↻ regenerate · ⇄ swap · tap a lift to log every set · tap a week to progress<br>${wtNote}</div>
+    <div class="hint">↻ regenerate · ⇄ swap · tap a lift to log every set · tap a week — same split, fresh exercises<br>${wtNote}</div>
     <div class="week${animate?'':' static'}">${daysHTML}</div>
     <div class="actions">
       <button class="ghost" id="regen">↻ Regenerate exercises</button>
@@ -287,7 +291,7 @@ function renderProgram(animate){
    seconds) were entered. Saving with nothing clears this occurrence's log. */
 function logSets(box){
   const di=+box.dataset.di, li=+box.dataset.li;
-  const l=PROGRAM.weekdays[di].lifts[li];
+  const l=curWeekdays()[di].lifts[li];
   const mode=logMode(l);
   const sets=[];
   box.querySelectorAll('.lb-set').forEach(row=>{
@@ -308,9 +312,9 @@ function logSets(box){
   entry.e1rm = mode==='weight' ? bestE1RM(entry) : null;
   LOG.sets[key]=entry; saveStore(); EDIT=null; renderProgram(false);
 }
-function clearLog(di,li){ const l=PROGRAM.weekdays[di].lifts[li]; delete LOG.sets[occKey(di,li,l.name)]; saveStore(); renderProgram(false); }
+function clearLog(di,li){ const l=curWeekdays()[di].lifts[li]; delete LOG.sets[occKey(di,li,l.name)]; saveStore(); renderProgram(false); }
 function swapLift(di,li){
-  const day=PROGRAM.weekdays[di]; if(!day||day.rest) return;
+  const day=curWeekdays()[di]; if(!day||day.rest) return;
   const cur=day.lifts[li], group=cur.group;
   const used=new Set(day.lifts.map(l=>l.name));
   let pool=getPool(group,PROGRAM.equip).filter(x=>!used.has(x.n));
