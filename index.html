@@ -142,6 +142,24 @@
   <div class="empty" id="empty">Set your brief above, then build your week ↑</div>
   <section id="program" class="hidden" aria-live="polite"></section>
 
+  <section id="addon" class="brief ai-card hidden" aria-label="Add an extra block with AI">
+    <div class="brief-head"><h2>✨ Add a block</h2><span class="step">AI · optional</span></div>
+    <div class="field" style="border-top:none;padding-top:8px">
+      <label class="flabel">Want extra work on something?</label>
+      <div class="sub2">Your weekly plan stays as it is — this appends a small extra block to one day, like the abs finisher. e.g. “more rear delts”, “extra calves”, “grip and forearms”, “a short glute finisher”. Claude picks moves from the exercise library, so they come with how-to, suggested weights and per-set logging.</div>
+      <input id="addonText" class="ai-line" type="text" autocomplete="off" placeholder="e.g. more rear delts">
+    </div>
+    <div class="field">
+      <label class="flabel">Add it to</label>
+      <div class="addon-row">
+        <select id="addonDay" class="ai-model addon-day" aria-label="Training day"></select>
+        <button id="addonEvery" class="chip" type="button" aria-pressed="true">Every week<small>keep it in the plan</small></button>
+      </div>
+    </div>
+    <button class="build ai-build" id="addonBuild">✨ Add the block <span class="arrow">→</span></button>
+    <div id="addonStatus" class="ai-status" role="status" aria-live="polite"></div>
+  </section>
+
   <footer>
     <b>SPLIT</b> &nbsp;·&nbsp; a demo program builder &nbsp;·&nbsp; not medical advice<br>
     log your real sets to personalise loads &nbsp;·&nbsp; adjust to how the set feels &nbsp;·&nbsp; warm up first
