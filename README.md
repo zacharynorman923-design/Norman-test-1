@@ -10,6 +10,10 @@ progression**. Log your real sets and the weights personalise to you.
 
 ## Features
 
+- **AI coach (bring your own key).** Describe your training in plain language and
+  Claude fills in the brief, then SPLIT builds the week. Optional — paste an
+  Anthropic API key (stored only in your browser, sent straight to Anthropic);
+  everything else works without it. See [Using the AI coach](#using-the-ai-coach).
 - **Goal-driven programming.** Strength, muscle, fat loss, endurance or general
   fitness each get their own rep ranges, rest periods, volume and conditioning
   dose — because those goals genuinely train differently.
@@ -89,12 +93,32 @@ repo (no build command, publish directory `/`).
 | `js/exercise-info.js` | Per-exercise how-to cues + the inline animated movement demos      |
 | `js/scheduler.js`   | The engine: split selection, load suggestion, and week generation    |
 | `js/app.js`         | State, persistence, rendering and all UI interactions                |
+| `js/ai.js`          | Optional AI coach: maps a plain-language description onto the brief   |
 
 The scheduler chooses a split from your goal and weekly frequency, fills each
 training day by rotating through that day's target muscle groups (leading with
 compound lifts), applies the sets/reps/rest scheme for your goal, and suggests
 loads scaled to the selected progression week. Logged sets are stored in
 `localStorage` and feed back into the weight suggestions.
+
+## Using the AI coach
+
+The **✨ Describe it** card lets you skip the chips: write your goal, schedule,
+equipment and experience in a sentence, and Claude maps it onto the brief before
+building the week.
+
+- **Bring your own key.** Create an API key at
+  [console.anthropic.com](https://console.anthropic.com), paste it into the card,
+  and pick a model (Opus 5 / Sonnet 5 / Haiku 4.5 — Haiku is cheapest for this).
+- **Where the key lives.** It's saved in your browser's `localStorage` on that
+  device only and sent directly to `api.anthropic.com` — there is no SPLIT
+  backend to send it to. Each build is a single request (a few cents at most).
+- **How it works.** SPLIT calls Anthropic's Messages API with a `set_brief`
+  tool; Claude returns the structured fields, which are validated and applied to
+  the chips, then the normal generator runs. The AI feature needs a connection;
+  the rest of the app (building, logging, progression) works offline.
+
+The AI coach is entirely optional — SPLIT is fully usable without a key.
 
 ## Disclaimer
 
