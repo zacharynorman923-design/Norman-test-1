@@ -288,3 +288,8 @@ aiBuild.addEventListener('click', async ()=>{
     aiBuild.disabled=false; aiBuild.innerHTML=label;
   }
 });
+
+/* This file loads after app.js, which restores and renders a saved session on
+   load — at that point refreshAddonUI() doesn't exist yet, so its guarded call
+   there is skipped. Sync the panel once now that it does. */
+refreshAddonUI();
