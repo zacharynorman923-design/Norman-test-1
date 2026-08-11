@@ -148,9 +148,14 @@ function renderProgram(animate){
         <span class="rnote">${restNotes[d.label.charCodeAt(0)%restNotes.length]}</span></div>`;
       return;
     }
-    delay+=0.06; let finisherShown=false, liftsHTML='';
+    delay+=0.06; let finisherShown=false, blockShown=null, liftsHTML='';
     d.lifts.forEach((l,li)=>{
       if(l.finisher && !finisherShown){ liftsHTML+=`<div class="finisher-label">＋ Abs finisher</div>`; finisherShown=true; }
+      if(l.addon && l.addon!==blockShown){
+        blockShown=l.addon;
+        liftsHTML+=`<div class="finisher-label addon-label">＋ ${l.addon}
+          <button class="blockrm" data-di="${di}" data-title="${l.addon}" title="Remove this block" aria-label="Remove the ${l.addon} block">✕</button></div>`;
+      }
       const v=weekAdjust(l.base,WEEK,l.compound);
       if(v.sets) totalSets+=parseInt(v.sets,10);
       const mode = logMode(l);
@@ -283,6 +288,7 @@ function renderProgram(animate){
     prog.querySelectorAll('.bar i').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
   }));
   if(EDIT){ const box=prog.querySelector('.logbox .lb-set input'); if(box) box.focus(); }
+  if(typeof refreshAddonUI==='function') refreshAddonUI();   // optional AI add-on panel
   saveSession();
 }
 
@@ -314,6 +320,20 @@ function logSets(box){
   LOG.sets[key]=entry; saveStore(); EDIT=null; renderProgram(false);
 }
 function clearLog(di,li){ const l=curWeekdays()[di].lifts[li]; delete LOG.sets[occKey(di,li,l.name)]; saveStore(); renderProgram(false); }
+/* Every week's copy of a given day — an AI block may span all weeks. */
+function allWeekDays(di){
+  const out=[];
+  if(PROGRAM.weeks){ for(const w in PROGRAM.weeks){ const d=PROGRAM.weeks[w][di]; if(d && !d.rest) out.push(d); } }
+  else if(PROGRAM.weekdays[di] && !PROGRAM.weekdays[di].rest) out.push(PROGRAM.weekdays[di]);
+  return out;
+}
+function removeBlock(di,title){
+  allWeekDays(di).forEach(day=>{
+    day.lifts = day.lifts.filter(l=>l.addon!==title);
+    day.inten = dayIntensity(day.lifts, PROGRAM.goal);
+  });
+  EDIT=null; renderProgram(false);
+}
 function swapLift(di,li){
   const day=curWeekdays()[di]; if(!day||day.rest) return;
   const cur=day.lifts[li], group=cur.group;
@@ -328,6 +348,7 @@ function swapLift(di,li){
   EDIT=null; renderProgram(false);
 }
 document.getElementById('program').addEventListener('click', e=>{
+  const br=e.target.closest('.blockrm'); if(br){ removeBlock(+br.dataset.di, br.dataset.title); return; }
   const aw=e.target.closest('.addwt'); if(aw){ aw.closest('.logbox').classList.toggle('show-weight'); return; }
   const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
