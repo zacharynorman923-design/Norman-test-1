@@ -123,6 +123,12 @@ header{padding:52px 0 30px}
 .logged{color:#2e8b57}
 .suggest{color:#a7743a}
 .logged .e1rm{display:inline-block;background:rgba(51,85,255,.1);color:var(--blue);border-radius:5px;padding:0 5px;margin-left:2px}
+.logged .part{display:inline-block;background:rgba(0,0,0,.06);color:#6a6a62;border-radius:5px;padding:0 5px;margin-left:2px}
+.diff{display:inline-block;border-radius:5px;padding:0 5px;margin-left:2px;text-transform:uppercase;letter-spacing:.06em}
+.d-easy{background:rgba(46,139,87,.13);color:#2e8b57}
+.d-right{background:rgba(51,85,255,.1);color:var(--blue)}
+.d-hard{background:rgba(167,116,58,.15);color:#a7743a}
+.d-fail{background:rgba(255,78,34,.13);color:var(--heat)}
 .logbtn{border:none;background:rgba(0,0,0,.05);color:#6a6a62;height:30px;padding:0 9px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .logbtn:hover{background:var(--blue);color:#fff}
 .logbtn.done{background:rgba(46,139,87,.16);color:#2e8b57}
@@ -186,6 +192,21 @@ header{padding:52px 0 30px}
 .addwt{margin-top:11px;background:none;border:1.5px dashed rgba(0,0,0,.2);border-radius:9px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6a6a62;cursor:pointer;transition:border-color .15s,color .15s}
 .addwt:hover{border-color:var(--blue);color:var(--blue)}
 .logbox.show-weight .addwt{border-style:solid;border-color:var(--blue);color:var(--blue)}
+.lb-sub{font-size:12px;line-height:1.5;color:#6a6a62;margin:-4px 0 11px}
+/* bank one set at a time: the ✓ on each row */
+.lb-done{margin-left:auto;flex-shrink:0;width:38px;height:38px;border-radius:10px;border:1.5px solid rgba(0,0,0,.15);background:#fff;color:#9b978c;font-size:15px;font-weight:700;line-height:1;cursor:pointer;transition:background .15s,border-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.lb-done:hover{border-color:var(--blue);color:var(--blue)}
+.lb-done.on{background:#2e8b57;border-color:#2e8b57;color:#fff}
+.lb-set.is-done input{border-color:rgba(46,139,87,.55);background:rgba(46,139,87,.06)}
+.lb-set.is-done .lb-n{color:#2e8b57}
+/* how it felt — feeds the next suggestion */
+.lb-diff{margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,.07)}
+.lb-dlab{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:9px}
+.lb-dchips{display:flex;flex-wrap:wrap;gap:6px}
+.dchip{background:#fff;border:1.5px solid rgba(0,0,0,.15);border-radius:9px;padding:8px 11px;font-family:'Archivo';font-weight:600;font-size:12.5px;color:#54524a;cursor:pointer;transition:background .15s,border-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.dchip:hover{border-color:var(--blue);color:var(--blue)}
+.dchip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.lb-dnote{margin-top:8px;font-size:12px;line-height:1.5;color:#6a6a62}
 .lb-foot{display:flex;align-items:center;gap:10px;margin-top:13px}
 .lb-foot .logclear{margin-top:0}
 .lb-btns{margin-left:auto;display:flex;gap:8px}

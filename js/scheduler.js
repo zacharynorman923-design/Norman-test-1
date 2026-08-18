@@ -31,7 +31,21 @@ function weekAdjust(base, week, compound){
 }
 
 /* ===================== WEIGHTS + PERSONALISATION ===================== */
-function exE1RM(name){ const e=lastForName(name); return e && e.e1rm ? e.e1rm : null; }
+/* Estimated max for an exercise, from the last time it was logged — nudged by
+   how that session felt, so "easy" pushes the next suggestion up and a missed
+   set pulls it back. */
+function exE1RM(name){
+  const e=lastForName(name);
+  if(!e || !e.e1rm) return null;
+  const d = e.diff && DIFF_BY[e.diff];
+  return d ? e.e1rm*d.f : e.e1rm;
+}
+/* Next target for lifts logged in reps or seconds — same idea, no load to scale. */
+function nextReps(r, diff){ const d=diff&&DIFF_BY[diff]; return Math.max(1, r+(d?d.rep:0)); }
+function nextSecs(s, diff){ const d=diff&&DIFF_BY[diff];
+  if(!d || !d.rep) return s;
+  return Math.max(5, Math.round(s*(d.rep>0?1.1:0.9)/5)*5);
+}
 function anchorMaxes(){
   const bw=parseFloat(state.bw)||0, ef=EXP_F[state.exp], out={};
   for(const a in BW_MULT){
