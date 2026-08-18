@@ -146,17 +146,27 @@ header{padding:52px 0 30px}
 .expando{border-top:1px solid rgba(0,0,0,.08);background:rgba(51,85,255,.045)}
 .howto{display:flex;gap:16px;padding:15px 18px;align-items:flex-start}
 .demo{flex-shrink:0}
-.figwrap{position:relative;width:96px;height:96px;background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.08)}
+.figwrap{position:relative;width:112px;height:112px;background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.08);overflow:hidden}
 .fig{position:absolute;inset:0;width:100%;height:100%;color:#22242b}
-.fig polyline{fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
-.fig circle{fill:currentColor}
-.fig .ld{stroke:var(--heat);stroke-width:5;stroke-linecap:round}
-.figA{animation:demoA 1.8s ease-in-out infinite}
-.figB{animation:demoB 1.8s ease-in-out infinite}
+.fig .seg{fill:currentColor;stroke:none}          /* body segments */
+.fig .seg.far{fill:#adaaa1}                       /* the limbs further from you */
+.fig .ld{fill:var(--heat);stroke:none}            /* what you're lifting */
+.fig .ld.far{opacity:.5}
+.fig .ld.bar{fill:none;stroke:var(--heat);stroke-width:3.4;stroke-linecap:round}
+.fig .ldh{fill:#fff}                              /* the sleeve through a plate */
+.fig .eq{fill:#cbc8bf;stroke:none}                /* bench, rack, bars */
+.fig .eq.bar{fill:none;stroke:#cbc8bf;stroke-width:4;stroke-linecap:round}
+.fig .eq.dim{opacity:.6}
+.fig .gr{stroke:#e0dcd3;stroke-width:2.4;stroke-linecap:round}   /* the floor */
+/* three frames: start → mid → end → mid → start */
+.figA{animation:demoA 2.2s ease-in-out infinite}
+.figM{animation:demoM 2.2s ease-in-out infinite}
+.figB{animation:demoB 2.2s ease-in-out infinite}
 .figwrap.hold .figS{animation:demoHold 2.6s ease-in-out infinite}
-@keyframes demoA{0%,44%{opacity:1}56%,100%{opacity:0}}
-@keyframes demoB{0%,44%{opacity:0}56%,100%{opacity:1}}
-@keyframes demoHold{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes demoA{0%,20%{opacity:1}27%,73%{opacity:0}80%,100%{opacity:1}}
+@keyframes demoM{0%,20%{opacity:0}27%,33%{opacity:1}40%,60%{opacity:0}66%,73%{opacity:1}80%,100%{opacity:0}}
+@keyframes demoB{0%,33%{opacity:0}40%,60%{opacity:1}66%,100%{opacity:0}}
+@keyframes demoHold{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
 .howto-txt{flex:1;min-width:0}
 .howto-h{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:9px}
 .howto-h .tg{display:block;color:#8a8577;letter-spacing:.06em;font-weight:400;margin-top:3px}
@@ -238,13 +248,13 @@ footer b{color:var(--muted)}
   .lift{gap:7px;padding-left:14px;padding-right:10px}
   .logbtn{padding:0 7px}
   .howto{gap:12px;padding:14px}
-  .figwrap{width:82px;height:82px}
+  .figwrap{width:96px;height:96px}
   .howto-steps li{font-size:13px}
 }
 @media (prefers-reduced-motion:reduce){
   .day{animation:none;opacity:1;transform:none}
   .bar i{transition:none}
   .figA,.figwrap.hold .figS{animation:none;opacity:1}
-  .figB{display:none}
+  .figB,.figM{display:none}
   *{scroll-behavior:auto}
 }

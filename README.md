@@ -40,8 +40,11 @@ your browser and your data stays on your device.
   every week draws a different selection of exercises for each day — cycling
   through the library instead of repeating the same lifts.
 - **Exercise guidance.** Tap any lift to see step-by-step form cues, the
-  muscles it targets, and a looping animated figure demonstrating the movement
-  — all drawn inline, so it works offline with no images to load.
+  muscles it targets, and a looping animated figure demonstrating the movement.
+  The figure is a proportioned body built from one skeleton — fixed bone
+  lengths, elbows and knees solved by inverse kinematics — set in its
+  equipment: the bench, the bar, the rack, the floor. All drawn inline as SVG,
+  so it works offline with no images to load.
 - **Per-set logging, set by set.** The same expanded panel records the weight and
   completed reps for *every* set. Hit **✓** on a row (or press Enter) to bank
   that set mid-workout and the panel stays open on the next one — or fill the
@@ -109,7 +112,7 @@ repo (no build command, publish directory `/`).
 | `index.html`        | Page structure and the training brief form                           |
 | `css/styles.css`    | Styling (dark theme, responsive layout)                              |
 | `js/exercises.js`   | Data: exercise library, split templates, rep schemes, progression    |
-| `js/exercise-info.js` | Per-exercise how-to cues + the inline animated movement demos      |
+| `js/exercise-info.js` | Per-exercise how-to cues + the figure engine behind the movement demos |
 | `js/scheduler.js`   | The engine: split selection, load suggestion, and week generation    |
 | `js/app.js`         | State, persistence, rendering and all UI interactions                |
 
