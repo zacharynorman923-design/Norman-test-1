@@ -24,7 +24,8 @@ progression**. Log your real sets and the weights personalise to you.
   frequency (full-body, upper/lower, PPL, and rotations), or switch to a
   muscle-group split for one body part per day.
 - **Equipment aware.** Full gym, dumbbells + bands, or bodyweight only — every
-  exercise in your plan is one you can actually do.
+  exercise in your plan is one you can actually do. The library holds ~140
+  movements across ten muscle groups, so a five-week block rarely repeats itself.
 - **Suggested weights.** Enter a recent 1RM (or bodyweight) and SPLIT estimates
   loads per lift, per rep range, per week. No numbers? Log real sets and the
   suggestions build from your logged e1RM.
