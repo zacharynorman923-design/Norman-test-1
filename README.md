@@ -16,8 +16,12 @@ your browser and your data stays on your device.
 
 - **Add a targeted block.** Keep your core weekly plan and bolt on extra work for
   a specific region — upper chest, inner back, rear delts, lower abs, forearms —
-  picked from a dropdown of 27 targets, added to the day you choose, every week
+  picked from a dropdown of 34 targets, added to the day you choose, every week
   or just this one, and removable in one click.
+- **Desk-work support blocks.** The same dropdown leads with seven targets for
+  the muscles that commonly go weak from sitting all day — lower back, posture
+  and rounded shoulders, neck and upper back, hips and hip flexors, knee support,
+  wrists and forearms, core and trunk stability.
 - **Goal-driven programming.** Strength, muscle, fat loss, endurance or general
   fitness each get their own rep ranges, rest periods, volume and conditioning
   dose — because those goals genuinely train differently.
@@ -111,10 +115,16 @@ Once a week is built, the **＋ Add a block** panel appends extra targeted work 
 one day without changing the rest of the plan — the same idea as the abs
 finisher, but aimed wherever you want.
 
-- Pick a target from the dropdown (27 of them, grouped by body part: upper /
+- Pick a target from the dropdown (34 of them, grouped by body part: upper /
   lower / inner / outer chest, lats, inner back, upper back & traps, front /
   side / rear delts, biceps peak, triceps long head, forearms & grip, quads,
   glutes, hamstrings, inner thigh, calves, upper / lower abs, obliques …).
+- The list opens with a **Desk-work support** group aimed at the weaknesses a
+  day at a desk builds up: lower back from sitting, posture & rounded shoulders,
+  neck & upper back, hips & hip flexors, knee support, wrists & forearms, and
+  core & trunk stability. These are supportive strengthening blocks, not
+  treatment — the panel says so, and pain that is severe, persistent or
+  post-injury belongs with a clinician.
 - Choose the day, and whether it applies **every week** or only the one you're
   viewing.
 - SPLIT draws up to three movements for that target from the exercise library,

@@ -387,6 +387,7 @@ const addonBuild = document.getElementById('addonBuild');
 const addonStatus= document.getElementById('addonStatus');
 
 let addonAllWeeks = true;
+addonTarget.addEventListener('change', refreshAddonNote);
 addonEvery.addEventListener('click', ()=>{
   addonAllWeeks=!addonAllWeeks;
   addonEvery.setAttribute('aria-pressed', addonAllWeeks?'true':'false');
@@ -401,6 +402,10 @@ function findExercise(name){
 function targetPool(names, equip){
   return names.map(findExercise).filter(f=>f && f.ex.eq.indexOf(equip)!==-1);
 }
+const addonNote = document.getElementById('addonNote');
+function isDeskTarget(label){ const t=findTarget(label); return !!(t && t.desk); }
+function refreshAddonNote(){ addonNote.classList.toggle('hidden', !isDeskTarget(addonTarget.value)); }
+
 function findTarget(label){
   for(const cat in MUSCLE_TARGETS){
     const t=MUSCLE_TARGETS[cat].filter(x=>x.label===label)[0];
@@ -429,6 +434,7 @@ function refreshAddonUI(){
   }
   addonTarget.innerHTML=html;
   if(prevTarget && addonTarget.querySelector(`option[value="${prevTarget}"]`)) addonTarget.value=prevTarget;
+  refreshAddonNote();
 }
 
 function addBlock(label, di, everyWeek){

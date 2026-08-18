@@ -217,6 +217,15 @@ const restNotes=['Rest — sleep & eat','Active recovery — walk','Full rest da
    library movements that hit it best. Pools are filtered by the user's
    equipment at render time, so a target only appears if it's trainable. */
 const MUSCLE_TARGETS = {
+  'Desk-work support':[
+    {label:'Lower back (from sitting)', desk:1, names:['Glute Bridge','Hip Thrust','Superman Hold','Hyperextension','Dead Bug','Cable Pull-Through','Plank','Romanian Deadlift']},
+    {label:'Posture & rounded shoulders', desk:1, names:['Face Pull','Rear Delt Fly','Prone Y-Raise','Chest-Supported Row','Inverted Row','Seated Cable Row']},
+    {label:'Neck & upper back', desk:1, names:['Face Pull','Prone Y-Raise','Superman Hold','Chest-Supported Row','Upright Row']},
+    {label:'Hips & hip flexors', desk:1, names:['Reverse Lunge','Bulgarian Split Squat','Walking Lunge','Step-Up','Glute Bridge','Frog Pump','Single-Leg Hip Thrust']},
+    {label:'Knee support', desk:1, names:['Step-Up','Reverse Lunge','Leg Extension','Wall Sit','Sissy Squat','Single-Leg Calf Raise','Tibialis Raise','Glute Bridge']},
+    {label:'Wrists & forearms', desk:1, names:['Hammer Curl','Zottman Curl','Towel Curl','Farmer Carry','Renegade Row']},
+    {label:'Core & trunk stability', desk:1, names:['Plank','Side Plank','Dead Bug','Pallof Press','Hollow Body Hold','Farmer Carry']},
+  ],
   Chest:[
     {label:'Upper chest', names:['Incline Barbell Bench Press','Incline Dumbbell Press','Incline Dumbbell Fly','Decline Push-Up']},
     {label:'Lower chest', names:['Decline Barbell Bench Press','Dips','Incline Push-Up','Cable Crossover']},
