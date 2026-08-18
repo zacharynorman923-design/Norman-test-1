@@ -110,7 +110,7 @@ function bestE1RM(entry){
 }
 function logMode(l){
   if(l.w) return 'weight';                                   // external load
-  if(typeof PATTERN!=='undefined' && PATTERN[l.name]==='hold') return 'time'; // isometric hold
+  if(typeof isTimedExercise==='function' && isTimedExercise(l.name)) return 'time'; // holds and carries
   return 'reps';                                             // bodyweight reps
 }
 function loggedText(l, entry){
