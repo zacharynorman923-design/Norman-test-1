@@ -391,7 +391,7 @@ addonEvery.addEventListener('click', ()=>{
   addonAllWeeks=!addonAllWeeks;
   addonEvery.setAttribute('aria-pressed', addonAllWeeks?'true':'false');
 });
-function addonSetStatus(msg,kind){ addonStatus.textContent=msg||''; addonStatus.className='ai-status'+(kind?' '+kind:''); }
+function addonSetStatus(msg,kind){ addonStatus.textContent=msg||''; addonStatus.className='addon-status'+(kind?' '+kind:''); }
 
 function findExercise(name){
   for(const g in EX){ const hit=EX[g].filter(x=>x.n===name)[0]; if(hit) return {ex:hit, group:g}; }
@@ -473,6 +473,9 @@ addonBuild.addEventListener('click', ()=>{
   saveSession(); EDIT=null; renderProgram(false);
   addonSetStatus(`Added “${label}” — ${n} move${n>1?'s':''} on ${day.label}${addonAllWeeks?', every week':' (this week only)'}. Remove it with the ✕ on the block.`,'ok');
 });
+
+/* The AI coach was removed — clear any API key it left in this browser. */
+try{ localStorage.removeItem('split_anthropic_key_v1'); localStorage.removeItem('split_anthropic_model_v1'); }catch(e){}
 
 /* On load: restore logs, then the last session (brief + program + week). */
 loadStore();
