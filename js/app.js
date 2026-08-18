@@ -373,6 +373,107 @@ document.getElementById('build').addEventListener('click',()=>{
   requestAnimationFrame(()=>document.getElementById('program').scrollIntoView({behavior:'smooth',block:'start'}));
 });
 
+/* ===================== ADD A BLOCK =====================
+   Appends a short extra block to one training day, targeting a specific muscle
+   region picked from a dropdown. Draws from the same exercise library, so the
+   added moves keep their how-to cues, demo, suggested loads and per-set
+   logging. Works offline — no API key involved. */
+
+const addonSec   = document.getElementById('addon');
+const addonTarget= document.getElementById('addonTarget');
+const addonDay   = document.getElementById('addonDay');
+const addonEvery = document.getElementById('addonEvery');
+const addonBuild = document.getElementById('addonBuild');
+const addonStatus= document.getElementById('addonStatus');
+
+let addonAllWeeks = true;
+addonEvery.addEventListener('click', ()=>{
+  addonAllWeeks=!addonAllWeeks;
+  addonEvery.setAttribute('aria-pressed', addonAllWeeks?'true':'false');
+});
+function addonSetStatus(msg,kind){ addonStatus.textContent=msg||''; addonStatus.className='ai-status'+(kind?' '+kind:''); }
+
+function findExercise(name){
+  for(const g in EX){ const hit=EX[g].filter(x=>x.n===name)[0]; if(hit) return {ex:hit, group:g}; }
+  return null;
+}
+/* Movements for a target that the user's equipment can actually do. */
+function targetPool(names, equip){
+  return names.map(findExercise).filter(f=>f && f.ex.eq.indexOf(equip)!==-1);
+}
+function findTarget(label){
+  for(const cat in MUSCLE_TARGETS){
+    const t=MUSCLE_TARGETS[cat].filter(x=>x.label===label)[0];
+    if(t) return t;
+  }
+  return null;
+}
+
+/* Populate both dropdowns; only show targets trainable with this equipment. */
+function refreshAddonUI(){
+  if(!PROGRAM){ addonSec.classList.add('hidden'); return; }
+  addonSec.classList.remove('hidden');
+
+  const prevDay=addonDay.value;
+  addonDay.innerHTML = curWeekdays()
+    .map((d,di)=> d.rest ? '' : `<option value="${di}">${d.label} · ${d.type}</option>`).join('');
+  if(prevDay && addonDay.querySelector(`option[value="${prevDay}"]`)) addonDay.value=prevDay;
+
+  const prevTarget=addonTarget.value;
+  let html='';
+  for(const cat in MUSCLE_TARGETS){
+    const opts=MUSCLE_TARGETS[cat]
+      .filter(t=>targetPool(t.names, PROGRAM.equip).length)
+      .map(t=>`<option value="${t.label}">${t.label}</option>`).join('');
+    if(opts) html+=`<optgroup label="${cat}">${opts}</optgroup>`;
+  }
+  addonTarget.innerHTML=html;
+  if(prevTarget && addonTarget.querySelector(`option[value="${prevTarget}"]`)) addonTarget.value=prevTarget;
+}
+
+function addBlock(label, di, everyWeek){
+  const target=findTarget(label); if(!target) return 0;
+  const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
+
+  const targets=[];
+  if(PROGRAM.weeks){
+    if(everyWeek){ for(const w in PROGRAM.weeks) targets.push(PROGRAM.weeks[w]); }
+    else targets.push(PROGRAM.weeks[WEEK] || PROGRAM.weekdays);
+  } else targets.push(PROGRAM.weekdays);
+
+  let added=0;
+  targets.forEach(days=>{
+    const day=days[di]; if(!day || day.rest) return;
+    day.lifts = day.lifts.filter(l=>l.addon!==label);           // replace a block of the same target
+    const already = new Set(day.lifts.map(l=>l.name));          // don't repeat what the day already programs
+    let pool = targetPool(target.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
+    if(!pool.length) pool = targetPool(target.names, PROGRAM.equip);
+    shuffle(pool).slice(0,3).forEach(f=>{
+      const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
+      if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+      else l.base.tag='added';
+      l.addon=label;
+      day.lifts.push(l); added++;
+    });
+    day.inten=dayIntensity(day.lifts, PROGRAM.goal);
+  });
+  return added ? Math.min(3, added) : 0;
+}
+
+addonBuild.addEventListener('click', ()=>{
+  if(!PROGRAM){ addonSetStatus('Build your week first.','err'); return; }
+  const label=addonTarget.value;
+  const di=parseInt(addonDay.value,10);
+  const day=curWeekdays()[di];
+  if(!label){ addonSetStatus('Pick a muscle to target.','err'); return; }
+  if(!day || day.rest){ addonSetStatus('Pick a training day.','err'); return; }
+
+  const n=addBlock(label, di, addonAllWeeks);
+  if(!n){ addonSetStatus('No movements available for that target with your equipment.','err'); return; }
+  saveSession(); EDIT=null; renderProgram(false);
+  addonSetStatus(`Added “${label}” — ${n} move${n>1?'s':''} on ${day.label}${addonAllWeeks?', every week':' (this week only)'}. Remove it with the ✕ on the block.`,'ok');
+});
+
 /* On load: restore logs, then the last session (brief + program + week). */
 loadStore();
 (function restore(){
