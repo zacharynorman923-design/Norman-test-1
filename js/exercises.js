@@ -151,25 +151,28 @@ const EX = {
   ],
 };
 
-/* ===================== SPLIT TEMPLATES ===================== */
+/* ===================== SPLIT TEMPLATES =====================
+   No template programs the `core` group. Abs work belongs to the abs finisher
+   (and to any core block added by hand), so it never doubles up inside the
+   day's main work. */
 const TEMPLATES = {
   'Push':['chest','shoulders','triceps','chest','shoulders','triceps'],
-  'Pull':['back','back','biceps','back','biceps','core'],
-  'Legs':['quads','posterior','quads','calves','core','posterior'],
+  'Pull':['back','back','biceps','back','biceps','back'],
+  'Legs':['quads','posterior','quads','calves','quads','posterior'],
   'Upper Body':['chest','back','shoulders','biceps','triceps','chest'],
-  'Lower Body':['quads','posterior','quads','posterior','calves','core'],
-  'Full Body':['quads','chest','back','shoulders','posterior','core'],
-  'Conditioning':['cardio','cardio','core','cardio'],
-  'Chest':['chest','chest','chest','chest','core'],
-  'Back':['back','back','back','back','core'],
-  'Shoulders':['shoulders','shoulders','shoulders','shoulders','core'],
+  'Lower Body':['quads','posterior','quads','posterior','calves','quads'],
+  'Full Body':['quads','chest','back','shoulders','posterior','biceps'],
+  'Conditioning':['cardio','cardio','cardio','cardio'],
+  'Chest':['chest','chest','chest','chest','triceps'],
+  'Back':['back','back','back','back','biceps'],
+  'Shoulders':['shoulders','shoulders','shoulders','shoulders','triceps'],
   'Arms':['biceps','triceps','biceps','triceps','biceps','triceps'],
   'Chest & Back':['chest','back','chest','back','chest','back'],
-  'Legs & Shoulders':['quads','shoulders','posterior','shoulders','calves','core'],
-  'Chest & Triceps':['chest','chest','triceps','chest','triceps','core'],
-  'Back & Biceps':['back','back','biceps','back','biceps','core'],
-  'Shoulders & Arms':['shoulders','shoulders','biceps','triceps','shoulders','core'],
-  'Chest & Arms':['chest','chest','triceps','biceps','triceps','core'],
+  'Legs & Shoulders':['quads','shoulders','posterior','shoulders','calves','quads'],
+  'Chest & Triceps':['chest','chest','triceps','chest','triceps','chest'],
+  'Back & Biceps':['back','back','biceps','back','biceps','back'],
+  'Shoulders & Arms':['shoulders','shoulders','biceps','triceps','shoulders','triceps'],
+  'Chest & Arms':['chest','chest','triceps','biceps','triceps','biceps'],
 };
 const WEEKDAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DAY_SLOTS = {2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,4,5],6:[0,1,2,3,4,5]};

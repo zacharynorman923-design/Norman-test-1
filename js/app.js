@@ -483,6 +483,37 @@ addonBuild.addEventListener('click', ()=>{
 /* The AI coach was removed — clear any API key it left in this browser. */
 try{ localStorage.removeItem('split_anthropic_key_v1'); localStorage.removeItem('split_anthropic_model_v1'); }catch(e){}
 
+/* Abs work now lives only in the finisher (and in blocks you add yourself), so
+   a week saved before that change still has core exercises sitting in its main
+   list. Drop them and slide the logs of everything below them up a slot, rather
+   than making you regenerate and lose the week you've been training. */
+function stripCoreFromMain(program){
+  if(!program) return false;
+  const weeks = program.weeks ? Object.keys(program.weeks) : [];
+  const map = {}; let changed = false;
+  const strip = (week, w)=>{
+    if(!Array.isArray(week)) return;
+    week.forEach((day,di)=>{
+      if(!day || day.rest || !Array.isArray(day.lifts)) return;
+      const keep=[];
+      day.lifts.forEach((l,li)=>{
+        if(l && l.group==='core' && !l.finisher && !l.addon){ changed=true; return; }
+        if(keep.length!==li) map[`${w}:${di}:${li}:${l.name}`] = `${w}:${di}:${keep.length}:${l.name}`;
+        keep.push(l);
+      });
+      day.lifts=keep;
+      if(typeof dayIntensity==='function') day.inten = dayIntensity(keep, program.goal);
+    });
+  };
+  weeks.forEach(w=>strip(program.weeks[w], w));
+  if(!weeks.length) strip(program.weekdays, 1);
+  if(!changed) return false;
+  const out={}; for(const k in LOG.sets) out[map[k]||k]=LOG.sets[k];
+  LOG.sets=out;
+  if(program.weeks && program.weeks[1]) program.weekdays = program.weeks[1];
+  return true;
+}
+
 /* On load: restore logs, then the last session (brief + program + week). */
 loadStore();
 (function restore(){
@@ -491,5 +522,9 @@ loadStore();
   Object.assign(state, sess.state);
   if(!state.max) state.max = {bench:'',squat:'',deadlift:'',press:'',row:''};
   syncBriefUI();
-  if(sess.program){ PROGRAM = sess.program; WEEK = sess.week || 1; renderProgram(false); }
+  if(sess.program){
+    PROGRAM = sess.program; WEEK = sess.week || 1;
+    if(stripCoreFromMain(PROGRAM)){ saveSession(); saveStore(); }
+    renderProgram(false);
+  }
 })();

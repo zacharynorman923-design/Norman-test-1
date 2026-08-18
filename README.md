@@ -48,6 +48,8 @@ your browser and your data stays on your device.
 - **Swap and regenerate.** Swap any exercise for another in the same group, or
   regenerate the whole week.
 - **Abs finisher.** Optionally append a 2-move core block to every training day.
+  This is the only place ab work is programmed — no training day mixes it into
+  its main list — so core volume is a single deliberate switch.
 
 ## Running it
 

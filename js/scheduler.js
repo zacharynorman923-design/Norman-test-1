@@ -86,7 +86,7 @@ function liftBase(ex,group,goal){
 }
 function mkLift(ex,group,goal,finisher){ return {name:ex.n,group,compound:ex.c,w:ex.w,base:liftBase(ex,group,goal),finisher:!!finisher}; }
 function pickLifts(dayType,count,queues,goal){
-  const template=TEMPLATES[dayType]||['core'];
+  const template=TEMPLATES[dayType]||['chest','back','quads','shoulders'];
   const lifts=[],used=new Set();
   let i=0, misses=0, maxMiss=template.length*4;
   while(lifts.length<count && misses<maxMiss){
