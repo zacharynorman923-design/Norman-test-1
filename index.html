@@ -27,29 +27,6 @@
     <p class="tagline">Tell it what you're training for. Get a <b>full week</b> — split, loaded, logged, and progressed to match.</p>
   </header>
 
-  <section class="brief ai-card" aria-label="Describe your training in words">
-    <div class="brief-head"><h2>✨ Describe it</h2><span class="step">AI · optional</span></div>
-    <div class="field" style="border-top:none;padding-top:8px">
-      <label class="flabel">Tell the coach, in your own words</label>
-      <div class="sub2">e.g. “34, been lifting a couple years, 4 days a week at home with dumbbells, want to build muscle and lose a bit of fat, 45-minute sessions.” Claude fills in the brief below, then builds your week.</div>
-      <textarea id="aiText" class="ai-text" rows="3" placeholder="Describe your goal, schedule, equipment, experience…"></textarea>
-    </div>
-    <div class="field">
-      <label class="flabel">Anthropic API key <span class="opt">— stored only in this browser</span></label>
-      <div class="sub2">Bring your own key from <b>console.anthropic.com</b>. It's saved on this device only and sent straight to Anthropic — never to any SPLIT server. Each build costs a few cents.</div>
-      <div class="ai-key-row">
-        <input id="aiKey" class="ai-key-input" type="password" inputmode="text" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-        <select id="aiModel" class="ai-model" aria-label="Claude model">
-          <option value="claude-opus-5">Opus 5 · best</option>
-          <option value="claude-sonnet-5">Sonnet 5 · balanced</option>
-          <option value="claude-haiku-4-5">Haiku 4.5 · cheapest</option>
-        </select>
-      </div>
-    </div>
-    <button class="build ai-build" id="aiBuild">✨ Build with AI <span class="arrow">→</span></button>
-    <div id="aiStatus" class="ai-status" role="status" aria-live="polite"></div>
-  </section>
-
   <section class="brief" aria-label="Your training brief">
     <div class="brief-head"><h2>Your brief</h2><span class="step">08 inputs</span></div>
 
@@ -147,17 +124,17 @@
     <div class="field" style="border-top:none;padding-top:8px">
       <label class="flabel">Target a specific muscle</label>
       <div class="sub2">Your weekly plan stays as it is — this appends a short extra block to one day, like the abs finisher. Pick what you want to hit and SPLIT adds movements for it, complete with how-to, suggested weights and per-set logging.</div>
-      <select id="addonTarget" class="ai-model addon-target" aria-label="Muscle to target"></select>
+      <select id="addonTarget" class="select addon-target" aria-label="Muscle to target"></select>
     </div>
     <div class="field">
       <label class="flabel">Add it to</label>
       <div class="addon-row">
-        <select id="addonDay" class="ai-model addon-day" aria-label="Training day"></select>
+        <select id="addonDay" class="select addon-day" aria-label="Training day"></select>
         <button id="addonEvery" class="chip" type="button" aria-pressed="true">Every week<small>keep it in the plan</small></button>
       </div>
     </div>
     <button class="build" id="addonBuild">＋ Add the block <span class="arrow">→</span></button>
-    <div id="addonStatus" class="ai-status" role="status" aria-live="polite"></div>
+    <div id="addonStatus" class="addon-status" role="status" aria-live="polite"></div>
   </section>
 
   <footer>
@@ -170,7 +147,6 @@
 <script src="js/exercise-info.js"></script>
 <script src="js/scheduler.js"></script>
 <script src="js/app.js"></script>
-<script src="js/ai.js"></script>
 <script>
   /* Register the service worker so the app installs and runs offline. */
   if ('serviceWorker' in navigator) {
