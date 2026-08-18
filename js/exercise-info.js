@@ -2,8 +2,8 @@
    HOWTO      : exercise name -> ordered step cues (how to perform it)
    GROUP_TARGET: muscle group -> the muscles it works (shown as "Targets")
    PATTERN    : exercise name -> movement-pattern key (drives the animated demo)
-   POSES      : pattern key  -> two stick-figure poses that cross-fade into a
-                looping motion demo (or one pose for a static hold)
+   MOVES      : pattern key  -> two poses of an articulated figure, cross-faded
+                through an interpolated mid-frame into a looping motion demo
    All self-contained — no images, no network — so it works offline.          */
 
 const GROUP_TARGET = {
@@ -172,13 +172,13 @@ const HOWTO = {
 
 /* Which movement each exercise looks like (drives the animation). */
 const PATTERN = {
-  'Barbell Bench Press':'pressh','Incline Dumbbell Press':'pressh','Dumbbell Bench Press':'pressh','Push-Up':'pressh','Dumbbell Fly':'pressh','Chest Fly Machine':'pressh','Dips':'pressh','Decline Push-Up':'pressh',
+  'Barbell Bench Press':'pressh','Incline Dumbbell Press':'pressh','Dumbbell Bench Press':'pressh','Push-Up':'pushup','Dumbbell Fly':'pressh','Chest Fly Machine':'pressh','Dips':'dip','Decline Push-Up':'pushup',
   'Deadlift':'hinge','Barbell Row':'pullh','Pull-Up':'pullv','Lat Pulldown':'pullv','One-Arm Dumbbell Row':'pullh','Inverted Row':'pullh','Seated Cable Row':'pullh','Superman Hold':'hold',
   'Overhead Press':'pressv','Dumbbell Shoulder Press':'pressv','Pike Push-Up':'pressv','Lateral Raise':'raise','Face Pull':'pullh','Handstand Hold':'hold',
   'Barbell Curl':'curl','Dumbbell Curl':'curl','Hammer Curl':'curl','Chin-Up':'pullv','Underhand Inverted Row':'pullh',
-  'Close-Grip Bench Press':'pressh','Triceps Pushdown':'ext','Overhead DB Extension':'ext','Bench Dip':'pressh','Diamond Push-Up':'pressh',
-  'Back Squat':'squat','Goblet Squat':'squat','Leg Press':'squat','Walking Lunge':'squat','Bulgarian Split Squat':'squat','Bodyweight Squat':'squat','Jump Squat':'squat',
-  'Romanian Deadlift':'hinge','Hip Thrust':'hinge','Lying Leg Curl':'hinge','Single-Leg RDL':'hinge','Glute Bridge':'hinge','Nordic Curl':'hinge',
+  'Close-Grip Bench Press':'pressh','Triceps Pushdown':'ext','Overhead DB Extension':'ext','Bench Dip':'dip','Diamond Push-Up':'pushup',
+  'Back Squat':'squat','Goblet Squat':'squat','Leg Press':'squat','Walking Lunge':'lunge','Bulgarian Split Squat':'lunge','Bodyweight Squat':'squat','Jump Squat':'squat',
+  'Romanian Deadlift':'hinge','Hip Thrust':'bridge','Lying Leg Curl':'hinge','Single-Leg RDL':'hinge','Glute Bridge':'bridge','Nordic Curl':'hinge',
   'Standing Calf Raise':'calf','Single-Leg Calf Raise':'calf',
   'Plank':'hold','Hanging Leg Raise':'core','Cable Crunch':'core','Dead Bug':'core','Russian Twist':'core','Ab Wheel Rollout':'core',
   'Rowing Intervals':'cardio','Assault Bike Sprints':'cardio','Incline Treadmill Walk':'cardio','Kettlebell Swings':'hinge','Dumbbell Thrusters':'squat','Burpees':'cardio','Jump Rope':'cardio','High Knees':'cardio','Shuttle Runs':'cardio',
@@ -188,9 +188,9 @@ const PATTERN = {
   'Machine Chest Press':'pressh',
   'Cable Crossover':'pressh',
   'Incline Dumbbell Fly':'pressh',
-  'Wide-Grip Push-Up':'pressh',
-  'Archer Push-Up':'pressh',
-  'Incline Push-Up':'pressh',
+  'Wide-Grip Push-Up':'pushup',
+  'Archer Push-Up':'pushup',
+  'Incline Push-Up':'pushup',
   'Pendlay Row':'pullh',
   'T-Bar Row':'pullh',
   'Chest-Supported Row':'pullh',
@@ -224,8 +224,8 @@ const PATTERN = {
   'Pause Squat':'squat',
   'Hack Squat':'squat',
   'Leg Extension':'squat',
-  'Step-Up':'squat',
-  'Reverse Lunge':'squat',
+  'Step-Up':'lunge',
+  'Reverse Lunge':'lunge',
   'Sissy Squat':'squat',
   'Wall Sit':'hold',
   'Sumo Deadlift':'hinge',
@@ -233,8 +233,8 @@ const PATTERN = {
   'Seated Leg Curl':'hinge',
   'Cable Pull-Through':'hinge',
   'Hyperextension':'hinge',
-  'Single-Leg Hip Thrust':'hinge',
-  'Frog Pump':'hinge',
+  'Single-Leg Hip Thrust':'bridge',
+  'Frog Pump':'bridge',
   'Seated Calf Raise':'calf',
   'Leg Press Calf Raise':'calf',
   'Donkey Calf Raise':'calf',
@@ -262,65 +262,230 @@ const PATTERN = {
 };
 const GROUP_PATTERN = {chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
 
-/* Two poses per pattern (side view, facing right). body = shoulder→hip→knee→
-   ankle→toe; arms = shoulder→elbow→hand; loads = a barbell/weight line. */
-const POSES = {
-  squat:{
-    a:{head:[52,17],body:[[50,30],[50,56],[50,78],[50,93],[60,93]],arms:[[[50,31],[58,39],[66,47]]]},
-    b:{head:[45,26],body:[[44,37],[53,58],[41,73],[50,91],[61,91]],arms:[[[44,38],[56,45],[67,47]]]},
-  },
-  hinge:{
-    a:{head:[52,17],body:[[50,30],[50,56],[50,78],[50,93],[60,93]],arms:[[[50,31],[50,45],[50,59]]],loads:[[[43,59],[57,59]]]},
-    b:{head:[70,42],body:[[62,44],[50,55],[49,77],[49,93],[59,93]],arms:[[[62,46],[61,60],[60,72]]],loads:[[[53,72],[67,72]]]},
-  },
-  pressh:{
-    a:{head:[50,17],body:[[50,30],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[41,38],[51,45]]],loads:[[[46,46],[46,44]]]},
-    b:{head:[50,17],body:[[50,30],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[63,36],[76,39]]],loads:[[[76,37],[76,41]]]},
-  },
-  pressv:{
-    a:{head:[50,18],body:[[50,31],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[42,40],[51,46]]],loads:[[[44,46],[58,46]]]},
-    b:{head:[50,18],body:[[50,31],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[52,18],[52,7]]],loads:[[[44,7],[60,7]]]},
-  },
-  pullv:{
-    a:{head:[50,28],body:[[50,40],[50,63],[50,82],[50,96]],arms:[[[50,40],[50,24],[50,11]]],loads:[[[38,10],[62,10]]]},
-    b:{head:[50,21],body:[[50,33],[50,56],[50,75],[50,89]],arms:[[[50,33],[41,20],[50,11]]],loads:[[[38,10],[62,10]]]},
-  },
-  pullh:{
-    a:{head:[68,40],body:[[60,42],[50,54],[49,76],[49,92],[59,92]],arms:[[[60,44],[60,58],[60,71]]],loads:[[[53,71],[67,71]]]},
-    b:{head:[68,40],body:[[60,42],[50,54],[49,76],[49,92],[59,92]],arms:[[[60,44],[66,52],[59,61]]],loads:[[[52,61],[66,61]]]},
-  },
-  curl:{
-    a:{head:[52,17],body:[[50,30],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[50,46],[50,60]]],loads:[[[43,60],[57,60]]]},
-    b:{head:[52,17],body:[[50,30],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[50,46],[41,36]]],loads:[[[34,34],[48,38]]]},
-  },
-  ext:{
-    a:{head:[50,18],body:[[50,31],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[52,20],[43,25]]],loads:[[[38,24],[48,27]]]},
-    b:{head:[50,18],body:[[50,31],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[52,20],[54,7]]],loads:[[[47,6],[61,8]]]},
-  },
-  raise:{
-    a:{head:[52,17],body:[[50,30],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[50,45],[50,58]]],loads:[[[44,58],[56,58]]]},
-    b:{head:[52,17],body:[[50,30],[50,57],[50,79],[50,93],[60,93]],arms:[[[50,32],[63,32],[75,32]]],loads:[[[75,29],[75,35]]]},
-  },
-  calf:{
-    a:{head:[52,18],body:[[50,31],[50,56],[50,78],[50,92],[61,92]],arms:[[[50,32],[50,46],[50,60]]]},
-    b:{head:[52,13],body:[[50,26],[50,51],[50,73],[50,86],[61,90]],arms:[[[50,27],[50,41],[50,55]]]},
-  },
-  core:{
-    a:{head:[24,72],body:[[32,74],[56,80],[68,66],[70,82]],arms:[[[32,74],[26,82]]]},
-    b:{head:[34,60],body:[[40,64],[57,80],[68,66],[70,82]],arms:[[[40,64],[36,74]]]},
-  },
-  hold:{
-    static:true,
-    a:{head:[22,58],body:[[30,60],[54,69],[74,79],[84,81]],arms:[[[30,60],[30,80]]]},
-  },
-  carry:{
-    a:{head:[52,16],body:[[50,29],[50,54],[44,72],[40,88],[48,90]],arms:[[[50,31],[50,45],[50,59]]],loads:[[[43,61],[57,61]]]},
-    b:{head:[52,16],body:[[50,29],[50,54],[56,72],[60,88],[68,90]],arms:[[[50,31],[50,45],[50,59]]],loads:[[[43,61],[57,61]]]},
-  },
-  cardio:{
-    a:{head:[52,16],body:[[50,28],[50,52],[43,70],[38,86],[46,88]],arms:[[[50,31],[42,38],[37,48]]]},
-    b:{head:[52,16],body:[[50,28],[50,52],[57,70],[62,86],[70,88]],arms:[[[50,31],[58,38],[63,48]]]},
-  },
+/* ===================== MOVEMENT DEMOS =====================
+   The figure is built from one skeleton with fixed bone lengths, so it keeps
+   human proportions in every frame. A pose says where the hips, hands and feet
+   are and how the torso leans; elbows and knees are solved from that (two-bone
+   IK), which is what makes the joints bend the way a body does and keeps the
+   hands on the bar. Frames cross-fade a → mid → b → mid → a, with the mid frame
+   interpolated, so the motion reads as movement rather than a jump cut.
+   Coordinates run 0–100 with y downward; the floor is at 97.               */
+const BONE = {spine:26, neck:6, head:8, uarm:14, farm:13, hand:3, thigh:20, shin:19, foot:7.5};
+const WID  = {sh:8.6, waist:6.2, uarm:[3.9,3.1], farm:[3.1,2.4], thigh:[5.4,4.1], shin:[4.1,2.7]};
+const FLOOR = 97;
+
+function at(p,deg,len){ const r=deg*Math.PI/180; return [p[0]+Math.cos(r)*len, p[1]+Math.sin(r)*len]; }
+function n1(v){ return Math.round(v*10)/10; }
+/* Two-bone IK. Returns the mid joint and the reachable end point, so an
+   over-extended pose keeps the hand attached to the arm. */
+function ik(root, target, l1, l2, bend){
+  let dx=target[0]-root[0], dy=target[1]-root[1];
+  let d=Math.hypot(dx,dy) || 0.001;
+  const max=l1+l2-0.02, min=Math.abs(l1-l2)+0.02;
+  if(d>max){ const k=max/d; dx*=k; dy*=k; d=max; }
+  if(d<min){ const k=min/d; dx*=k; dy*=k; d=min; }
+  const end=[root[0]+dx, root[1]+dy];
+  const a=(d*d + l1*l1 - l2*l2)/(2*d);
+  const h=Math.sqrt(Math.max(0, l1*l1 - a*a));
+  const ux=dx/d, uy=dy/d;
+  return { j:[root[0]+ux*a - uy*h*bend, root[1]+uy*a + ux*h*bend], end };
+}
+/* A limb segment: a quad that tapers from wa to wb, capped with round joints. */
+function limb(a,b,wa,wb,cls){
+  const dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy)||1;
+  const nx=-dy/L, ny=dx/L;
+  const p=(pt,w,s)=>`${n1(pt[0]+nx*w*s)},${n1(pt[1]+ny*w*s)}`;
+  return `<path class="${cls}" d="M${p(a,wa,1)} L${p(b,wb,1)} L${p(b,wb,-1)} L${p(a,wa,-1)} Z"/>`
+       + `<circle class="${cls}" cx="${n1(a[0])}" cy="${n1(a[1])}" r="${wa}"/>`
+       + `<circle class="${cls}" cx="${n1(b[0])}" cy="${n1(b[1])}" r="${wb}"/>`;
+}
+/* Solve one frame into joint positions. */
+function build(f){
+  const hip=f.hip, torso=f.torso;
+  const sh=at(hip,torso,BONE.spine);
+  const hAng=(f.head!=null?f.head:torso);
+  const nk=at(sh,hAng,BONE.neck);
+  const hd=at(nk,hAng,BONE.head*0.95);
+  const o2=at([0,0], torso-90, 2.3);                      // far side sits behind
+  const off=f.flat ? [0,0] : o2;
+  const hands=f.hands || [f.hand,f.hand];
+  const feet =f.feet  || [f.foot,f.foot];
+  const eb=f.elbows || [f.elbow!=null?f.elbow:1, f.elbow!=null?f.elbow:1];
+  const kn=f.knees  || [f.knee!=null?f.knee:1, f.knee!=null?f.knee:1];
+  const arms=hands.map((h,i)=>{
+    const o = i===0 ? off : [0,0];
+    const root=[sh[0]+o[0], sh[1]+o[1]], tgt=[h[0]+o[0], h[1]+o[1]];
+    const r=ik(root,tgt,BONE.uarm,BONE.farm,eb[i]);
+    return {sh:root, el:r.j, wr:r.end};
+  });
+  const legs=feet.map((ft,i)=>{
+    const o = i===0 ? off : [0,0];
+    const root=[hip[0]+o[0], hip[1]+o[1]], tgt=[ft[0]+o[0], ft[1]+o[1]];
+    const r=ik(root,tgt,BONE.thigh,BONE.shin,kn[i]);
+    const tw=(f.toes && f.toes[i]!=null) ? f.toes[i] : (f.toe!=null?f.toe:0);
+    return {hip:root, kn:r.j, an:r.end, toe:at(r.end, tw, BONE.foot)};
+  });
+  return {hip,sh,nk,hd,hAng,torso,arms,legs};
+}
+/* Equipment held in the hands, drawn from the solved skeleton. */
+function grip(kind, s){
+  if(!kind || kind==='none') return '';
+  const hands = s.arms.map(a=>a.wr);
+  if(kind==='plate'){                                     // a barbell seen end-on
+    const h=hands[1];
+    return `<circle class="ld" cx="${n1(h[0])}" cy="${n1(h[1])}" r="8.5"/>`
+         + `<circle class="ldh" cx="${n1(h[0])}" cy="${n1(h[1])}" r="3"/>`;
+  }
+  if(kind==='plateshoulder'){                             // bar racked on the back
+    const p=at(s.sh, s.torso+90, 5.5);
+    return `<circle class="ld" cx="${n1(p[0])}" cy="${n1(p[1])}" r="8.5"/>`
+         + `<circle class="ldh" cx="${n1(p[0])}" cy="${n1(p[1])}" r="3"/>`;
+  }
+  if(kind==='db'){                                        // a dumbbell in each hand
+    return hands.map((h,i)=>`<g class="${i?'ld':'ld far'}">
+      <rect x="${n1(h[0]-3.6)}" y="${n1(h[1]-5.6)}" width="7.2" height="11.2" rx="2.6"/></g>`).join('');
+  }
+  if(kind==='bar'){                                       // a bar across both hands
+    const a=hands[0], b=hands[1];
+    return `<line class="ld bar" x1="${n1(a[0]-7)}" y1="${n1(a[1])}" x2="${n1(b[0]+7)}" y2="${n1(b[1])}"/>`
+         + `<rect class="ld" x="${n1(a[0]-9)}" y="${n1(a[1]-6)}" width="4" height="12" rx="1.6"/>`
+         + `<rect class="ld" x="${n1(b[0]+5)}" y="${n1(b[1]-6)}" width="4" height="12" rx="1.6"/>`;
+  }
+  if(kind==='kb'){                                        // kettlebell
+    const h=hands[1];
+    return `<path class="ld" d="M${n1(h[0]-3.5)},${n1(h[1])} a3.5,3.5 0 0 1 7,0"/>`
+         + `<circle class="ld" cx="${n1(h[0])}" cy="${n1(h[1]+7)}" r="6"/>`;
+  }
+  return '';
+}
+function figure(f, spec, cls){
+  const s=build(f);
+  const far=(x)=>x, N='seg', F='seg far';
+  let g='';
+  g += spec.back || '';
+  if(spec.gripBehind) g += grip(spec.grip, s);
+  // far side first, then the trunk, then the near side — reads as depth
+  g += limb(s.legs[0].hip, s.legs[0].kn, WID.thigh[0], WID.thigh[1], F)
+     + limb(s.legs[0].kn, s.legs[0].an, WID.shin[0], WID.shin[1], F)
+     + limb(s.legs[0].an, s.legs[0].toe, 3.1, 2.2, F);
+  g += limb(s.arms[0].sh, s.arms[0].el, WID.uarm[0], WID.uarm[1], F)
+     + limb(s.arms[0].el, s.arms[0].wr, WID.farm[0], WID.farm[1], F);
+  g += limb(s.hip, s.sh, WID.waist, WID.sh, N);            // trunk
+  g += limb(s.sh, s.nk, 4.2, 3.4, N);                      // neck
+  g += `<ellipse class="seg" cx="${n1(s.hd[0])}" cy="${n1(s.hd[1])}" rx="6.1" ry="6.9"
+         transform="rotate(${n1(s.hAng+90)} ${n1(s.hd[0])} ${n1(s.hd[1])})"/>`;
+  g += limb(s.legs[1].hip, s.legs[1].kn, WID.thigh[0], WID.thigh[1], N)
+     + limb(s.legs[1].kn, s.legs[1].an, WID.shin[0], WID.shin[1], N)
+     + limb(s.legs[1].an, s.legs[1].toe, 3.2, 2.3, N);
+  g += limb(s.arms[1].sh, s.arms[1].el, WID.uarm[0], WID.uarm[1], N)
+     + limb(s.arms[1].el, s.arms[1].wr, WID.farm[0], WID.farm[1], N);
+  if(!spec.gripBehind) g += grip(spec.grip, s);
+  g += spec.front || '';
+  return `<svg class="fig ${cls}" viewBox="${spec.box||'0 0 100 100'}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${g}</svg>`;
+}
+/* Interpolated mid-frame, so two authored poses give three drawn ones. */
+function lerp(a,b,t){ return a+(b-a)*t; }
+function lerpPt(a,b,t){ return [lerp(a[0],b[0],t), lerp(a[1],b[1],t)]; }
+function lerpFrame(A,B,t){
+  const out={};
+  for(const k of ['torso','head','toe']) if(A[k]!=null && B[k]!=null) out[k]=lerp(A[k],B[k],t);
+  for(const k of ['elbow','knee','flat']) if(A[k]!=null) out[k]=A[k];
+  for(const k of ['elbows','knees','toes']) if(A[k]) out[k]=A[k];
+  out.hip=lerpPt(A.hip,B.hip,t);
+  const pair=(k,s)=>{
+    const a=A[k]||[A[s],A[s]], b=B[k]||[B[s],B[s]];
+    return [lerpPt(a[0],b[0],t), lerpPt(a[1],b[1],t)];
+  };
+  out.hands=pair('hands','hand');
+  out.feet =pair('feet','foot');
+  return out;
+}
+
+const FLOORSVG = `<line class="gr" x1="3" y1="97" x2="97" y2="97"/>`;
+const BENCH = `<rect class="eq" x="26" y="64" width="54" height="6" rx="2.4"/>
+  <rect class="eq" x="31" y="70" width="4" height="27" rx="1.4"/>
+  <rect class="eq" x="72" y="70" width="4" height="27" rx="1.4"/>` + FLOORSVG;
+const BARFIX = `<line class="eq bar" x1="18" y1="9" x2="82" y2="9"/>
+  <rect class="eq" x="16" y="4" width="4" height="10" rx="1.4"/>
+  <rect class="eq" x="80" y="4" width="4" height="10" rx="1.4"/>`;
+const DIPBAR_B = `<line class="eq bar dim" x1="52" y1="50" x2="88" y2="50"/>
+  <rect class="eq dim" x="84" y="50" width="4" height="47" rx="1.4"/>` + FLOORSVG;
+const DIPBAR_F = `<line class="eq bar" x1="54" y1="59" x2="92" y2="59"/>
+  <rect class="eq" x="88" y="59" width="4" height="38" rx="1.4"/>`;
+const STEP = `<rect class="eq" x="28" y="88" width="62" height="9" rx="2.2"/>` + FLOORSVG;
+
+/* Each pattern: two authored poses plus the props behind and in front. */
+const MOVES = {
+  squat:{ grip:'plate', gripBehind:true, back:FLOORSVG,
+    a:{hip:[50,58], torso:-86, feet:[[45,97],[55,97]], hand:[42,37], elbow:1},
+    b:{hip:[48,76], torso:-66, feet:[[45,97],[55,97]], hand:[49,56], elbow:1} },
+
+  lunge:{ grip:'db', back:FLOORSVG,
+    a:{hip:[50,58], torso:-88, feet:[[45,97],[55,97]], hands:[[46,58],[56,58]]},
+    b:{hip:[50,74], torso:-84, feet:[[32,95],[68,97]], toes:[-45,0], hands:[[46,74],[58,74]]} },
+
+  hinge:{ grip:'plate', back:FLOORSVG,
+    a:{hip:[50,58], torso:-86, feet:[[46,97],[54,97]], hand:[52,60], elbow:1},
+    b:{hip:[54,64], torso:-38, feet:[[46,97],[54,97]], hand:[60,80], elbow:1} },
+
+  bridge:{ grip:'none', back:FLOORSVG, box:'18 60 72 40',
+    a:{hip:[54,90], torso:172, foot:[78,97], hand:[30,95], elbow:-1, head:186, knee:-1, toe:-25},
+    b:{hip:[54,71], torso:127, foot:[78,97], hand:[34,90], elbow:-1, head:144, knee:-1, toe:-25} },
+
+  pressh:{ grip:'plate', back:BENCH, box:'8 24 86 76',
+    a:{hip:[36,62], torso:4, feet:[[18,93],[22,95]], hand:[62,56], elbow:-1, toe:35, head:-8},
+    b:{hip:[36,62], torso:4, feet:[[18,93],[22,95]], hand:[62,37], elbow:-1, toe:35, head:-8} },
+
+  pushup:{ grip:'none', back:FLOORSVG, box:'8 56 86 45',
+    a:{hip:[46,78], torso:203, foot:[82,93], hand:[20,95], elbow:1, toe:-42, head:210},
+    b:{hip:[46,88], torso:190, foot:[82,93], hand:[20,95], elbow:1, toe:-42, head:198} },
+
+  dip:{ grip:'none', back:DIPBAR_B, front:DIPBAR_F,
+    a:{hip:[48,58], torso:-84, hand:[58,59], elbow:1, feet:[[40,88],[44,90]], toe:-25},
+    b:{hip:[48,72], torso:-78, hand:[58,59], elbow:1, feet:[[40,96],[44,97]], toe:-25} },
+
+  pressv:{ grip:'bar', back:FLOORSVG,
+    a:{hip:[50,58], torso:-90, feet:[[44,97],[56,97]], hands:[[38,36],[62,36]], elbows:[1,-1], flat:true},
+    b:{hip:[50,58], torso:-90, feet:[[44,97],[56,97]], hands:[[40,8],[60,8]], elbows:[1,-1], flat:true} },
+
+  pullv:{ grip:'none', back:BARFIX,
+    a:{hip:[50,60], torso:-90, feet:[[47,92],[53,92]], hands:[[40,9],[60,9]], elbows:[1,-1], flat:true, toe:-30},
+    b:{hip:[50,44], torso:-90, feet:[[47,78],[53,78]], hands:[[40,9],[60,9]], elbows:[1,-1], flat:true, toe:-30} },
+
+  pullh:{ grip:'plate', back:FLOORSVG,
+    a:{hip:[56,64], torso:-32, feet:[[48,97],[56,97]], hand:[44,82], elbow:1, head:-20},
+    b:{hip:[56,64], torso:-32, feet:[[48,97],[56,97]], hand:[42,66], elbow:1, head:-20} },
+
+  curl:{ grip:'plate', back:FLOORSVG,
+    a:{hip:[50,58], torso:-88, feet:[[46,97],[54,97]], hand:[52,58], elbow:1},
+    b:{hip:[50,58], torso:-88, feet:[[46,97],[54,97]], hand:[58,40], elbow:1} },
+
+  ext:{ grip:'bar', back:FLOORSVG,
+    a:{hip:[50,58], torso:-88, feet:[[44,97],[56,97]], hands:[[42,48],[58,48]], elbows:[1,-1], flat:true},
+    b:{hip:[50,58], torso:-88, feet:[[44,97],[56,97]], hands:[[42,62],[58,62]], elbows:[1,-1], flat:true} },
+
+  raise:{ grip:'db', back:FLOORSVG,
+    a:{hip:[50,58], torso:-90, feet:[[42,97],[58,97]], hands:[[38,58],[62,58]], elbows:[1,-1], flat:true},
+    b:{hip:[50,58], torso:-90, feet:[[42,97],[58,97]], hands:[[22,31],[78,31]], elbows:[1,-1], flat:true} },
+
+  calf:{ grip:'none', back:STEP,
+    a:{hip:[50,50], torso:-90, feet:[[50,88],[56,88]], hand:[52,50], toe:0},
+    b:{hip:[50,43], torso:-90, feet:[[50,81],[56,81]], hand:[52,43], toe:48} },
+
+  core:{ grip:'none', back:FLOORSVG, box:'18 62 72 38',
+    a:{hip:[56,92], torso:178, foot:[80,93], hand:[28,86], elbow:-1, head:190, knee:-1, toe:-35},
+    b:{hip:[56,92], torso:200, foot:[74,80], hand:[30,76], elbow:-1, head:212, knee:-1, toe:-35} },
+
+  hold:{ static:true, grip:'none', back:FLOORSVG, box:'8 56 86 45',
+    a:{hip:[46,78], torso:203, foot:[82,93], hand:[20,95], elbow:1, toe:-42, head:210} },
+
+  carry:{ grip:'db', back:FLOORSVG,
+    a:{hip:[50,58], torso:-88, feet:[[40,97],[60,95]], hands:[[46,58],[57,58]], toes:[0,-14]},
+    b:{hip:[50,58], torso:-88, feet:[[60,97],[40,95]], hands:[[46,58],[57,58]], toes:[-14,0]} },
+
+  cardio:{ grip:'none', back:FLOORSVG,
+    a:{hip:[50,58], torso:-82, feet:[[38,92],[64,84]], hands:[[62,50],[38,52]], elbows:[-1,1], knees:[1,1], toe:-15},
+    b:{hip:[50,58], torso:-82, feet:[[64,84],[38,92]], hands:[[38,52],[62,50]], elbows:[1,-1], knees:[1,1], toe:-15} },
 };
 
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */
@@ -328,19 +493,12 @@ const TIME_PATTERNS = ['hold','carry'];
 function isTimedExercise(name){ return TIME_PATTERNS.indexOf(PATTERN[name])!==-1; }
 
 /* ---- builders (pure; called from the renderer) ---- */
-function figSVG(pose, cls){
-  const pl = a => a.map(p=>p.join(',')).join(' ');
-  let inner = `<circle cx="${pose.head[0]}" cy="${pose.head[1]}" r="7"/>`;
-  inner += `<polyline points="${pl(pose.body)}"/>`;
-  (pose.arms||[]).forEach(a => { inner += `<polyline points="${pl(a)}"/>`; });
-  (pose.loads||[]).forEach(a => { inner += `<line class="ld" x1="${a[0][0]}" y1="${a[0][1]}" x2="${a[1][0]}" y2="${a[1][1]}"/>`; });
-  return `<svg class="fig ${cls}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${inner}</svg>`;
-}
 function movementDemo(l){
   const key = PATTERN[l.name] || GROUP_PATTERN[l.group] || 'cardio';
-  const P = POSES[key]; if(!P) return '';
-  if(P.static) return `<div class="figwrap hold">${figSVG(P.a,'figS')}</div>`;
-  return `<div class="figwrap">${figSVG(P.a,'figA')}${figSVG(P.b,'figB')}</div>`;
+  const M = MOVES[key]; if(!M) return '';
+  if(M.static) return `<div class="figwrap hold">${figure(M.a,M,'figS')}</div>`;
+  const mid = M.m || lerpFrame(M.a, M.b, 0.5);
+  return `<div class="figwrap">${figure(M.a,M,'figA')}${figure(mid,M,'figM')}${figure(M.b,M,'figB')}</div>`;
 }
 function howtoBlock(l){
   const steps = HOWTO[l.name] || ['Perform with control through a full range of motion.'];
