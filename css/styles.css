@@ -67,6 +67,7 @@ header{padding:52px 0 30px}
 .addon-row{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
 .addon-day{flex:1;min-width:190px}
 .addon-target{width:100%}
+.addon-note{margin-top:10px;padding:10px 12px;border-left:3px solid var(--heat);background:rgba(255,78,34,.07);border-radius:0 8px 8px 0;font-size:12.5px;line-height:1.55;color:#c9c5ba}
 #addon{margin-top:16px}
 
 #program{margin-top:40px}
