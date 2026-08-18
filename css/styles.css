@@ -79,6 +79,7 @@ header{padding:52px 0 30px}
 .ai-line::placeholder{color:var(--muted-dark)}
 .addon-row{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
 .addon-day{flex:1;min-width:190px}
+.addon-target{width:100%}
 #addon{margin-top:16px}
 
 #program{margin-top:40px}

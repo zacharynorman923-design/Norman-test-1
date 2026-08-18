@@ -14,9 +14,10 @@ progression**. Log your real sets and the weights personalise to you.
   Claude fills in the brief, then SPLIT builds the week. Optional — paste an
   Anthropic API key (stored only in your browser, sent straight to Anthropic);
   everything else works without it. See [Using the AI coach](#using-the-ai-coach).
-- **Ask for extra work.** Keep your core weekly plan and bolt on a targeted block
-  — "more rear delts", "extra calves", "grip work" — added to the day you pick,
-  every week or just this one, and removable in one click.
+- **Add a targeted block.** Keep your core weekly plan and bolt on extra work for
+  a specific region — upper chest, inner back, rear delts, lower abs, forearms —
+  picked from a dropdown of 27 targets, added to the day you choose, every week
+  or just this one, and removable in one click.
 - **Goal-driven programming.** Strength, muscle, fat loss, endurance or general
   fitness each get their own rep ranges, rest periods, volume and conditioning
   dose — because those goals genuinely train differently.
@@ -122,21 +123,28 @@ building the week.
   the chips, then the normal generator runs. The AI feature needs a connection;
   the rest of the app (building, logging, progression) works offline.
 
-### Adding a block
-
-Once a week is built, the **✨ Add a block** panel appends extra targeted work to
-one day without changing the rest of the plan — the same idea as the abs
-finisher, but for whatever you ask for.
-
-- Say what you want ("more rear delts", "a short glute finisher"), pick the day,
-  and choose whether it applies **every week** or just the one you're viewing.
-- Claude may only choose from the exercise library for your equipment, so the
-  added moves keep their how-to cues, animated demo, suggested loads and per-set
-  logging. Any name it returns that isn't in the library is discarded.
-- The block appears under its own labelled divider; the **✕** on that divider
-  removes it from every week.
-
 The AI coach is entirely optional — SPLIT is fully usable without a key.
+
+## Adding a block
+
+Once a week is built, the **＋ Add a block** panel appends extra targeted work to
+one day without changing the rest of the plan — the same idea as the abs
+finisher, but aimed wherever you want. No API key and no connection needed.
+
+- Pick a target from the dropdown (27 of them, grouped by body part: upper /
+  lower / inner / outer chest, lats, inner back, upper back & traps, front /
+  side / rear delts, biceps peak, triceps long head, forearms & grip, quads,
+  glutes, hamstrings, inner thigh, calves, upper / lower abs, obliques …).
+- Choose the day, and whether it applies **every week** or only the one you're
+  viewing.
+- SPLIT draws up to three movements for that target from the exercise library,
+  skipping anything the day already programs, so the added work comes with its
+  how-to cues, animated demo, suggested loads and per-set logging.
+- Targets with no movement your equipment can do are hidden — pick bodyweight
+  and side delts drops out of the list rather than offering something you can't
+  train.
+- The block appears under its own labelled divider; the **✕** there removes it
+  from every week.
 
 ## Disclaimer
 

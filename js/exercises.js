@@ -211,3 +211,51 @@ const GOAL_META = {
 
 /* ===================== RENDER COPY ===================== */
 const restNotes=['Rest — sleep & eat','Active recovery — walk','Full rest day','Mobility & easy cardio','Rest — let it grow'];
+
+/* ===================== MUSCLE TARGETS =====================
+   Specific regions you can bolt an extra block onto, each mapped to the
+   library movements that hit it best. Pools are filtered by the user's
+   equipment at render time, so a target only appears if it's trainable. */
+const MUSCLE_TARGETS = {
+  Chest:[
+    {label:'Upper chest', names:['Incline Barbell Bench Press','Incline Dumbbell Press','Incline Dumbbell Fly','Decline Push-Up']},
+    {label:'Lower chest', names:['Decline Barbell Bench Press','Dips','Incline Push-Up','Cable Crossover']},
+    {label:'Inner chest', names:['Cable Crossover','Chest Fly Machine','Dumbbell Fly','Machine Chest Press','Diamond Push-Up']},
+    {label:'Outer chest', names:['Wide-Grip Push-Up','Archer Push-Up','Dumbbell Fly','Barbell Bench Press']},
+  ],
+  Back:[
+    {label:'Lats (width)', names:['Pull-Up','Lat Pulldown','Straight-Arm Pulldown','Chin-Up']},
+    {label:'Inner back (thickness)', names:['Seated Cable Row','Chest-Supported Row','T-Bar Row','Barbell Row','Pendlay Row','Inverted Row']},
+    {label:'Upper back & traps', names:['Face Pull','Prone Y-Raise','Upright Row','Rack Pull','Renegade Row']},
+    {label:'Lower back', names:['Superman Hold','Hyperextension','Good Morning','Deadlift','Rack Pull']},
+  ],
+  Shoulders:[
+    {label:'Front delts', names:['Front Raise','Overhead Press','Arnold Press','Machine Shoulder Press','Pike Push-Up']},
+    {label:'Side delts', names:['Lateral Raise','Cable Lateral Raise','Upright Row','Dumbbell Shoulder Press']},
+    {label:'Rear delts', names:['Rear Delt Fly','Face Pull','Prone Y-Raise','Chest-Supported Row']},
+  ],
+  Arms:[
+    {label:'Biceps peak', names:['Incline Dumbbell Curl','Concentration Curl','Chin-Up','Hammer Curl']},
+    {label:'Biceps overall', names:['Barbell Curl','EZ-Bar Curl','Preacher Curl','Cable Curl','Dumbbell Curl','Bodyweight Bicep Curl','Underhand Inverted Row']},
+    {label:'Triceps long head', names:['Cable Overhead Extension','Single-Arm Overhead Extension','Overhead DB Extension','Skull Crusher','Bodyweight Skull Crusher']},
+    {label:'Triceps lateral head', names:['Triceps Pushdown','Dumbbell Kickback','Diamond Push-Up','Close-Grip Bench Press','Bench Dip']},
+    {label:'Forearms & grip', names:['Hammer Curl','Zottman Curl','Farmer Carry','Towel Curl','Renegade Row']},
+  ],
+  Legs:[
+    {label:'Quads', names:['Leg Extension','Hack Squat','Front Squat','Pause Squat','Sissy Squat','Wall Sit']},
+    {label:'Glutes', names:['Hip Thrust','Single-Leg Hip Thrust','Frog Pump','Cable Pull-Through','Glute Bridge','Reverse Lunge']},
+    {label:'Hamstrings', names:['Romanian Deadlift','Lying Leg Curl','Seated Leg Curl','Nordic Curl','Single-Leg RDL','Good Morning']},
+    {label:'Inner thigh', names:['Sumo Deadlift','Goblet Squat','Bulgarian Split Squat','Walking Lunge']},
+    {label:'Calves', names:['Standing Calf Raise','Seated Calf Raise','Leg Press Calf Raise','Donkey Calf Raise','Single-Leg Calf Raise','Calf Jump']},
+    {label:'Ankles & shins', names:['Tibialis Raise','Farmer Walk on Toes','Single-Leg Calf Raise']},
+  ],
+  Core:[
+    {label:'Upper abs', names:['Weighted Sit-Up','Cable Crunch','V-Up','Bicycle Crunch']},
+    {label:'Lower abs', names:['Hanging Leg Raise','Hanging Knee Raise','Toes-to-Bar','Dead Bug','Hollow Body Hold']},
+    {label:'Obliques', names:['Russian Twist','Side Plank','Bicycle Crunch','Pallof Press','Mountain Climber']},
+    {label:'Core stability', names:['Plank','Ab Wheel Rollout','Pallof Press','Hollow Body Hold','Farmer Carry','Bear Crawl']},
+  ],
+  Conditioning:[
+    {label:'Conditioning finisher', names:['Burpees','Jump Rope','Battle Ropes','Kettlebell Swings','High Knees','Jumping Jacks','Mountain Climber']},
+  ],
+};
