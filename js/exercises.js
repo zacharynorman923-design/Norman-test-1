@@ -198,6 +198,18 @@ const WEEK_INFO = {
 const WEEK_FACTOR = {1:.92,2:.98,3:1.06,4:1.13,5:.5};
 const LOAD_FACTOR = {1:1.0,2:1.025,3:1.05,4:1.075,5:0.6};
 
+/* ===================== HOW IT FELT =====================
+   Rate a logged lift and the next suggestion for it moves: `f` scales the
+   estimated max the loads are drawn from, `rep` shifts the target for lifts
+   logged in reps or seconds instead of weight. */
+const DIFF_LEVELS = [
+  {k:'easy',  label:'Easy',       short:'easy',   f:1.05, rep: 1, note:'next time goes up ~5%'},
+  {k:'right', label:'Just right', short:'right',  f:1.00, rep: 0, note:'keep the progression as planned'},
+  {k:'hard',  label:'Hard',       short:'hard',   f:0.97, rep: 0, note:'hold this load a little longer'},
+  {k:'fail',  label:'Missed reps',short:'missed', f:0.92, rep:-1, note:'next time backs off ~8%'},
+];
+const DIFF_BY = {}; DIFF_LEVELS.forEach(d=>{ DIFF_BY[d.k]=d; });
+
 /* ===================== WEIGHTS + PERSONALISATION ===================== */
 const BW_MULT={bench:1.0,squat:1.4,deadlift:1.7,press:0.6,row:0.9};
 const EXP_F={beginner:0.7,intermediate:1.0,advanced:1.25};

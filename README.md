@@ -42,9 +42,17 @@ your browser and your data stays on your device.
 - **Exercise guidance.** Tap any lift to see step-by-step form cues, the
   muscles it targets, and a looping animated figure demonstrating the movement
   — all drawn inline, so it works offline with no images to load.
-- **Per-set logging.** The same expanded panel lets you record the weight and
-  completed reps for *every* set. Your best estimated 1RM across those sets is
-  saved locally and feeds straight back into the suggested loads.
+- **Per-set logging, set by set.** The same expanded panel records the weight and
+  completed reps for *every* set. Hit **✓** on a row (or press Enter) to bank
+  that set mid-workout and the panel stays open on the next one — or fill the
+  whole thing in afterwards and **Save all**. Partly-logged lifts show their
+  progress (`2/4 sets`) on the collapsed row. Your best estimated 1RM across
+  those sets is saved locally and feeds straight back into the suggested loads.
+- **How did it feel?** Rate a lift *Easy · Just right · Hard · Missed reps* and
+  the next suggestion for it moves with you: the estimated max behind the load
+  is scaled (+5% / 0 / −3% / −8%), and lifts logged in reps or seconds get their
+  target shifted instead. The rating shows on the collapsed row, so you can see
+  why a weight went up.
 - **Swap and regenerate.** Swap any exercise for another in the same group, or
   regenerate the whole week.
 - **Abs finisher.** Optionally append a 2-move core block to every training day.

@@ -6,6 +6,12 @@ const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'
    weeks. History for the same exercise drives suggestions for next time. */
 const LOG = { sets:{} };  // `${week}:${di}:${li}:${name}` (or `hist:name`) -> entry
 let PROGRAM = null, WEEK = 1, EDIT = null;
+/* Difficulty picked before any set of that lift is logged — held here until
+   there is an entry to attach it to. */
+const PENDING_DIFF = {};
+/* Which set row to focus after the next render: null = the first one,
+   {row:-1} = leave focus where it is. */
+let FOCUS = null;
 
 function occKey(di,li,name){ return `${WEEK}:${di}:${li}:${name}`; }
 /* Most recent logged entry for an exercise, across every day/week — used to
@@ -21,26 +27,32 @@ function loggedNames(){ const s=new Set(); for(const k in LOG.sets){ const e=LOG
 /* persistence — survives reloads on a served page (https or localhost);
    silent no-op if storage is blocked (e.g. opened directly as a file://). */
 function saveStore(){ try{ localStorage.setItem('split_log_v2', JSON.stringify(LOG.sets)); }catch(e){} }
-/* Bring any stored entry up to the per-set shape {unit,type,sets:[{w,r}],e1rm}.
-   Older logs held a single {weight,reps,...}; convert them to one set. */
+/* Sets are positional: `null` marks a set that hasn't been logged yet, so a
+   lift logged one set at a time keeps every set on its own slot. Trailing
+   blanks are trimmed. */
+function trimSets(a){ let n=a.length; while(n>0 && a[n-1]==null) n--; return a.slice(0,n); }
+/* Bring any stored entry up to the per-set shape {unit,type,sets:[{w,r}],diff,
+   e1rm}. Older logs held a single {weight,reps,...}; convert them to one set. */
 function normalizeEntry(e){
   if(!e || typeof e!=='object') return null;
   if(Array.isArray(e.sets)){
-    if(e.metric==='time' || (e.sets[0] && e.sets[0].sec!=null)){
-      const sets=e.sets.filter(s=>s && s.sec>0).map(s=>({sec:s.sec}));
-      return sets.length ? {unit:e.unit||'kg', metric:'time', sets, e1rm:null} : null;
+    const first=e.sets.filter(s=>s)[0];
+    const diff=(e.diff && DIFF_BY[e.diff]) ? e.diff : null;
+    if(e.metric==='time' || (first && first.sec!=null)){
+      const sets=trimSets(e.sets.map(s=> s && s.sec>0 ? {sec:s.sec} : null));
+      return sets.some(s=>s) ? {unit:e.unit||'kg', metric:'time', sets, diff, e1rm:null} : null;
     }
-    const sets=e.sets.filter(s=>s && s.r>0).map(s=>({w:s.w>0?s.w:0, r:s.r}));
-    if(!sets.length) return null;
-    const metric = e.metric || (sets.some(s=>s.w>0)||e.type ? 'weight' : 'reps');
-    const out={unit:e.unit||'kg', type:e.type, sets, metric, e1rm:null};
+    const sets=trimSets(e.sets.map(s=> s && s.r>0 ? {w:s.w>0?s.w:0, r:s.r} : null));
+    if(!sets.some(s=>s)) return null;
+    const metric = e.metric || (sets.some(s=>s&&s.w>0)||e.type ? 'weight' : 'reps');
+    const out={unit:e.unit||'kg', type:e.type, sets, metric, diff, e1rm:null};
     out.e1rm = metric==='weight' ? (e.e1rm!=null?e.e1rm:bestE1RM(out)) : null;
     return out;
   }
   const r=parseInt(e.reps,10); if(!(r>0)) return null;
   const w=e.weight>0?e.weight:0;
   const metric = (w>0||e.type) ? 'weight' : 'reps';
-  const out={unit:e.unit||'kg', type:e.type, sets:[{w,r}], metric, e1rm:null};
+  const out={unit:e.unit||'kg', type:e.type, sets:[{w,r}], metric, diff:null, e1rm:null};
   out.e1rm = metric==='weight' ? (e.e1rm!=null?e.e1rm:bestE1RM(out)) : null;
   return out;
 }
@@ -105,9 +117,11 @@ function setE1RM(entry, s){
 }
 function bestE1RM(entry){
   let best=null;
-  entry.sets.forEach(s=>{ const e=setE1RM(entry,s); if(e!=null && (best===null||e>best)) best=e; });
+  entry.sets.forEach(s=>{ if(!s) return; const e=setE1RM(entry,s); if(e!=null && (best===null||e>best)) best=e; });
   return best;
 }
+function doneSets(entry){ return entry && entry.sets ? entry.sets.filter(Boolean).length : 0; }
+function lastBanked(entry){ const a=(entry&&entry.sets||[]).filter(Boolean); return a.length?a[a.length-1]:null; }
 function logMode(l){
   if(l.w) return 'weight';                                   // external load
   if(typeof isTimedExercise==='function' && isTimedExercise(l.name)) return 'time'; // holds and carries
@@ -115,20 +129,25 @@ function logMode(l){
 }
 function loggedText(l, entry){
   const u=entry.unit, dh=entry.type==='dumbbell'?'/hand':'';
+  const join=parts=>parts.join(' · ');                 // “—” marks a set not logged yet
   if(entry.metric==='time'){
-    return `logged ${entry.sets.map(s=>s.sec).join(' · ')} s`;
+    return `logged ${join(entry.sets.map(s=> s ? s.sec : '—'))} s`;
   }
   if(entry.metric==='weight' || l.w){
-    const parts=entry.sets.map(s=> s.w>0 ? `${fmt(s.w)}×${s.r}` : `bw×${s.r}`);
-    return `logged ${parts.join(' · ')} ${u}${dh}`;
+    const parts=entry.sets.map(s=> !s ? '—' : (s.w>0 ? `${fmt(s.w)}×${s.r}` : `bw×${s.r}`));
+    return `logged ${join(parts)} ${u}${dh}`;
   }
   // bodyweight reps — show added weight only if the lifter used some
-  const weighted = entry.sets.some(s=>s.w>0);
+  const weighted = entry.sets.some(s=>s && s.w>0);
   if(weighted){
-    const parts=entry.sets.map(s=> s.w>0 ? `+${fmt(s.w)}×${s.r}` : `bw×${s.r}`);
-    return `logged ${parts.join(' · ')} reps (+${u})`;
+    const parts=entry.sets.map(s=> !s ? '—' : (s.w>0 ? `+${fmt(s.w)}×${s.r}` : `bw×${s.r}`));
+    return `logged ${join(parts)} reps (+${u})`;
   }
-  return `logged ${entry.sets.map(s=>s.r).join(' · ')} reps`;
+  return `logged ${join(entry.sets.map(s=> s ? s.r : '—'))} reps`;
+}
+function diffChip(entry, cls){
+  const d = entry && entry.diff && DIFF_BY[entry.diff];
+  return d ? ` <span class="diff d-${d.k} ${cls||''}">${d.short}</span>` : '';
 }
 /* The current week's training days (each week has its own exercise picks over
    the same fixed structure). Falls back to the single-week shape for sessions
@@ -175,9 +194,11 @@ function renderProgram(animate){
       if(done){
         const be=bestE1RM(done);
         const beTxt = be!=null ? ` <span class="e1rm">e1RM ${fmt(Math.round(be))} ${done.unit}</span>` : '';
-        loggedLine = `<div class="logged">✓ ${loggedText(l,done)}${beTxt}</div>`;
+        const nWant=parseInt(v.sets,10)||0, nDone=doneSets(done);
+        const partTxt = (nWant && nDone<nWant) ? ` <span class="part">${nDone}/${nWant} sets</span>` : '';
+        loggedLine = `<div class="logged">✓ ${loggedText(l,done)}${beTxt}${partTxt}${diffChip(done)}</div>`;
       } else if(suggest){
-        loggedLine = `<div class="suggest">↝ last: ${loggedText(l,suggest).replace(/^logged /,'')}</div>`;
+        loggedLine = `<div class="suggest">↝ last: ${loggedText(l,suggest).replace(/^logged /,'')}${diffChip(suggest)}</div>`;
       }
       const chevron = `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>`;
       liftsHTML+=`<div class="lift expandable${open?' open':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
@@ -194,50 +215,77 @@ function renderProgram(animate){
           const rows=Math.max(nSets, src?src.sets.length:0);
           const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
           const targetR=repTop(v.reps);
+          /* Prefills come from this occurrence's own log if it has one; otherwise
+             from last time, shifted by how that session felt. */
+          const lastDiff = suggest ? suggest.diff : null;
+          const carry = done ? lastBanked(done) : null;   // most recent set banked today
           let head, rowsHTML='';
           for(let i=0;i<rows;i++){
-            const s = src && src.sets[i];
+            const s = done ? done.sets[i] : null;          // this row, already banked
+            const last = suggest ? suggest.sets[i] : null; // the same set last time
+            const isDone = !!s;
+            const tick = `<button class="lb-done${isDone?' on':''}" type="button" data-i="${i}"
+              title="${isDone?'Update this set':'Log this set now'}" aria-label="Log set ${i+1}" aria-pressed="${isDone}">✓</button>`;
+            const cls = `lb-set${isDone?' is-done':''}`;
+            /* An unlogged row starts from whatever is most useful: the set you
+               just banked (so the working weight carries down the list), else
+               the suggestion for a fresh occurrence, else last time's numbers. */
             if(mode==='time'){
-              const pv = s ? s.sec : '';
-              rowsHTML+=`<div class="lb-set">
+              const pv = s ? s.sec : carry ? carry.sec : (last ? nextSecs(last.sec,lastDiff) : '');
+              rowsHTML+=`<div class="${cls}">
                 <span class="lb-n">Set ${i+1}</span>
                 <input class="lt" type="number" inputmode="numeric" value="${pv}" placeholder="—" aria-label="Set ${i+1} hold seconds">
-                <span class="lb-u">sec</span>
+                <span class="lb-u">sec</span>${tick}
               </div>`;
             } else if(mode==='weight'){
-              const pw = s ? (s.w>0?s.w:'') : (num!==''?num:'');
-              const pr = s ? s.r : targetR;
-              rowsHTML+=`<div class="lb-set">
+              // a fresh occurrence starts from the suggested load, which already
+              // carries last session's difficulty
+              const ref = s || carry;
+              const pw = ref ? (ref.w>0?ref.w:'') : (num!=='' ? num : (last && last.w>0 ? last.w : ''));
+              const pr = ref ? ref.r : (last ? last.r : targetR);
+              rowsHTML+=`<div class="${cls}">
                 <span class="lb-n">Set ${i+1}</span>
                 <input class="lw" type="number" inputmode="decimal" value="${pw}" placeholder="—" aria-label="Set ${i+1} weight ${unit}${dh}">
                 <span class="lb-x">×</span>
-                <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">
+                <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="reps" aria-label="Set ${i+1} reps">${tick}
               </div>`;
             } else { // reps (bodyweight) — reps first, added weight optional/hidden
-              const pr = s ? s.r : targetR;
-              const pw = s ? (s.w>0?s.w:'') : '';
-              rowsHTML+=`<div class="lb-set">
+              const ref = s || carry;
+              const pr = ref ? ref.r : (last ? nextReps(last.r,lastDiff) : targetR);
+              const pw = ref ? (ref.w>0?ref.w:'') : (last && last.w>0 ? last.w : '');
+              rowsHTML+=`<div class="${cls}">
                 <span class="lb-n">Set ${i+1}</span>
                 <input class="lr" type="number" inputmode="numeric" value="${pr}" placeholder="—" aria-label="Set ${i+1} reps">
                 <span class="lb-u">reps</span>
-                <input class="lw opt" type="number" inputmode="decimal" value="${pw}" placeholder="+${unit}" aria-label="Set ${i+1} added weight ${unit}">
+                <input class="lw opt" type="number" inputmode="decimal" value="${pw}" placeholder="+${unit}" aria-label="Set ${i+1} added weight ${unit}">${tick}
               </div>`;
             }
           }
           head = mode==='time' ? 'Log each set — hold time in seconds'
                : mode==='weight' ? `Log each set — weight ${unit}${dh} × completed reps`
                : 'Log each set — completed reps';
-          const showWeight = mode==='reps' && src && src.metric!=='time' && src.sets.some(s=>s.w>0);
+          const curDiff = PENDING_DIFF[key] || (done && done.diff) || '';
+          const dchips = DIFF_LEVELS.map(d=>
+            `<button class="dchip${curDiff===d.k?' on':''}" type="button" data-diff="${d.k}" aria-pressed="${curDiff===d.k}">${d.label}</button>`).join('');
+          const dNote = curDiff && DIFF_BY[curDiff] ? DIFF_BY[curDiff].note : 'Sets the starting point for the next time this lift comes up.';
+          const diffHTML = `<div class="lb-diff">
+            <div class="lb-dlab">How did it feel?</div>
+            <div class="lb-dchips" role="group" aria-label="How did that feel">${dchips}</div>
+            <div class="lb-dnote">${dNote}</div>
+          </div>`;
+          const showWeight = mode==='reps' && src && src.metric!=='time' && src.sets.some(s=>s && s.w>0);
           const addWtBtn = mode==='reps' ? `<button class="addwt" type="button">＋ Add weight (vest / belt)</button>` : '';
           logHTML=`<div class="logbox${showWeight?' show-weight':''}" data-di="${di}" data-li="${li}">
             <div class="lb-head">${head}</div>
+            <div class="lb-sub">Hit ✓ on a set to bank it mid-workout — or fill them all in and save at the end.</div>
             <div class="lb-sets">${rowsHTML}</div>
             ${addWtBtn}
+            ${diffHTML}
             <div class="lb-foot">
               ${done?`<button class="logclear" data-di="${di}" data-li="${li}">Clear</button>`:'<span></span>'}
               <div class="lb-btns">
-                <button class="logcancel" type="button">Cancel</button>
-                <button class="logsave" type="button">Save sets</button>
+                <button class="logcancel" type="button">Close</button>
+                <button class="logsave" type="button">Save all</button>
               </div>
             </div>
           </div>`;
@@ -257,7 +305,7 @@ function renderProgram(animate){
   const weekPills=[1,2,3,4,5].map(w=>`<button class="wk${w===5?' deload':''}" data-wk="${w}" aria-pressed="${w===WEEK}">${w===5?'Deload':'Wk '+w}</button>`).join('');
   const wtNote = anyLog ? `weights <span class="wt">personalised from your logged sets</span>`
       : (anchorsAvail ? `<span class="wt">≈ weights</span> from your numbers, scaled per week`
-      : `tap a lift to <span class="wt">log every set</span>, or add a max in the brief, for suggested weights`);
+      : `tap a lift to <span class="wt">log your sets</span>, or add a max in the brief, for suggested weights`);
   const logCount=logNames.size;
 
   prog.innerHTML=`
@@ -274,7 +322,7 @@ function renderProgram(animate){
       <div class="weeks" role="group" aria-label="Progression week">${weekPills}</div>
       <div class="wknote"><b>${wi.tag}</b><span>${wi.note}</span></div>
     </div>
-    <div class="hint">↻ regenerate · ⇄ swap · tap a lift to log every set · tap a week — same split, fresh exercises<br>${wtNote}</div>
+    <div class="hint">↻ regenerate · ⇄ swap · tap a lift to log sets as you go · tap a week — same split, fresh exercises<br>${wtNote}</div>
     <div class="week${animate?'':' static'}">${daysHTML}</div>
     <div class="actions">
       <button class="ghost" id="regen">↻ Regenerate exercises</button>
@@ -287,7 +335,15 @@ function renderProgram(animate){
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     prog.querySelectorAll('.bar i').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
   }));
-  if(EDIT){ const box=prog.querySelector('.logbox .lb-set input'); if(box) box.focus(); }
+  if(EDIT){
+    const rows=prog.querySelectorAll('.logbox .lb-set');
+    const want = FOCUS ? FOCUS.row : 0;
+    if(want>=0 && rows.length){
+      const inp=(rows[Math.min(want,rows.length-1)]).querySelector('input');
+      if(inp) inp.focus();
+    }
+  }
+  FOCUS=null;
   if(typeof refreshAddonUI==='function') refreshAddonUI();   // optional AI add-on panel
   saveSession();
 }
@@ -296,30 +352,73 @@ function renderProgram(animate){
 /* Read every set row in the open log box and store them against THIS
    occurrence (week + day + slot + exercise). A set counts only if reps (or
    seconds) were entered. Saving with nothing clears this occurrence's log. */
+function readSetRow(row, mode){
+  if(mode==='time'){
+    const sec=parseInt(row.querySelector('.lt').value,10);
+    return sec>0 ? {sec} : null;
+  }
+  const r=parseInt(row.querySelector('.lr').value,10);
+  if(!(r>0)) return null;
+  const wi=row.querySelector('.lw');
+  const w=wi?parseFloat(wi.value):NaN;
+  return { w:w>0?w:0, r };
+}
+/* Write a set list against this occurrence. An all-null list clears it. */
+function commitSets(di,li,l,mode,sets){
+  const key=occKey(di,li,l.name);
+  sets=trimSets(sets);
+  if(!sets.some(s=>s)){ delete LOG.sets[key]; saveStore(); return null; }
+  const prev=LOG.sets[key];
+  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode, name:l.name,
+                diff: PENDING_DIFF[key] || (prev&&prev.diff) || null, ts:Date.now() };
+  entry.e1rm = mode==='weight' ? bestE1RM(entry) : null;
+  LOG.sets[key]=entry; saveStore();
+  return entry;
+}
+/* Save every row at once — the fill-it-in-afterwards path. */
 function logSets(box){
   const di=+box.dataset.di, li=+box.dataset.li;
   const l=curWeekdays()[di].lifts[li];
   const mode=logMode(l);
-  const sets=[];
-  box.querySelectorAll('.lb-set').forEach(row=>{
-    if(mode==='time'){
-      const sec=parseInt(row.querySelector('.lt').value,10);
-      if(sec>0) sets.push({ sec });
-    } else {
-      const r=parseInt(row.querySelector('.lr').value,10);
-      if(!(r>0)) return;
-      const wi=row.querySelector('.lw');
-      const w=wi?parseFloat(wi.value):NaN;
-      sets.push({ w:w>0?w:0, r });
-    }
-  });
-  const key=occKey(di,li,l.name);
-  if(!sets.length){ delete LOG.sets[key]; saveStore(); EDIT=null; renderProgram(false); return; }
-  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode, name:l.name, ts:Date.now() };
-  entry.e1rm = mode==='weight' ? bestE1RM(entry) : null;
-  LOG.sets[key]=entry; saveStore(); EDIT=null; renderProgram(false);
+  const sets=[...box.querySelectorAll('.lb-set')].map(row=>readSetRow(row,mode));
+  commitSets(di,li,l,mode,sets);
+  EDIT=null; renderProgram(false);
 }
-function clearLog(di,li){ const l=curWeekdays()[di].lifts[li]; delete LOG.sets[occKey(di,li,l.name)]; saveStore(); renderProgram(false); }
+/* Bank a single set mid-workout, leaving the panel open on the next one. */
+function logOneSet(box, idx){
+  const di=+box.dataset.di, li=+box.dataset.li;
+  const l=curWeekdays()[di].lifts[li];
+  const mode=logMode(l);
+  const rows=[...box.querySelectorAll('.lb-set')];
+  const prev=LOG.sets[occKey(di,li,l.name)];
+  const sets=prev ? prev.sets.slice() : [];
+  while(sets.length<=idx) sets.push(null);
+  sets[idx]=readSetRow(rows[idx],mode);
+  commitSets(di,li,l,mode,sets);
+  FOCUS={row: Math.min(idx+1, rows.length-1)};
+  renderProgram(false);
+}
+/* Rate the lift. Applies to the stored entry right away when there is one. */
+function setDiff(box, val){
+  const di=+box.dataset.di, li=+box.dataset.li;
+  const l=curWeekdays()[di].lifts[li];
+  const key=occKey(di,li,l.name);
+  const cur = PENDING_DIFF[key] || (LOG.sets[key] && LOG.sets[key].diff) || '';
+  const next = cur===val ? '' : val;                 // tap the active one to clear it
+  PENDING_DIFF[key]=next;
+  if(LOG.sets[key]){
+    LOG.sets[key].diff = next||null;
+    LOG.sets[key].ts = Date.now();
+    saveStore();
+  }
+  FOCUS={row:-1};
+  renderProgram(false);
+}
+function clearLog(di,li){
+  const l=curWeekdays()[di].lifts[li], key=occKey(di,li,l.name);
+  delete LOG.sets[key]; delete PENDING_DIFF[key];
+  saveStore(); renderProgram(false);
+}
 /* Every week's copy of a given day — an AI block may span all weeks. */
 function allWeekDays(di){
   const out=[];
@@ -350,6 +449,8 @@ function swapLift(di,li){
 document.getElementById('program').addEventListener('click', e=>{
   const br=e.target.closest('.blockrm'); if(br){ removeBlock(+br.dataset.di, br.dataset.title); return; }
   const aw=e.target.closest('.addwt'); if(aw){ aw.closest('.logbox').classList.toggle('show-weight'); return; }
+  const sd=e.target.closest('.lb-done'); if(sd){ logOneSet(sd.closest('.logbox'), +sd.dataset.i); return; }
+  const dc=e.target.closest('.dchip'); if(dc){ setDiff(dc.closest('.logbox'), dc.dataset.diff); return; }
   const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
   const cl=e.target.closest('.logclear'); if(cl){ clearLog(+cl.dataset.di,+cl.dataset.li); return; }
@@ -358,10 +459,20 @@ document.getElementById('program').addEventListener('click', e=>{
   const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
   if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }
-  if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.sets={}; saveStore(); renderProgram(false); } return; }
+  if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.sets={}; for(const k in PENDING_DIFF) delete PENDING_DIFF[k]; saveStore(); renderProgram(false); } return; }
 });
 /* Keyboard: Enter/Space toggles a focused lift row (but not while typing in it). */
 document.getElementById('program').addEventListener('keydown', e=>{
+  // Enter inside a set row banks that set, so you can log without reaching for ✓
+  if(e.key==='Enter' && e.target.tagName==='INPUT'){
+    const row=e.target.closest('.lb-set');
+    if(row){
+      e.preventDefault();
+      const box=row.closest('.logbox');
+      logOneSet(box, [...box.querySelectorAll('.lb-set')].indexOf(row));
+      return;
+    }
+  }
   if(e.key!=='Enter' && e.key!==' ') return;
   if(e.target.closest('input,button')) return;
   const lift=e.target.closest('.lift'); if(!lift || !lift.dataset.k) return;
