@@ -290,6 +290,7 @@ header{padding:52px 0 30px}
 .hidden{display:none}
 footer{margin-top:44px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted-dark);letter-spacing:.1em;line-height:1.8}
 footer b{color:var(--muted)}
+footer .ver{opacity:.6}
 
 /* rest timer — fixed above everything, outside the re-rendered program */
 .resttimer{position:fixed;left:12px;right:12px;bottom:12px;z-index:50;max-width:756px;margin:0 auto;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;box-shadow:0 12px 34px rgba(0,0,0,.45)}
