@@ -55,6 +55,14 @@ your browser and your data stays on your device.
   whole thing in afterwards and **Save all**. Partly-logged lifts show their
   progress (`2/4 sets`) on the collapsed row. Your best estimated 1RM across
   those sets is saved locally and feeds straight back into the suggested loads.
+- **Rest timer.** Banking a set starts that lift's prescribed rest in a bar
+  pinned to the bottom of the screen — it survives switching weeks or
+  re-rendering, takes **+30s**, and buzzes and chimes when the rest is up. The
+  last set of a lift doesn't start one.
+- **Cardio logs too.** A scheduled cardio session logs the minutes you actually
+  did, and rates the same way the lifts do.
+- **Today.** The current weekday is marked in the week, so the plan orients
+  itself the moment you open it.
 - **How did it feel?** Rate a lift *Easy · Just right · Hard · Missed reps* and
   the next suggestion for it moves with you: the estimated max behind the load
   is scaled (+5% / 0 / −3% / −8%), and lifts logged in reps or seconds get their
@@ -125,6 +133,17 @@ training day by rotating through that day's target muscle groups (leading with
 compound lifts), applies the sets/reps/rest scheme for your goal, and suggests
 loads scaled to the selected progression week. Logged sets are stored in
 `localStorage` and feed back into the weight suggestions.
+
+## Your data (and backing it up)
+
+Everything is stored in this browser's `localStorage` — no account, no server,
+nothing leaves your device. That also means a cleared cache, a new phone or a
+browser that evicts storage takes it with it.
+
+Under the week: **⭳ Export a backup** writes your brief, your program and every
+logged set to a `split-backup-YYYY-MM-DD.json` file, and **⭱ Restore one** reads
+it back after confirming what it will replace. A file that isn't a SPLIT backup
+is refused without touching what you have.
 
 ## Cardio schedule
 

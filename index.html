@@ -156,6 +156,18 @@
   </footer>
 </div>
 
+<input type="file" id="impfile" accept="application/json,.json" hidden>
+
+<div id="rest" class="resttimer hidden" role="status" aria-live="off">
+  <div class="rt-bar"><i id="restFill"></i></div>
+  <div class="rt-body">
+    <span class="rt-label" id="restLabel">Rest</span>
+    <span class="rt-time" id="restTime">0:00</span>
+    <button class="rt-btn" id="restAdd" type="button">+30s</button>
+    <button class="rt-btn rt-x" id="restSkip" type="button" aria-label="Dismiss the rest timer">✕</button>
+  </div>
+</div>
+
 <script src="js/exercises.js"></script>
 <script src="js/exercise-info.js"></script>
 <script src="js/scheduler.js"></script>
