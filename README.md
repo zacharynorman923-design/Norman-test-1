@@ -22,6 +22,10 @@ your browser and your data stays on your device.
   the muscles that commonly go weak from sitting all day — lower back, posture
   and rounded shoulders, neck and upper back, hips and hip flexors, knee support,
   wrists and forearms, core and trunk stability.
+- **Cardio scheduled around the lifting.** Pick what you want cardio to *do* —
+  longevity, bone and muscle, hunting and hiking fitness, or joint-friendly
+  volume — and SPLIT writes the week's sessions in: zone 2 on the off days, the
+  hard one alongside a training day, each with its own pacing cue.
 - **Goal-driven programming.** Strength, muscle, fat loss, endurance or general
   fitness each get their own rep ranges, rest periods, volume and conditioning
   dose — because those goals genuinely train differently.
@@ -29,7 +33,7 @@ your browser and your data stays on your device.
   frequency (full-body, upper/lower, PPL, and rotations), or switch to a
   muscle-group split for one body part per day.
 - **Equipment aware.** Full gym, dumbbells + bands, or bodyweight only — every
-  exercise in your plan is one you can actually do. The library holds ~140
+  exercise in your plan is one you can actually do. The library holds ~145
   movements across ten muscle groups, so a five-week block rarely repeats itself.
 - **Suggested weights.** Enter a recent 1RM (or bodyweight) and SPLIT estimates
   loads per lift, per rep range, per week. No numbers? Log real sets and the
@@ -121,6 +125,28 @@ training day by rotating through that day's target muscle groups (leading with
 compound lifts), applies the sets/reps/rest scheme for your goal, and suggests
 loads scaled to the selected progression week. Logged sets are stored in
 `localStorage` and feed back into the weight suggestions.
+
+## Cardio schedule
+
+Cardio pays off differently depending on how you do it, and the modality is most
+of the difference. Pick an aim in the brief and SPLIT schedules the sessions
+into the week alongside the lifting.
+
+| Aim | The week |
+| --- | --- |
+| **Longevity** | 3 × zone 2 (incline walk, bike, easy run, ruck) + 1 × VO2 max intervals (assault bike, rower, ski erg) |
+| **Bone & muscle** | 2 × impact (running, jump rope, sprints, vest) + 2 × zone 2 on your feet |
+| **Hunting & hiking** | 2 × loaded climb (stepmill, incline, vest) + 1 × long ruck, 60–90 min at 10–20% bodyweight |
+| **Joint-friendly** | 3 × zone 2 (bike, rower, swim) + 1 × intervals, none of it with impact |
+
+- Easy sessions take the **off days** first — that's the point of zone 2, a day
+  that costs you nothing else. The hard session sits **with a lifting day**, so
+  the week still has room to recover.
+- The movement rotates week to week, like the lifts do, and is filtered by your
+  equipment — every aim keeps at least one option you can do with nothing.
+- Tap a session for its pacing cue, the how-to and the animated demo. Swapping a
+  session keeps the prescription and changes only the modality.
+- The **deload week** keeps the easy sessions and drops the hard one.
 
 ## Adding a block
 

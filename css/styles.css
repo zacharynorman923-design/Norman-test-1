@@ -117,6 +117,11 @@ header{padding:52px 0 30px}
 .rx{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--card-ink);white-space:nowrap;line-height:1.2}
 .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#8f8a7e;white-space:nowrap;margin-top:3px}
 .meta .load{color:var(--blue);font-weight:700}
+/* a cardio session's prescription is a sentence, not "4 × 6–8" — give it a line */
+.lift.cardio-row .nm{flex:1 1 auto}
+.lift.cardio-row .prescribe{flex:0 0 100%;text-align:left;order:4;margin-top:-2px}
+.lift.cardio-row .rx{font-size:12.5px;white-space:normal;color:#2e8b57;letter-spacing:.02em}
+.lift.cardio-row .meta{display:none}
 /* logged / previous-set summary: its own full-width line under the row, so
    long 4-set strings wrap cleanly instead of cramming the right column */
 .logged,.suggest{flex:0 0 100%;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;white-space:normal;line-height:1.6;margin-top:1px;padding-right:40px;word-spacing:1px}
@@ -157,6 +162,9 @@ header{padding:52px 0 30px}
 .fig .eq{fill:#cbc8bf;stroke:none}                /* bench, rack, bars */
 .fig .eq.bar{fill:none;stroke:#cbc8bf;stroke-width:4;stroke-linecap:round}
 .fig .eq.dim{opacity:.6}
+.fig .eq.ring{fill:none;stroke:#cbc8bf;stroke-width:3.4}
+.fig .eq.frame{fill:none;stroke:#cbc8bf;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.fig .gr.wave{stroke:#cfe3ea;stroke-width:3;stroke-dasharray:9 7}
 .fig .gr{stroke:#e0dcd3;stroke-width:2.4;stroke-linecap:round}   /* the floor */
 /* three frames: start → mid → end → mid → start */
 .figA{animation:demoA 2.2s ease-in-out infinite}
@@ -228,6 +236,21 @@ header{padding:52px 0 30px}
 .finisher-label{display:flex;align-items:center;gap:9px;padding:9px 18px 5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--heat);font-weight:700;border-top:1px solid rgba(0,0,0,.055)}
 .finisher-label::after{content:"";height:1px;flex:1;background:rgba(0,0,0,.08)}
 .addon-label{color:var(--blue)}
+.cardio-label{color:#2e8b57}
+.cardio-cue{margin:13px 18px 0;padding:8px 0 8px 11px;font-size:13.5px;line-height:1.5;color:#54524a;border-left:3px solid #2e8b57;background:rgba(46,139,87,.06);border-radius:0 8px 8px 0}
+
+/* the cardio schedule that sits under the week */
+.cardio-plan{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
+.cp-head{font-family:'Anton',sans-serif;font-weight:400;font-size:20px;letter-spacing:.02em;text-transform:uppercase;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cp-aim{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:none;color:#5fbf85}
+.cp-note{margin-top:10px;font-size:13.5px;line-height:1.6;color:#c9c5ba}
+.cp-list{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:12px;overflow:hidden}
+.cp-list li{background:var(--panel-2);padding:12px 14px}
+.cs-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cs-top b{font-size:15px;color:var(--bone)}
+.cs-rx{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:#5fbf85;letter-spacing:.02em}
+.cs-days{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted-dark);letter-spacing:.02em;line-height:1.6}
+.cp-foot{margin-top:12px;font-size:12px;color:var(--muted-dark);line-height:1.55}
 .blockrm{order:3;flex-shrink:0;border:none;background:rgba(0,0,0,.05);color:#6a6a62;width:22px;height:22px;border-radius:6px;font-size:11px;line-height:1;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .blockrm:hover{background:var(--heat);color:#fff}
 

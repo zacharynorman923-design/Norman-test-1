@@ -138,16 +138,92 @@ function buildWeekdays(layout, slots, count, queues, goal, equip, abs){
   return weekdays;
 }
 const PROG_WEEKS = 5;
+
+/* ===================== CARDIO =====================
+   The chosen aim is a weekly dose of sessions. Easy work takes the off days
+   first — that is the point of zone 2, a day that costs you nothing else —
+   and the hard session sits with a lifting day so the week still has room to
+   recover. The movement rotates week to week, like the lifts do. */
+function cardioPool(names, equip){
+  const byName={}; EX.cardio.forEach(x=>{ byName[x.n]=x; });
+  const pool=names.map(n=>byName[n]).filter(x=>x && x.eq.indexOf(equip)!==-1);
+  return pool.length ? pool : getPool('cardio',equip);
+}
+function mkCardioLift(sess, ex){
+  return {name:ex.n, group:'cardio', compound:0, cardio:sess.kind, cue:sess.cue, pool:sess.pool,
+          base:{sets:'', reps:sess.rx, rest:'—', tag:sess.tag}};
+}
+function cardioSessions(aim, equip, week){
+  const A=CARDIO_AIMS[aim];
+  if(!A || !A.sessions || !A.sessions.length) return [];
+  const out=[];
+  A.sessions.forEach((s,si)=>{
+    const pool=cardioPool(s.pool, equip);
+    for(let i=0;i<s.n;i++){
+      const ex=pool[(i + si + (week-1)*s.n) % pool.length];
+      out.push({kind:s.kind, tag:s.tag, rx:s.rx, cue:s.cue, hard:!!s.hard, lift:mkCardioLift(s,ex)});
+    }
+  });
+  return out;
+}
+/* A rest day that picks up cardio becomes a light day of its own; a training
+   day just gets the session appended after the lifting. */
+function attachCardio(weekdays, i, sess){
+  const d=weekdays[i];
+  if(d.rest) weekdays[i]={label:d.label, rest:false, cardioDay:true, type:sess.kind, lifts:[sess.lift], inten:0.3};
+  else d.lifts.push(sess.lift);
+  return weekdays[i].label;
+}
+function applyCardio(weekdays, aim, equip, week){
+  let sessions=cardioSessions(aim, equip, week);
+  if(!sessions.length) return [];
+  if(week===PROG_WEEKS) sessions=sessions.filter(s=>!s.hard);   // deload keeps the easy work
+  const rest=[], train=[];
+  weekdays.forEach((d,i)=>{ (d.rest?rest:train).push(i); });
+  const summary={};
+  const note=(s,day)=>{
+    const k=s.kind;
+    if(!summary[k]) summary[k]={kind:k, tag:s.tag, rx:s.rx, cue:s.cue, n:0, days:[], moves:[]};
+    summary[k].n++; summary[k].days.push(day);
+    if(summary[k].moves.indexOf(s.lift.name)===-1) summary[k].moves.push(s.lift.name);
+  };
+  /* Hard sessions sit with a lifting day, spread as far apart as the week
+     allows rather than stacked at the end of it. */
+  const hard=sessions.filter(s=>s.hard), slots=train.length?train:rest, taken=[];
+  hard.forEach((s,k)=>{
+    let i = hard.length>1 ? Math.round(k*(slots.length-1)/(hard.length-1)) : slots.length-1;
+    while(taken.indexOf(i)!==-1 && taken.length<slots.length) i=(i+1)%slots.length;
+    taken.push(i);
+    note(s, attachCardio(weekdays, slots[i], s));
+  });
+  const easySlots = rest.concat(train);
+  sessions.filter(s=>!s.hard).forEach((s,k)=>{
+    note(s, attachCardio(weekdays, easySlots[k%easySlots.length], s));
+  });
+  return Object.keys(summary).map(k=>{
+    const s=summary[k];
+    s.days.sort((a,b)=>WEEKDAYS.indexOf(a)-WEEKDAYS.indexOf(b));
+    return s;
+  });
+}
 function generate(){
   const {goal,days,exp,equip,length,split,abs}=state;
+  const aim = state.cardio && CARDIO_AIMS[state.cardio] ? state.cardio : 'none';
   const layout = (split==='muscle') ? muscleSplit(days) : chooseSplit(days,goal,exp);
   const queues=buildQueues(equip);           // shared across weeks -> week-to-week variation
   const count=targetCount(length,exp);
   const slots=DAY_SLOTS[days];
   const weeks={};
-  for(let w=1; w<=PROG_WEEKS; w++){ weeks[w]=buildWeekdays(layout, slots, count, queues, goal, equip, abs); }
+  let cardioSummary=[];
+  for(let w=1; w<=PROG_WEEKS; w++){
+    weeks[w]=buildWeekdays(layout, slots, count, queues, goal, equip, abs);
+    const placed=applyCardio(weeks[w], aim, equip, w);
+    if(w===1) cardioSummary=placed;
+  }
   const uniq=[...new Set(layout)];
   const splitName = split==='muscle' ? 'Body-part split'
       : (uniq.length<=2 ? uniq.join(' / ') : (days===6?'Push · Pull · Legs ×2':uniq.slice(0,3).join(' · ')));
-  return {meta:GOAL_META[goal], weeks, weekdays:weeks[1], days, length, splitName, goal, equip, abs};
+  const A=CARDIO_AIMS[aim];
+  const cardio = cardioSummary.length ? {aim, label:A.label, sub:A.sub, note:A.note, sessions:cardioSummary} : null;
+  return {meta:GOAL_META[goal], weeks, weekdays:weeks[1], days, length, splitName, goal, equip, abs, cardio};
 }

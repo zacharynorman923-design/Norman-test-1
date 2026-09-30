@@ -148,6 +148,12 @@ const EX = {
     {n:'Sprint Intervals',eq:ALL_EQ,c:0},
     {n:'Bear Crawl',eq:ALL_EQ,c:0},
     {n:'Jumping Jacks',eq:ALL_EQ,c:0},
+    {n:'Zone 2 Bike',eq:G,c:0},
+    {n:'Steady Row',eq:G,c:0},
+    {n:'Steady Run',eq:ALL_EQ,c:0},
+    {n:'Ruck Walk',eq:ALL_EQ,c:0},
+    {n:'Weighted Vest Walk',eq:DB_EQ,c:0},
+    {n:'Swim Laps',eq:ALL_EQ,c:0},
   ],
 };
 
@@ -186,6 +192,61 @@ const SCHEME = {
   general:   {comp:{s:'3',r:'8–10',rest:'90 s'},  iso:{s:'3',r:'10–12',rest:'60 s'}},
 };
 const CARDIO_RX = ['8 × 30s / 30s','20 min steady','6 × 40s / 20s','5 rounds','12 min AMRAP'];
+
+/* ===================== CARDIO SCHEDULE =====================
+   Cardio earns different things depending on what you want from it, and the
+   modality is most of the difference. Each aim is a weekly dose: how many
+   sessions of what kind, and which movements can fill them. `pool` is listed
+   best-first and filtered by your equipment, so every aim keeps at least one
+   option you can do with nothing.                                          */
+const CARDIO_AIMS = {
+  none:{ label:'None', sub:'lifting only', sessions:[] },
+
+  longevity:{ label:'Longevity', sub:'zone 2 + one hard session',
+    note:'Zone 2 three to four times a week, plus one VO2 max interval session. The easy volume builds the aerobic base; the one hard session is what moves VO2 max, and VO2 max is the number that tracks with living longer.',
+    sessions:[
+      {kind:'Zone 2', n:3, rx:'40 min easy', tag:'zone 2',
+       cue:'Nose-breathing pace — you could hold a conversation the whole way.',
+       pool:['Incline Treadmill Walk','Zone 2 Bike','Steady Run','Ruck Walk']},
+      {kind:'VO2 max', n:1, hard:1, rx:'5 × 3 min hard / 3 min easy', tag:'vo2 max',
+       cue:'Hard enough that talking is out. Take the full recovery between efforts.',
+       pool:['Assault Bike Sprints','Rowing Intervals','Ski Erg Intervals','Sprint Intervals']},
+    ]},
+
+  bone:{ label:'Bone & muscle', sub:'impact and carried load',
+    note:'Impact and carried load are the signals bone responds to — running, jump rope or a weighted vest. Cycling and swimming build the engine but leave the skeleton unloaded.',
+    sessions:[
+      {kind:'Impact', n:2, hard:1, rx:'20–30 min', tag:'impact',
+       cue:'Land light and quiet, under your hips. Build the minutes slowly — bone adapts more slowly than lungs.',
+       pool:['Steady Run','Jump Rope','Sprint Intervals','Weighted Vest Walk']},
+      {kind:'Zone 2', n:2, rx:'30–40 min easy', tag:'zone 2',
+       cue:'Easy conversational pace, still on your feet rather than seated.',
+       pool:['Weighted Vest Walk','Steady Run','Incline Treadmill Walk','Ruck Walk']},
+    ]},
+
+  hike:{ label:'Hunting & hiking', sub:'stepmill and loaded walking',
+    note:'Stepmill plus a weighted vest, and one long ruck. Climbing under load is the closest indoor match for a mountain, and the long carry is what teaches your legs and back to keep going.',
+    sessions:[
+      {kind:'Loaded climb', n:2, rx:'30–45 min steady climb', tag:'climb',
+       cue:'Steady steps, no leaning on the handrails. Add weight before you add speed.',
+       pool:['Stair Climber','Incline Treadmill Walk','Weighted Vest Walk','Ruck Walk']},
+      {kind:'Long ruck', n:1, rx:'60–90 min · 10–20% bodyweight', tag:'ruck',
+       cue:'Pack loaded high and strapped tight. Rolling ground beats flat.',
+       pool:['Ruck Walk','Weighted Vest Walk','Incline Treadmill Walk']},
+    ]},
+
+  joints:{ label:'Joint-friendly', sub:'volume without the pounding',
+    note:'Cycling, rowing and swimming carry no impact, so you can pile on aerobic volume without asking anything of sore knees, hips or a cranky back.',
+    sessions:[
+      {kind:'Zone 2', n:3, rx:'40–50 min easy', tag:'zone 2',
+       cue:'Smooth and continuous. If a joint complains, drop the resistance before the duration.',
+       pool:['Zone 2 Bike','Steady Row','Swim Laps']},
+      {kind:'Intervals', n:1, hard:1, rx:'8 × 1 min hard / 1 min easy', tag:'intervals',
+       cue:'All the intensity, none of the landing forces.',
+       pool:['Rowing Intervals','Assault Bike Sprints','Ski Erg Intervals','Swim Laps']},
+    ]},
+};
+const CARDIO_ORDER = ['none','longevity','bone','hike','joints'];
 
 /* ===================== PROGRESSION ===================== */
 const WEEK_INFO = {
