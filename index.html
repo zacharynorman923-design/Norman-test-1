@@ -148,7 +148,8 @@
 
   <footer>
     <b>SPLIT</b> &nbsp;·&nbsp; a demo program builder &nbsp;·&nbsp; not medical advice<br>
-    log your real sets to personalise loads &nbsp;·&nbsp; adjust to how the set feels &nbsp;·&nbsp; warm up first
+    log your real sets to personalise loads &nbsp;·&nbsp; adjust to how the set feels &nbsp;·&nbsp; warm up first<br>
+    <span class="ver" id="appver"></span>
   </footer>
 </div>
 
@@ -169,10 +170,17 @@
 <script src="js/scheduler.js"></script>
 <script src="js/app.js"></script>
 <script>
-  /* Register the service worker so the app installs and runs offline. */
+  /* Register the service worker so the app installs and runs offline.
+     updateViaCache:'none' makes the browser check sw.js itself against the
+     server, and coming back to the app checks for a newer deploy — an
+     installed app can sit open in the background for days. */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update().catch(() => {});
+        });
+      }).catch(() => {});
     });
   }
 </script>

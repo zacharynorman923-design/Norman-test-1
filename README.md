@@ -106,6 +106,15 @@ Installed, it launches full-screen with its own icon and works without a
 connection. (The service worker needs `https://` or `http://localhost` — it is
 inactive on `file://`.)
 
+**Updates apply themselves.** The app's own files are fetched network-first, so
+opening it online always runs the latest deploy; the cache is only the offline
+fallback. When a new service worker version takes over, it reloads the open app
+once. Coming back to an app left open in the background checks for a new
+version too. The footer shows which version is running.
+
+When you release, bump `VERSION` in `sw.js` and `APP_VERSION` in `js/app.js`
+together.
+
 ## Deploy it (GitHub Pages)
 
 The site is fully static, so it hosts for free on GitHub Pages:

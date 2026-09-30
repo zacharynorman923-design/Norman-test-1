@@ -1,3 +1,6 @@
+/* The deployed version, shown in the footer so you can tell which build is
+   running. Keep in step with VERSION in sw.js. */
+const APP_VERSION = 'split-v21';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -840,6 +843,8 @@ function stripCoreFromMain(program){
   if(program.weeks && program.weeks[1]) program.weekdays = program.weeks[1];
   return true;
 }
+
+try{ document.getElementById('appver').textContent = APP_VERSION.replace('split-','version '); }catch(e){}
 
 /* On load: restore logs, then the last session (brief + program + week). */
 loadStore();
