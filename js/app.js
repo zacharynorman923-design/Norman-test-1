@@ -39,6 +39,10 @@ function normalizeEntry(e){
   if(Array.isArray(e.sets)){
     const first=e.sets.filter(s=>s)[0];
     const diff=(e.diff && DIFF_BY[e.diff]) ? e.diff : null;
+    if(e.metric==='mins' || (first && first.min!=null)){
+      const sets=trimSets(e.sets.map(s=> s && s.min>0 ? {min:s.min} : null));
+      return sets.some(s=>s) ? {unit:e.unit||'kg', metric:'mins', sets, diff, e1rm:null} : null;
+    }
     if(e.metric==='time' || (first && first.sec!=null)){
       const sets=trimSets(e.sets.map(s=> s && s.sec>0 ? {sec:s.sec} : null));
       return sets.some(s=>s) ? {unit:e.unit||'kg', metric:'time', sets, diff, e1rm:null} : null;
@@ -124,13 +128,31 @@ function bestE1RM(entry){
 function doneSets(entry){ return entry && entry.sets ? entry.sets.filter(Boolean).length : 0; }
 function lastBanked(entry){ const a=(entry&&entry.sets||[]).filter(Boolean); return a.length?a[a.length-1]:null; }
 function logMode(l){
+  if(l.cardio) return 'mins';                                // a cardio session
   if(l.w) return 'weight';                                   // external load
   if(typeof isTimedExercise==='function' && isTimedExercise(l.name)) return 'time'; // holds and carries
   return 'reps';                                             // bodyweight reps
 }
+/* Minutes to start from for a session that has never been logged: read them off
+   the prescription, but only when it is a plain duration — "5 × 3 min hard"
+   is not 3 minutes of work. */
+function rxMinutes(rx){
+  if(!rx || /[×x]/.test(rx)) return '';
+  const m=String(rx).match(/(\d+)\s*(?:–\s*\d+\s*)?min/);
+  return m ? m[1] : '';
+}
+function nextMins(m, diff){
+  const d=diff&&DIFF_BY[diff];
+  if(!d || !d.rep) return m;
+  return Math.max(5, Math.round(m*(d.rep>0?1.1:0.9)/5)*5);
+}
 function loggedText(l, entry){
   const u=entry.unit, dh=entry.type==='dumbbell'?'/hand':'';
   const join=parts=>parts.join(' · ');                 // “—” marks a set not logged yet
+  if(entry.metric==='mins'){
+    const m=entry.sets.filter(Boolean).reduce((n,s)=>n+s.min,0);
+    return `logged ${m} min`;
+  }
   if(entry.metric==='time'){
     return `logged ${join(entry.sets.map(s=> s ? s.sec : '—'))} s`;
   }
@@ -160,11 +182,12 @@ function renderProgram(animate){
   const logNames=loggedNames(), anyLog=logNames.size>0;
   const anchorsAvail=Object.values(anchors).some(v=>v);
   const prog=document.getElementById('program');
+  const today=(new Date().getDay()+6)%7;          // WEEKDAYS starts on Monday
   let totalSets=0, daysHTML='', delay=0;
 
   curWeekdays().forEach((d,di)=>{
     if(d.rest){
-      daysHTML+=`<div class="day rest"><span class="dow">${d.label}</span><span class="rfocus">Rest</span>
+      daysHTML+=`<div class="day rest${di===today?' today':''}"><span class="dow">${d.label}</span><span class="rfocus">Rest</span>
         <span class="rnote">${restNotes[d.label.charCodeAt(0)%restNotes.length]}</span></div>`;
       return;
     }
@@ -193,7 +216,7 @@ function renderProgram(animate){
         if(load){ metaTxt=`<span class="load">${load.txt}</span> · ${v.rest}`; if(load.num!=null) num=load.num; }
       }
       const key=`${di}:${li}`;
-      const loggable = v.sets!=='';
+      const loggable = v.sets!=='' || mode==='mins';
       const open = EDIT===key;
       let loggedLine='';
       if(done){
@@ -216,7 +239,7 @@ function renderProgram(animate){
       if(open){
         let logHTML='';
         if(loggable){
-          const nSets=parseInt(v.sets,10)||1;
+          const nSets=mode==='mins' ? 1 : (parseInt(v.sets,10)||1);
           const rows=Math.max(nSets, src?src.sets.length:0);
           const dh = l.w && l.w[2]==='dumbbell' ? ' /hand' : '';
           const targetR=repTop(v.reps);
@@ -229,13 +252,21 @@ function renderProgram(animate){
             const s = done ? done.sets[i] : null;          // this row, already banked
             const last = suggest ? suggest.sets[i] : null; // the same set last time
             const isDone = !!s;
+            const what = mode==='mins' ? 'session' : 'set';
             const tick = `<button class="lb-done${isDone?' on':''}" type="button" data-i="${i}"
-              title="${isDone?'Update this set':'Log this set now'}" aria-label="Log set ${i+1}" aria-pressed="${isDone}">✓</button>`;
+              title="${isDone?'Update this '+what:'Log this '+what+' now'}" aria-label="Log ${mode==='mins'?'this session':'set '+(i+1)}" aria-pressed="${isDone}">✓</button>`;
             const cls = `lb-set${isDone?' is-done':''}`;
             /* An unlogged row starts from whatever is most useful: the set you
                just banked (so the working weight carries down the list), else
                the suggestion for a fresh occurrence, else last time's numbers. */
-            if(mode==='time'){
+            if(mode==='mins'){
+              const pv = s ? s.min : (last ? nextMins(last.min,lastDiff) : rxMinutes(v.reps));
+              rowsHTML+=`<div class="${cls}">
+                <span class="lb-n">Session</span>
+                <input class="lm" type="number" inputmode="numeric" value="${pv}" placeholder="—" aria-label="Minutes done">
+                <span class="lb-u">min</span>${tick}
+              </div>`;
+            } else if(mode==='time'){
               const pv = s ? s.sec : carry ? carry.sec : (last ? nextSecs(last.sec,lastDiff) : '');
               rowsHTML+=`<div class="${cls}">
                 <span class="lb-n">Set ${i+1}</span>
@@ -266,13 +297,19 @@ function renderProgram(animate){
               </div>`;
             }
           }
-          head = mode==='time' ? 'Log each set — hold time in seconds'
+          head = mode==='mins' ? 'Log the session — minutes done'
+               : mode==='time' ? 'Log each set — hold time in seconds'
                : mode==='weight' ? `Log each set — weight ${unit}${dh} × completed reps`
                : 'Log each set — completed reps';
           const curDiff = PENDING_DIFF[key] || (done && done.diff) || '';
-          const dchips = DIFF_LEVELS.map(d=>
-            `<button class="dchip${curDiff===d.k?' on':''}" type="button" data-diff="${d.k}" aria-pressed="${curDiff===d.k}">${d.label}</button>`).join('');
-          const dNote = curDiff && DIFF_BY[curDiff] ? DIFF_BY[curDiff].note : 'Sets the starting point for the next time this lift comes up.';
+          const dchips = DIFF_LEVELS.map(d=>{
+            // "missed reps" means nothing on a 40-minute walk
+            const lab = (mode==='mins' && d.k==='fail') ? 'Cut it short' : d.label;
+            return `<button class="dchip${curDiff===d.k?' on':''}" type="button" data-diff="${d.k}" aria-pressed="${curDiff===d.k}">${lab}</button>`;
+          }).join('');
+          const dNote = curDiff && DIFF_BY[curDiff] ? DIFF_BY[curDiff].note
+                      : (mode==='mins' ? 'Sets the starting point for the next session of this kind.'
+                                       : 'Sets the starting point for the next time this lift comes up.');
           const diffHTML = `<div class="lb-diff">
             <div class="lb-dlab">How did it feel?</div>
             <div class="lb-dchips" role="group" aria-label="How did that feel">${dchips}</div>
@@ -282,15 +319,16 @@ function renderProgram(animate){
           const addWtBtn = mode==='reps' ? `<button class="addwt" type="button">＋ Add weight (vest / belt)</button>` : '';
           logHTML=`<div class="logbox${showWeight?' show-weight':''}" data-di="${di}" data-li="${li}">
             <div class="lb-head">${head}</div>
-            <div class="lb-sub">Hit ✓ on a set to bank it mid-workout — or fill them all in and save at the end.</div>
+            <div class="lb-sub">${mode==='mins' ? 'Tick it off when the session is done.' : 'Hit ✓ on a set to bank it mid-workout — or fill them all in and save at the end.'}</div>
             <div class="lb-sets">${rowsHTML}</div>
             ${addWtBtn}
             ${diffHTML}
             <div class="lb-foot">
+              ${parseRest(v.rest)?`<button class="restnow" type="button" data-sec="${parseRest(v.rest)}" data-name="${l.name}">⏱ Rest ${v.rest}</button>`:''}
               ${done?`<button class="logclear" data-di="${di}" data-li="${li}">Clear</button>`:'<span></span>'}
               <div class="lb-btns">
                 <button class="logcancel" type="button">Close</button>
-                <button class="logsave" type="button">Save all</button>
+                <button class="logsave" type="button">${mode==='mins'?'Save':'Save all'}</button>
               </div>
             </div>
           </div>`;
@@ -301,7 +339,7 @@ function renderProgram(animate){
     });
     const pct=Math.round(Math.max(.2,Math.min(1,d.inten*factor))*100);
     const style = animate ? `style="animation-delay:${delay.toFixed(2)}s"` : '';
-    daysHTML+=`<div class="day train" ${style}>
+    daysHTML+=`<div class="day train${di===today?' today':''}" ${style}>
       <div class="day-top"><span class="dow">${d.label}</span><span class="focus">${d.type}</span>
         <span class="intensity"><div class="lab">${intensityLabel(d.inten*factor)}</div>
           <div class="bar"><i data-w="${pct}"></i></div></span></div>
@@ -339,6 +377,7 @@ function renderProgram(animate){
         <div class="stat"><div class="k">Sessions</div><div class="v">${p.days}<small>/wk</small></div></div>
         <div class="stat"><div class="k">Working sets</div><div class="v">${totalSets}<small>/wk</small></div></div>
         <div class="stat"><div class="k">Logged lifts</div><div class="v">${logCount}</div></div>
+        ${p.cardio?`<div class="stat"><div class="k">Cardio</div><div class="v">${p.cardio.sessions.reduce((n,s)=>n+s.n,0)}<small>/wk</small></div></div>`:''}
       </div>
       <div class="weeks" role="group" aria-label="Progression week">${weekPills}</div>
       <div class="wknote"><b>${wi.tag}</b><span>${wi.note}</span></div>
@@ -350,6 +389,11 @@ function renderProgram(animate){
       <button class="ghost" id="regen">↻ Regenerate exercises</button>
       <button class="ghost" id="edit">↑ Change brief</button>
       ${anyLog?`<button class="ghost" id="clearlog">⌫ Clear all logs (${logCount})</button>`:''}
+    </div>
+    <div class="datarow">
+      Your logs live in this browser only.
+      <button class="linkbtn" id="expdata" type="button">⭳ Export a backup</button>
+      <button class="linkbtn" id="impdata" type="button">⭱ Restore one</button>
     </div>`;
 
   prog.classList.remove('hidden');
@@ -375,6 +419,10 @@ function renderProgram(animate){
    occurrence (week + day + slot + exercise). A set counts only if reps (or
    seconds) were entered. Saving with nothing clears this occurrence's log. */
 function readSetRow(row, mode){
+  if(mode==='mins'){
+    const min=parseInt(row.querySelector('.lm').value,10);
+    return min>0 ? {min} : null;
+  }
   if(mode==='time'){
     const sec=parseInt(row.querySelector('.lt').value,10);
     return sec>0 ? {sec} : null;
@@ -415,10 +463,18 @@ function logOneSet(box, idx){
   const prev=LOG.sets[occKey(di,li,l.name)];
   const sets=prev ? prev.sets.slice() : [];
   while(sets.length<=idx) sets.push(null);
-  sets[idx]=readSetRow(rows[idx],mode);
-  commitSets(di,li,l,mode,sets);
+  const val=readSetRow(rows[idx],mode);
+  sets[idx]=val;
+  const entry=commitSets(di,li,l,mode,sets);
   FOCUS={row: Math.min(idx+1, rows.length-1)};
   renderProgram(false);
+  /* Straight into the rest between sets — but not after the last one, and
+     never for a cardio session, which has no sets to rest between. */
+  if(val && entry && mode!=='mins'){
+    const v=weekAdjust(l.base,WEEK,l.compound);
+    const nWant=parseInt(v.sets,10)||0;
+    if(!nWant || doneSets(entry)<nWant) startRest(parseRest(v.rest), l.name);
+  }
 }
 /* Rate the lift. Applies to the stored entry right away when there is one. */
 function setDiff(box, val){
@@ -482,12 +538,15 @@ document.getElementById('program').addEventListener('click', e=>{
   const dc=e.target.closest('.dchip'); if(dc){ setDiff(dc.closest('.logbox'), dc.dataset.diff); return; }
   const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
+  const rn=e.target.closest('.restnow'); if(rn){ startRest(+rn.dataset.sec, rn.dataset.name); return; }
   const cl=e.target.closest('.logclear'); if(cl){ clearLog(+cl.dataset.di,+cl.dataset.li); return; }
   const wk=e.target.closest('.wk'); if(wk){ EDIT=null; WEEK=parseInt(wk.dataset.wk,10); renderProgram(false); return; }
   const sw=e.target.closest('.swap'); if(sw){ swapLift(+sw.dataset.di,+sw.dataset.li); return; }
   const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
   if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  if(e.target.closest('#expdata')){ exportData(); return; }
+  if(e.target.closest('#impdata')){ document.getElementById('impfile').click(); return; }
   if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.sets={}; for(const k in PENDING_DIFF) delete PENDING_DIFF[k]; saveStore(); renderProgram(false); } return; }
 });
 /* Keyboard: Enter/Space toggles a focused lift row (but not while typing in it). */
@@ -618,6 +677,113 @@ addonBuild.addEventListener('click', ()=>{
   if(!n){ addonSetStatus('No movements available for that target with your equipment.','err'); return; }
   saveSession(); EDIT=null; renderProgram(false);
   addonSetStatus(`Added “${label}” — ${n} move${n>1?'s':''} on ${day.label}${addonAllWeeks?', every week':' (this week only)'}. Remove it with the ✕ on the block.`,'ok');
+});
+
+/* ===================== REST TIMER =====================
+   Lives outside #program, so re-rendering the week never interrupts a running
+   countdown. Starts itself when you bank a set, using that lift's prescribed
+   rest, and can be started by hand from the log panel. */
+const restEl=document.getElementById('rest'), restTimeEl=document.getElementById('restTime'),
+      restFill=document.getElementById('restFill'), restLabelEl=document.getElementById('restLabel');
+let restEnd=0, restTotal=0, restTick=null;
+/* '2 min' | '75 s' | '90 s' | '—'  ->  seconds */
+function parseRest(txt){
+  const m=String(txt||'').match(/(\d+(?:\.\d+)?)\s*(min|s)\b/i);
+  if(!m) return 0;
+  return Math.round(parseFloat(m[1]) * (m[2].toLowerCase()==='min' ? 60 : 1));
+}
+function fmtClock(sec){ return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
+function drawRest(){
+  const left=Math.max(0, Math.ceil((restEnd-Date.now())/1000));
+  restTimeEl.textContent=fmtClock(left);
+  restFill.style.width=(restTotal ? Math.max(0,left/restTotal)*100 : 0)+'%';
+  if(left<=0 && !restEl.classList.contains('done')){
+    restEl.classList.add('done');
+    restLabelEl.textContent='Next set';
+    restChime();
+    clearInterval(restTick); restTick=null;
+  }
+}
+function startRest(sec, label){
+  sec=Math.round(sec);
+  if(!(sec>0)) return;
+  restTotal=sec; restEnd=Date.now()+sec*1000;
+  restLabelEl.textContent=label||'Rest';
+  restEl.classList.remove('hidden','done');
+  drawRest();
+  clearInterval(restTick); restTick=setInterval(drawRest,250);
+}
+function stopRest(){
+  clearInterval(restTick); restTick=null; restEnd=0;
+  restEl.classList.add('hidden'); restEl.classList.remove('done');
+}
+/* A short tone and a buzz — both best-effort, both silent if the platform
+   says no. */
+function restChime(){
+  try{ if(navigator.vibrate) navigator.vibrate([140,70,140]); }catch(e){}
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    const c=new AC(), o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(0.0001,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.22,c.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.6);
+    o.start(); o.stop(c.currentTime+0.62);
+    setTimeout(()=>{ try{ c.close(); }catch(e){} },900);
+  }catch(e){}
+}
+document.getElementById('restSkip').addEventListener('click', stopRest);
+document.getElementById('restAdd').addEventListener('click', ()=>{
+  if(!restEnd) return;
+  const left=Math.max(0, Math.ceil((restEnd-Date.now())/1000)) + 30;
+  startRest(left, restLabelEl.textContent==='Next set' ? 'Rest' : restLabelEl.textContent);
+});
+
+/* ===================== BACKUP =====================
+   Everything lives in this browser's localStorage, which a cleared cache or a
+   new phone takes with it. Export writes the lot to a file; restore reads one
+   back. */
+function exportData(){
+  const payload={app:'SPLIT', format:1, exportedAt:new Date().toISOString(),
+                 state, week:WEEK, program:PROGRAM, logs:LOG.sets};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='split-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+function importData(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    let o=null;
+    try{ o=JSON.parse(reader.result); }catch(e){}
+    if(!o || typeof o!=='object' || (!o.logs && !o.program)){
+      alert('That does not look like a SPLIT backup.'); return;
+    }
+    const incoming=o.logs ? Object.keys(o.logs).length : 0;
+    const have=Object.keys(LOG.sets).length;
+    const when=o.exportedAt ? new Date(o.exportedAt).toLocaleDateString() : 'an unknown date';
+    if(!confirm(`Restore the backup from ${when}?\n\nIt replaces what is in this browser — ${have} logged lift${have===1?'':'s'} and your current week — with ${incoming} logged lift${incoming===1?'':'s'}. This cannot be undone.`)) return;
+    if(o.logs && typeof o.logs==='object'){
+      const out={};
+      for(const k in o.logs){ const n=normalizeEntry(o.logs[k]); if(n){ n.name=o.logs[k].name; n.ts=o.logs[k].ts||0; out[k]=n; } }
+      LOG.sets=out; saveStore();
+    }
+    if(o.state) Object.assign(state, o.state);
+    if(!state.max) state.max={bench:'',squat:'',deadlift:'',press:'',row:''};
+    syncBriefUI();
+    EDIT=null;
+    if(o.program){ PROGRAM=o.program; WEEK=o.week||1; }
+    if(PROGRAM){ saveSession(); renderProgram(false); }
+  };
+  reader.readAsText(file);
+}
+document.getElementById('impfile').addEventListener('change', e=>{
+  const f=e.target.files && e.target.files[0];
+  if(f) importData(f);
+  e.target.value='';                       // so the same file can be picked twice
 });
 
 /* The AI coach was removed — clear any API key it left in this browser. */
