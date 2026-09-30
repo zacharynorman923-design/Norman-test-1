@@ -256,6 +256,23 @@ header{padding:52px 0 30px}
 .cs-top b{font-size:15px;color:var(--bone)}
 .cs-rx{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:#5fbf85;letter-spacing:.02em}
 .cs-days{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted-dark);letter-spacing:.02em;line-height:1.6}
+.cs-covers{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.cov{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.07);color:#cfccc2}
+.cov-longevity{background:rgba(95,191,133,.14);color:#5fbf85}
+.cov-bone{background:rgba(255,78,34,.14);color:#ff8a66}
+.cov-hike{background:rgba(214,170,90,.16);color:#d8b06a}
+.cov-joints{background:rgba(91,118,255,.16);color:#8ea0ff}
+.cp-sub{margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.cp-goals{list-style:none;margin-top:9px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cp-goals li{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.cg-top{display:flex;align-items:center;gap:7px}
+.cg-top b{font-size:13.5px;color:var(--bone)}
+.cg-tick{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#2e8b57;color:#fff;flex-shrink:0}
+.cp-goals li.miss .cg-tick{background:rgba(255,255,255,.12);color:var(--muted)}
+.cg-asks{margin-top:6px;font-size:12px;line-height:1.5;color:var(--muted)}
+.cg-by{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;color:#5fbf85;line-height:1.5}
+.cp-goals li.miss .cg-by{color:var(--muted-dark)}
+@media (max-width:430px){ .cp-goals{grid-template-columns:1fr} }
 .cp-foot{margin-top:12px;font-size:12px;color:var(--muted-dark);line-height:1.55}
 .blockrm{order:3;flex-shrink:0;border:none;background:rgba(0,0,0,.05);color:#6a6a62;width:22px;height:22px;border-radius:6px;font-size:11px;line-height:1;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .blockrm:hover{background:var(--heat);color:#fff}

@@ -194,59 +194,38 @@ const SCHEME = {
 const CARDIO_RX = ['8 × 30s / 30s','20 min steady','6 × 40s / 20s','5 rounds','12 min AMRAP'];
 
 /* ===================== CARDIO SCHEDULE =====================
-   Cardio earns different things depending on what you want from it, and the
-   modality is most of the difference. Each aim is a weekly dose: how many
-   sessions of what kind, and which movements can fill them. `pool` is listed
-   best-first and filtered by your equipment, so every aim keeps at least one
-   option you can do with nothing.                                          */
+   One week of cardio that covers all four things cardio is good for, rather
+   than making you choose. Each goal names what it asks for; each session says
+   which goals it serves. The two stack well: zone 2 on a bike, rower or in
+   the pool is the longevity base *and* the joint-friendly volume, and a
+   loaded climb is the hiking work *and* carried load for bone.
+   `pool` is best-first and filtered by your equipment — every session keeps
+   at least one option you can do with nothing.                            */
+const CARDIO_GOALS = {
+  longevity:{ label:'Longevity',        asks:'Zone 2 (incline walking or bike) 3–4× a week, plus 1 VO2 max interval session (assault bike or rowing).' },
+  bone:     { label:'Bone & muscle',    asks:'Running, jump rope, or a weighted vest.' },
+  hike:     { label:'Hunting & hiking', asks:'Stepmill plus weighted vest or ruck walking.' },
+  joints:   { label:'Joint-friendly volume', asks:'Cycling, rowing, or swimming.' },
+};
 const CARDIO_AIMS = {
-  none:{ label:'None', sub:'lifting only', sessions:[] },
-
-  longevity:{ label:'Longevity', sub:'zone 2 + one hard session',
-    note:'Zone 2 three to four times a week, plus one VO2 max interval session. The easy volume builds the aerobic base; the one hard session is what moves VO2 max, and VO2 max is the number that tracks with living longer.',
+  none:{ label:'Off', sub:'lifting only', sessions:[] },
+  all:{ label:'All four', sub:'longevity · bone · hiking · joints',
+    note:'Five sessions that cover every goal between them. The easy ones take your off days; the two hard ones sit with a lifting day. Three of the five are zone 2 effort, the fourth is the VO2 max session, and the fifth is the impact that bone needs.',
     sessions:[
-      {kind:'Zone 2', n:3, rx:'40 min easy', tag:'zone 2',
-       cue:'Nose-breathing pace — you could hold a conversation the whole way.',
-       pool:['Incline Treadmill Walk','Zone 2 Bike','Steady Run','Ruck Walk']},
-      {kind:'VO2 max', n:1, hard:1, rx:'5 × 3 min hard / 3 min easy', tag:'vo2 max',
+      {kind:'Zone 2', n:2, rx:'40 min easy', tag:'zone 2', covers:['longevity','joints'],
+       cue:'Nose-breathing pace — you could hold a conversation the whole way. Bike, rower or pool keeps the volume off your joints.',
+       pool:['Zone 2 Bike','Steady Row','Swim Laps','Incline Treadmill Walk']},
+      {kind:'Loaded climb', n:1, long:1, rx:'45–60 min · vest or pack at 10–20% bodyweight', tag:'climb', covers:['hike','bone','longevity'],
+       cue:'Still zone 2 — just uphill and carrying weight. Steady steps, no leaning on the rails; add weight before speed.',
+       pool:['Stair Climber','Weighted Vest Walk','Ruck Walk','Incline Treadmill Walk']},
+      {kind:'VO2 max', n:1, hard:1, rx:'5 × 3 min hard / 3 min easy', tag:'vo2 max', covers:['longevity'],
        cue:'Hard enough that talking is out. Take the full recovery between efforts.',
        pool:['Assault Bike Sprints','Rowing Intervals','Ski Erg Intervals','Sprint Intervals']},
-    ]},
-
-  bone:{ label:'Bone & muscle', sub:'impact and carried load',
-    note:'Impact and carried load are the signals bone responds to — running, jump rope or a weighted vest. Cycling and swimming build the engine but leave the skeleton unloaded.',
-    sessions:[
-      {kind:'Impact', n:2, hard:1, rx:'20–30 min', tag:'impact',
+      {kind:'Impact', n:1, hard:1, rx:'20–30 min', tag:'impact', covers:['bone'],
        cue:'Land light and quiet, under your hips. Build the minutes slowly — bone adapts more slowly than lungs.',
-       pool:['Steady Run','Jump Rope','Sprint Intervals','Weighted Vest Walk']},
-      {kind:'Zone 2', n:2, rx:'30–40 min easy', tag:'zone 2',
-       cue:'Easy conversational pace, still on your feet rather than seated.',
-       pool:['Weighted Vest Walk','Steady Run','Incline Treadmill Walk','Ruck Walk']},
-    ]},
-
-  hike:{ label:'Hunting & hiking', sub:'stepmill and loaded walking',
-    note:'Stepmill plus a weighted vest, and one long ruck. Climbing under load is the closest indoor match for a mountain, and the long carry is what teaches your legs and back to keep going.',
-    sessions:[
-      {kind:'Loaded climb', n:2, rx:'30–45 min steady climb', tag:'climb',
-       cue:'Steady steps, no leaning on the handrails. Add weight before you add speed.',
-       pool:['Stair Climber','Incline Treadmill Walk','Weighted Vest Walk','Ruck Walk']},
-      {kind:'Long ruck', n:1, rx:'60–90 min · 10–20% bodyweight', tag:'ruck',
-       cue:'Pack loaded high and strapped tight. Rolling ground beats flat.',
-       pool:['Ruck Walk','Weighted Vest Walk','Incline Treadmill Walk']},
-    ]},
-
-  joints:{ label:'Joint-friendly', sub:'volume without the pounding',
-    note:'Cycling, rowing and swimming carry no impact, so you can pile on aerobic volume without asking anything of sore knees, hips or a cranky back.',
-    sessions:[
-      {kind:'Zone 2', n:3, rx:'40–50 min easy', tag:'zone 2',
-       cue:'Smooth and continuous. If a joint complains, drop the resistance before the duration.',
-       pool:['Zone 2 Bike','Steady Row','Swim Laps']},
-      {kind:'Intervals', n:1, hard:1, rx:'8 × 1 min hard / 1 min easy', tag:'intervals',
-       cue:'All the intensity, none of the landing forces.',
-       pool:['Rowing Intervals','Assault Bike Sprints','Ski Erg Intervals','Swim Laps']},
+       pool:['Steady Run','Jump Rope','Sprint Intervals']},
     ]},
 };
-const CARDIO_ORDER = ['none','longevity','bone','hike','joints'];
 
 /* ===================== PROGRESSION ===================== */
 const WEEK_INFO = {

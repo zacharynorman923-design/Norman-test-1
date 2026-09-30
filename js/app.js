@@ -1,6 +1,6 @@
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
-                abs:false, cardio:'none', unit:'kg', bw:'',
+                abs:false, cardio:'all', unit:'kg', bw:'',
                 max:{bench:'',squat:'',deadlift:'',press:'',row:''} };
 /* Each log is stored against the specific occurrence you did it on
    (week + day + slot + exercise), so it never bleeds onto other days or
@@ -93,6 +93,7 @@ function syncBriefUI(){
   document.getElementById('bw').value = state.bw || '';
   document.querySelectorAll('input[data-max]').forEach(inp=>{ inp.value = (state.max&&state.max[inp.dataset.max]) || ''; });
   absBtn.setAttribute('aria-checked', state.abs?'true':'false');
+  cardioBtn.setAttribute('aria-checked', cardioOn()?'true':'false');
 }
 
 document.querySelectorAll('.chips').forEach(group=>{
@@ -112,6 +113,12 @@ document.querySelectorAll('input[data-max]').forEach(inp=>{
 });
 const absBtn=document.getElementById('absToggle');
 absBtn.addEventListener('click',()=>{ state.abs=!state.abs; absBtn.setAttribute('aria-checked', state.abs?'true':'false'); saveSession(); });
+const cardioBtn=document.getElementById('cardioToggle');
+cardioBtn.addEventListener('click',()=>{
+  state.cardio = cardioOn() ? 'none' : 'all';
+  cardioBtn.setAttribute('aria-checked', cardioOn()?'true':'false');
+  saveSession();
+});
 
 /* ===================== RENDER ===================== */
 /* Estimated 1RM of a single set (Epley). Dumbbell weight is per-hand, so the
@@ -355,15 +362,29 @@ function renderProgram(animate){
      often, and which days it landed on. */
   let cardioHTML='';
   if(p.cardio){
+    const goalName=g=>(CARDIO_GOALS[g]||{label:g}).label;
     const rows=p.cardio.sessions.map(s=>`<li>
       <div class="cs-top"><b>${s.n} × ${s.kind}</b><span class="cs-rx">${s.rx}</span></div>
       <div class="cs-days">${s.days.join(' · ')} &nbsp;—&nbsp; ${s.moves.join(', ')}</div>
+      ${(s.covers||[]).length?`<div class="cs-covers">${s.covers.map(g=>`<span class="cov cov-${g}">${goalName(g)}</span>`).join('')}</div>`:''}
     </li>`).join('');
+    /* Check the week against each goal: what it asks for, and what delivers it. */
+    const cover=Object.keys(CARDIO_GOALS).map(g=>{
+      const by=p.cardio.sessions.filter(s=>(s.covers||[]).indexOf(g)!==-1);
+      return `<li class="${by.length?'ok':'miss'}">
+        <div class="cg-top"><span class="cg-tick">${by.length?'✓':'—'}</span><b>${CARDIO_GOALS[g].label}</b></div>
+        <div class="cg-asks">${CARDIO_GOALS[g].asks}</div>
+        <div class="cg-by">${by.length ? '→ '+by.map(s=>`${s.n} × ${s.kind}`).join(' · ') : 'not covered this week'}</div>
+      </li>`;
+    }).join('');
+    const total=p.cardio.sessions.reduce((n,s)=>n+s.n,0);
     cardioHTML=`<div class="cardio-plan">
-      <div class="cp-head">Cardio schedule<span class="cp-aim">${p.cardio.label} · ${p.cardio.sub}</span></div>
+      <div class="cp-head">Cardio schedule<span class="cp-aim">${total} sessions / wk · all four goals</span></div>
       <p class="cp-note">${p.cardio.note}</p>
       <ul class="cp-list">${rows}</ul>
-      <p class="cp-foot">These sit alongside the lifting — tap any session in the week for how to pace it. The deload week keeps the easy sessions and drops the hard one.</p>
+      <div class="cp-sub">What it covers</div>
+      <ul class="cp-goals">${cover}</ul>
+      <p class="cp-foot">Tap any session in the week for how to pace it, and log the minutes when it's done. The deload week keeps the easy sessions and drops the two hard ones.</p>
     </div>`;
   }
 

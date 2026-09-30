@@ -139,6 +139,10 @@ function buildWeekdays(layout, slots, count, queues, goal, equip, abs){
 }
 const PROG_WEEKS = 5;
 
+/* Cardio is one switch. Saved briefs from when it was a pick-one of four aims
+   (longevity, bone, hike, joints) read as on — each of those is now covered. */
+function cardioOn(){ return !!state.cardio && state.cardio!=='none'; }
+
 /* ===================== CARDIO =====================
    The chosen aim is a weekly dose of sessions. Easy work takes the off days
    first — that is the point of zone 2, a day that costs you nothing else —
@@ -160,8 +164,8 @@ function cardioSessions(aim, equip, week){
   A.sessions.forEach((s,si)=>{
     const pool=cardioPool(s.pool, equip);
     for(let i=0;i<s.n;i++){
-      const ex=pool[(i + si + (week-1)*s.n) % pool.length];
-      out.push({kind:s.kind, tag:s.tag, rx:s.rx, cue:s.cue, hard:!!s.hard, lift:mkCardioLift(s,ex)});
+      const ex=pool[(i + (week-1)*s.n) % pool.length];
+      out.push({kind:s.kind, tag:s.tag, rx:s.rx, cue:s.cue, covers:s.covers||[], hard:!!s.hard, long:!!s.long, lift:mkCardioLift(s,ex)});
     }
   });
   return out;
@@ -183,7 +187,7 @@ function applyCardio(weekdays, aim, equip, week){
   const summary={};
   const note=(s,day)=>{
     const k=s.kind;
-    if(!summary[k]) summary[k]={kind:k, tag:s.tag, rx:s.rx, cue:s.cue, n:0, days:[], moves:[]};
+    if(!summary[k]) summary[k]={kind:k, tag:s.tag, rx:s.rx, cue:s.cue, covers:s.covers, n:0, days:[], moves:[]};
     summary[k].n++; summary[k].days.push(day);
     if(summary[k].moves.indexOf(s.lift.name)===-1) summary[k].moves.push(s.lift.name);
   };
@@ -196,11 +200,25 @@ function applyCardio(weekdays, aim, equip, week){
     taken.push(i);
     note(s, attachCardio(weekdays, slots[i], s));
   });
-  const easySlots = rest.concat(train);
-  sessions.filter(s=>!s.hard).forEach((s,k)=>{
-    note(s, attachCardio(weekdays, easySlots[k%easySlots.length], s));
+  /* Easy sessions take the off days: the long one (the loaded climb) from the
+     end of the week, where a weekend usually is, the rest from the front. Any
+     that don't fit go on lifting days that aren't already carrying a hard
+     session, spread out, and only then double up. */
+  const restQ=rest.slice(), overflow=[];
+  sessions.filter(s=>!s.hard).sort((a,b)=>(b.long?1:0)-(a.long?1:0)).forEach(s=>{
+    if(restQ.length) note(s, attachCardio(weekdays, s.long ? restQ.pop() : restQ.shift(), s));
+    else overflow.push(s);
   });
-  return Object.keys(summary).map(k=>{
+  if(overflow.length){
+    const hardDays=taken.map(i=>slots[i]);
+    const free=train.filter(i=>hardDays.indexOf(i)===-1);
+    const pool=free.length ? free : train.length ? train : rest;
+    overflow.forEach((s,k)=>{
+      note(s, attachCardio(weekdays, pool[Math.floor(k*pool.length/overflow.length)], s));
+    });
+  }
+  const order=CARDIO_AIMS[aim].sessions.map(x=>x.kind);           // list in plan order
+  return Object.keys(summary).sort((a,b)=>order.indexOf(a)-order.indexOf(b)).map(k=>{
     const s=summary[k];
     s.days.sort((a,b)=>WEEKDAYS.indexOf(a)-WEEKDAYS.indexOf(b));
     return s;
@@ -208,7 +226,7 @@ function applyCardio(weekdays, aim, equip, week){
 }
 function generate(){
   const {goal,days,exp,equip,length,split,abs}=state;
-  const aim = state.cardio && CARDIO_AIMS[state.cardio] ? state.cardio : 'none';
+  const aim = cardioOn() ? 'all' : 'none';
   const layout = (split==='muscle') ? muscleSplit(days) : chooseSplit(days,goal,exp);
   const queues=buildQueues(equip);           // shared across weeks -> week-to-week variation
   const count=targetCount(length,exp);
