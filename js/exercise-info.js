@@ -168,6 +168,12 @@ const HOWTO = {
   'Sprint Intervals':['Run at near maximum effort for the work interval.','Keep the arms driving and the strides powerful.','Walk or jog the recovery, then repeat.'],
   'Bear Crawl':['On hands and toes, knees hovering just off the floor.','Crawl forward moving the opposite hand and foot together.','Keep the hips low and the back flat.'],
   'Jumping Jacks':['Start with feet together, arms at your sides.','Jump the feet wide as the arms sweep overhead.','Jump back in and keep a steady rhythm.'],
+  'Zone 2 Bike':['Set a resistance you could hold for the full 40 minutes.','Ride where you can still speak a full sentence — that is zone 2.','Keep the cadence around 80–90 rpm, steady rather than surging.'],
+  'Steady Row':['Drive with the legs, then swing the back, then pull the arms.','Return in reverse — arms, body, then legs.','Hold a split you could keep for half an hour.'],
+  'Steady Run':['Run at a conversational pace, not a hard one.','Land under your hips with a quick, light cadence.','Keep the effort even and finish feeling you could go further.'],
+  'Ruck Walk':['Load a pack to 10–20% of bodyweight, straps snug and high on the back.','Walk tall — chest up, ribs down, steady stride.','Rolling ground beats flat; keep the pace brisk but conversational.'],
+  'Weighted Vest Walk':['Start with a vest around 10% of bodyweight.','Walk tall and brisk, arms swinging naturally.','Add incline before you add weight.'],
+  'Swim Laps':['Push off long, body flat and level at the surface.','Roll to breathe rather than lifting the head.','Swim easy laps with short rests — the effort stays conversational.'],
 };
 
 /* Which movement each exercise looks like (drives the animation). */
@@ -181,7 +187,7 @@ const PATTERN = {
   'Romanian Deadlift':'hinge','Hip Thrust':'bridge','Lying Leg Curl':'hinge','Single-Leg RDL':'hinge','Glute Bridge':'bridge','Nordic Curl':'hinge',
   'Standing Calf Raise':'calf','Single-Leg Calf Raise':'calf',
   'Plank':'hold','Hanging Leg Raise':'core','Cable Crunch':'core','Dead Bug':'core','Russian Twist':'core','Ab Wheel Rollout':'core',
-  'Rowing Intervals':'cardio','Assault Bike Sprints':'cardio','Incline Treadmill Walk':'cardio','Kettlebell Swings':'hinge','Dumbbell Thrusters':'squat','Burpees':'cardio','Jump Rope':'cardio','High Knees':'cardio','Shuttle Runs':'cardio',
+  'Kettlebell Swings':'hinge','Dumbbell Thrusters':'squat','Burpees':'cardio','Jump Rope':'cardio','High Knees':'cardio','Shuttle Runs':'cardio',
 
   'Incline Barbell Bench Press':'pressh',
   'Decline Barbell Bench Press':'pressh',
@@ -252,13 +258,18 @@ const PATTERN = {
   'Weighted Sit-Up':'core',
   'Farmer Carry':'carry',
   'Ski Erg Intervals':'cardio',
-  'Stair Climber':'cardio',
   'Battle Ropes':'cardio',
   'Kettlebell Snatch':'cardio',
   'Dumbbell Clean and Press':'cardio',
   'Sprint Intervals':'cardio',
   'Bear Crawl':'cardio',
   'Jumping Jacks':'cardio',
+  'Zone 2 Bike':'bike', 'Assault Bike Sprints':'bike',
+  'Steady Row':'row', 'Rowing Intervals':'row',
+  'Steady Run':'cardio',
+  'Ruck Walk':'walk', 'Weighted Vest Walk':'walk',
+  'Incline Treadmill Walk':'walk', 'Stair Climber':'walk',
+  'Swim Laps':'swim',
 };
 const GROUP_PATTERN = {chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
 
@@ -413,6 +424,19 @@ const DIPBAR_B = `<line class="eq bar dim" x1="52" y1="50" x2="88" y2="50"/>
 const DIPBAR_F = `<line class="eq bar" x1="54" y1="59" x2="92" y2="59"/>
   <rect class="eq" x="88" y="59" width="4" height="38" rx="1.4"/>`;
 const STEP = `<rect class="eq" x="28" y="88" width="62" height="9" rx="2.2"/>` + FLOORSVG;
+const BIKE = `<circle class="eq ring" cx="20" cy="82" r="13"/>
+  <circle class="eq ring" cx="78" cy="82" r="13"/>
+  <path class="eq frame" d="M20,82 L52,82 M52,82 L40,58 M40,58 L70,52 M70,52 L78,82 M52,82 L70,52"/>
+  <rect class="eq" x="32" y="55" width="16" height="4" rx="1.8"/>
+  <line class="eq bar" x1="68" y1="49" x2="82" y2="49"/>
+  <circle class="eq" cx="52" cy="82" r="3"/>` + FLOORSVG;
+const ERG = `<rect class="eq" x="14" y="80" width="58" height="4" rx="1.8"/>
+  <rect class="eq" x="16" y="84" width="4" height="13" rx="1.4"/>
+  <rect class="eq" x="66" y="84" width="4" height="13" rx="1.4"/>
+  <circle class="eq ring" cx="84" cy="66" r="11"/>
+  <rect class="eq" x="72" y="58" width="5" height="18" rx="2" transform="rotate(14 74 67)"/>` + FLOORSVG;
+const WATER = `<line class="gr wave" x1="2" y1="72" x2="98" y2="72"/>
+  <line class="gr wave" x1="8" y1="88" x2="92" y2="88"/>`;
 
 /* Each pattern: two authored poses plus the props behind and in front. */
 const MOVES = {
@@ -486,6 +510,22 @@ const MOVES = {
   cardio:{ grip:'none', back:FLOORSVG,
     a:{hip:[50,58], torso:-82, feet:[[38,92],[64,84]], hands:[[62,50],[38,52]], elbows:[-1,1], knees:[1,1], toe:-15},
     b:{hip:[50,58], torso:-82, feet:[[64,84],[38,92]], hands:[[38,52],[62,50]], elbows:[1,-1], knees:[1,1], toe:-15} },
+
+  walk:{ grip:'none', back:FLOORSVG,
+    a:{hip:[50,58], torso:-86, feet:[[38,96],[62,95]], hands:[[57,57],[44,58]], elbows:[-1,1], toes:[-12,0]},
+    b:{hip:[50,58], torso:-86, feet:[[62,95],[38,96]], hands:[[44,58],[57,57]], elbows:[-1,1], toes:[0,-12]} },
+
+  bike:{ grip:'none', back:BIKE, box:'2 28 96 72',
+    a:{hip:[40,54], torso:-52, feet:[[52,74],[52,90]], hands:[[74,50],[74,50]], knees:[1,1], toe:0},
+    b:{hip:[40,54], torso:-52, feet:[[52,90],[52,74]], hands:[[74,50],[74,50]], knees:[1,1], toe:0} },
+
+  row:{ grip:'none', back:ERG, box:'6 26 92 74',
+    a:{hip:[44,76], torso:-62, feet:[[68,70],[68,70]], hand:[78,58], elbow:1, toe:-55, head:-52},
+    b:{hip:[28,76], torso:-104, feet:[[66,70],[66,70]], hand:[44,58], elbow:1, toe:-55, head:-96} },
+
+  swim:{ grip:'none', back:WATER, box:'4 52 92 42',
+    a:{hip:[52,80], torso:186, feet:[[86,78],[88,84]], hands:[[16,72],[44,88]], elbows:[1,-1], toe:-8, head:194},
+    b:{hip:[52,80], torso:186, feet:[[86,84],[88,78]], hands:[[22,84],[38,68]], elbows:[1,-1], toe:-8, head:194} },
 };
 
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */

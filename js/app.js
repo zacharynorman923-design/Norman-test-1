@@ -1,6 +1,7 @@
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
-                abs:false, unit:'kg', bw:'', max:{bench:'',squat:'',deadlift:'',press:'',row:''} };
+                abs:false, cardio:'none', unit:'kg', bw:'',
+                max:{bench:'',squat:'',deadlift:'',press:'',row:''} };
 /* Each log is stored against the specific occurrence you did it on
    (week + day + slot + exercise), so it never bleeds onto other days or
    weeks. History for the same exercise drives suggestions for next time. */
@@ -167,9 +168,13 @@ function renderProgram(animate){
         <span class="rnote">${restNotes[d.label.charCodeAt(0)%restNotes.length]}</span></div>`;
       return;
     }
-    delay+=0.06; let finisherShown=false, blockShown=null, liftsHTML='';
+    delay+=0.06; let finisherShown=false, blockShown=null, cardioShown=null, liftsHTML='';
     d.lifts.forEach((l,li)=>{
       if(l.finisher && !finisherShown){ liftsHTML+=`<div class="finisher-label">＋ Abs finisher</div>`; finisherShown=true; }
+      if(l.cardio && !d.cardioDay && l.cardio!==cardioShown){
+        cardioShown=l.cardio;
+        liftsHTML+=`<div class="finisher-label cardio-label">＋ ${l.cardio}</div>`;
+      }
       if(l.addon && l.addon!==blockShown){
         blockShown=l.addon;
         liftsHTML+=`<div class="finisher-label addon-label">＋ ${l.addon}
@@ -201,7 +206,7 @@ function renderProgram(animate){
         loggedLine = `<div class="suggest">↝ last: ${loggedText(l,suggest).replace(/^logged /,'')}${diffChip(suggest)}</div>`;
       }
       const chevron = `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>`;
-      liftsHTML+=`<div class="lift expandable${open?' open':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
+      liftsHTML+=`<div class="lift expandable${open?' open':''}${l.cardio?' cardio-row':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
         <div class="nm">${l.name}<em>${v.tag}</em></div>
         <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div></div>
         ${chevron}
@@ -290,7 +295,8 @@ function renderProgram(animate){
             </div>
           </div>`;
         }
-        liftsHTML+=`<div class="expando">${howtoBlock(l)}${logHTML}</div>`;
+        const cueHTML = l.cue ? `<div class="cardio-cue">${l.cue}</div>` : '';
+        liftsHTML+=`<div class="expando">${cueHTML}${howtoBlock(l)}${logHTML}</div>`;
       }
     });
     const pct=Math.round(Math.max(.2,Math.min(1,d.inten*factor))*100);
@@ -307,6 +313,21 @@ function renderProgram(animate){
       : (anchorsAvail ? `<span class="wt">≈ weights</span> from your numbers, scaled per week`
       : `tap a lift to <span class="wt">log your sets</span>, or add a max in the brief, for suggested weights`);
   const logCount=logNames.size;
+  /* The cardio schedule for the chosen aim: what each session is for, how
+     often, and which days it landed on. */
+  let cardioHTML='';
+  if(p.cardio){
+    const rows=p.cardio.sessions.map(s=>`<li>
+      <div class="cs-top"><b>${s.n} × ${s.kind}</b><span class="cs-rx">${s.rx}</span></div>
+      <div class="cs-days">${s.days.join(' · ')} &nbsp;—&nbsp; ${s.moves.join(', ')}</div>
+    </li>`).join('');
+    cardioHTML=`<div class="cardio-plan">
+      <div class="cp-head">Cardio schedule<span class="cp-aim">${p.cardio.label} · ${p.cardio.sub}</span></div>
+      <p class="cp-note">${p.cardio.note}</p>
+      <ul class="cp-list">${rows}</ul>
+      <p class="cp-foot">These sit alongside the lifting — tap any session in the week for how to pace it. The deload week keeps the easy sessions and drops the hard one.</p>
+    </div>`;
+  }
 
   prog.innerHTML=`
     <div class="prog-head">
@@ -324,6 +345,7 @@ function renderProgram(animate){
     </div>
     <div class="hint">↻ regenerate · ⇄ swap · tap a lift to log sets as you go · tap a week — same split, fresh exercises<br>${wtNote}</div>
     <div class="week${animate?'':' static'}">${daysHTML}</div>
+    ${cardioHTML}
     <div class="actions">
       <button class="ghost" id="regen">↻ Regenerate exercises</button>
       <button class="ghost" id="edit">↑ Change brief</button>
@@ -436,6 +458,13 @@ function removeBlock(di,title){
 function swapLift(di,li){
   const day=curWeekdays()[di]; if(!day||day.rest) return;
   const cur=day.lifts[li], group=cur.group;
+  if(cur.cardio){                       // keep the session — swap only the modality
+    const opts=cardioPool(cur.pool||[], PROGRAM.equip).filter(x=>x.n!==cur.name);
+    if(!opts.length) return;
+    const pick=opts[Math.floor(Math.random()*opts.length)];
+    day.lifts[li]=Object.assign({}, cur, {name:pick.n});
+    EDIT=null; renderProgram(false); return;
+  }
   const used=new Set(day.lifts.map(l=>l.name));
   let pool=getPool(group,PROGRAM.equip).filter(x=>!used.has(x.n));
   if(!pool.length) pool=getPool(group,PROGRAM.equip).filter(x=>x.n!==cur.name);
@@ -532,7 +561,7 @@ function refreshAddonUI(){
 
   const prevDay=addonDay.value;
   addonDay.innerHTML = curWeekdays()
-    .map((d,di)=> d.rest ? '' : `<option value="${di}">${d.label} · ${d.type}</option>`).join('');
+    .map((d,di)=> (d.rest || d.cardioDay) ? '' : `<option value="${di}">${d.label} · ${d.type}</option>`).join('');
   if(prevDay && addonDay.querySelector(`option[value="${prevDay}"]`)) addonDay.value=prevDay;
 
   const prevTarget=addonTarget.value;
