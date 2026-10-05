@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v22';
+const APP_VERSION = 'split-v23';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -546,7 +546,8 @@ function swapChoices(day, l){
   if(l.cardio) return [{label:l.cardio+' options', items:cardioPool(l.pool||[], eq)}];
   if(l.addon){
     const t=findTarget(l.addon);
-    if(t) return [{label:l.addon, items:targetPool(t.names, eq).map(f=>f.ex)}];
+    const slot = t && t.slots && l.lever!=null ? t.slots[l.lever] : null;
+    if(t) return [{label:l.addon, items:targetPool(slot ? slot.names : t.names, eq).map(f=>f.ex)}];
   }
   const pool=getPool(l.group, eq);
   if(l.finisher) return [{label:'Core', items:pool}];
@@ -579,6 +580,7 @@ function replaceLift(di, li, name){
       if(found.group!=='cardio') nl.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
       else nl.base.tag='added';
       nl.addon=cur.addon;
+      if(cur.lever!=null){ nl.lever=cur.lever; nl.cue=cur.cue; }
     }
   }
   day.lifts[li]=nl; day.inten=dayIntensity(day.lifts,PROGRAM.goal);
@@ -659,8 +661,19 @@ function targetPool(names, equip){
   return names.map(findExercise).filter(f=>f && f.ex.eq.indexOf(equip)!==-1);
 }
 const addonNote = document.getElementById('addonNote');
-function isDeskTarget(label){ const t=findTarget(label); return !!(t && t.desk); }
-function refreshAddonNote(){ addonNote.classList.toggle('hidden', !isDeskTarget(addonTarget.value)); }
+const TARGET_NOTES = {
+  desk:'Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.',
+  apt:'Anterior pelvic tilt is a balance problem: hip flexors and the lower back pull the pelvis forward, and glutes, hamstrings and the deep core don\u2019t pull it back enough. These moves build the side that pulls back, with a cue on each for doing them in a posterior tilt — pair them with hip-flexor stretching. General fitness guidance, not treatment; see a clinician for back pain that is severe, persistent, or follows an injury.',
+};
+function targetNote(label){
+  const t=findTarget(label);
+  return !t ? '' : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
+}
+function refreshAddonNote(){
+  const note=targetNote(addonTarget.value);
+  addonNote.textContent=note;
+  addonNote.classList.toggle('hidden', !note);
+}
 
 function findTarget(label){
   for(const cat in MUSCLE_TARGETS){
@@ -708,18 +721,31 @@ function addBlock(label, di, everyWeek){
     const day=days[di]; if(!day || day.rest) return;
     day.lifts = day.lifts.filter(l=>l.addon!==label);           // replace a block of the same target
     const already = new Set(day.lifts.map(l=>l.name));          // don't repeat what the day already programs
-    let pool = targetPool(target.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
-    if(!pool.length) pool = targetPool(target.names, PROGRAM.equip);
-    shuffle(pool).slice(0,3).forEach(f=>{
+    const add=(f, lever, cue)=>{
       const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
       if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
       else l.base.tag='added';
       l.addon=label;
-      day.lifts.push(l); added++;
-    });
+      if(lever!=null){ l.lever=lever; l.cue=cue; }
+      day.lifts.push(l); already.add(f.ex.n); added++;
+    };
+    if(target.slots && target.slots.length>1){
+      // one move from each lever, so the block is balanced
+      target.slots.forEach((slot,si)=>{
+        const all=targetPool(slot.names, PROGRAM.equip);
+        const fresh=all.filter(f=>!already.has(f.ex.n));
+        const pick=shuffle(fresh.length?fresh:all)[0];
+        if(pick) add(pick, si, slot.cue);
+      });
+    } else {
+      const slot = target.slots ? target.slots[0] : null;
+      let pool = targetPool(target.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
+      if(!pool.length) pool = targetPool(target.names, PROGRAM.equip);
+      shuffle(pool).slice(0,3).forEach(f=>add(f, slot?0:null, slot?slot.cue:null));
+    }
     day.inten=dayIntensity(day.lifts, PROGRAM.goal);
   });
-  return added ? Math.min(3, added) : 0;
+  return added ? Math.min(target.slots ? Math.max(3,target.slots.length) : 3, added) : 0;
 }
 
 addonBuild.addEventListener('click', ()=>{

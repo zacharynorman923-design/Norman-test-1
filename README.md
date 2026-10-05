@@ -201,6 +201,12 @@ finisher, but aimed wherever you want.
   core & trunk stability. These are supportive strengthening blocks, not
   treatment — the panel says so, and pain that is severe, persistent or
   post-injury belongs with a clinician.
+- An **Anterior pelvic tilt** group works the side that pulls the pelvis back
+  toward neutral. **Full APT block** takes one move from each lever — glutes,
+  hamstrings, deep core, and a split stance that lengthens the hip flexors — so
+  it is always balanced; each lever is also on offer alone. Every move carries
+  the posterior-tilt cue that makes it count, and swapping one stays within its
+  lever.
 - Choose the day, and whether it applies **every week** or only the one you're
   viewing.
 - SPLIT draws up to three movements for that target from the exercise library,
