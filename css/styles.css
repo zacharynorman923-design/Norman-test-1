@@ -141,9 +141,12 @@ header{padding:52px 0 30px}
 .logbtn{border:none;background:rgba(0,0,0,.05);color:#6a6a62;height:30px;padding:0 9px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .logbtn:hover{background:var(--blue);color:#fff}
 .logbtn.done{background:rgba(46,139,87,.16);color:#2e8b57}
-.swap{border:none;background:rgba(0,0,0,.05);color:#6a6a62;width:30px;height:30px;border-radius:8px;font-size:15px;line-height:1;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
-.swap:hover{background:var(--blue);color:#fff}
+/* ⇄ is a native picker: the select sits invisibly over the icon, so a tap opens
+   the phone's own list (a wheel on iOS) instead of a cramped custom menu. */
+.swap{position:relative;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05);color:#6a6a62;width:30px;height:30px;border-radius:8px;font-size:15px;line-height:1;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.swap:hover,.swap:focus-within{background:var(--blue);color:#fff}
 .swap:active{transform:scale(.9)}
+.swapsel{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;-webkit-appearance:none;appearance:none;border:0}
 .lift.expandable{cursor:pointer}
 .lift.expandable:hover{background:#efece1}
 .lift.open{background:#eae7db}
