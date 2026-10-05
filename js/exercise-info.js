@@ -173,6 +173,7 @@ const HOWTO = {
   'Steady Run':['Run at a conversational pace, not a hard one.','Land under your hips with a quick, light cadence.','Keep the effort even and finish feeling you could go further.'],
   'Ruck Walk':['Load a pack to 10–20% of bodyweight, straps snug and high on the back.','Walk tall — chest up, ribs down, steady stride.','Rolling ground beats flat; keep the pace brisk but conversational.'],
   'Weighted Vest Walk':['Start with a vest around 10% of bodyweight.','Walk tall and brisk, arms swinging naturally.','Add incline before you add weight.'],
+  'Reverse Crunch':['Lie on your back, knees bent at 90°, hands by your sides.','Curl your hips off the floor by tilting the pelvis back toward your ribs — not by swinging the legs.','Lower slowly until the low back is flat again; stop before it arches.'],
   'Swim Laps':['Push off long, body flat and level at the surface.','Roll to breathe rather than lifting the head.','Swim easy laps with short rests — the effort stays conversational.'],
 };
 
@@ -270,6 +271,7 @@ const PATTERN = {
   'Ruck Walk':'walk', 'Weighted Vest Walk':'walk',
   'Incline Treadmill Walk':'walk', 'Stair Climber':'walk',
   'Swim Laps':'swim',
+  'Reverse Crunch':'core',
 };
 const GROUP_PATTERN = {chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
 

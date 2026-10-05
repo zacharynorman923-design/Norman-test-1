@@ -132,6 +132,7 @@ const EX = {
     {n:'V-Up',eq:ALL_EQ,c:0},
     {n:'Side Plank',eq:ALL_EQ,c:0},
     {n:'Hollow Body Hold',eq:ALL_EQ,c:0},
+    {n:'Reverse Crunch',eq:ALL_EQ,c:0},
     {n:'Pallof Press',eq:G,c:0,w:['bench',0.25,'machine']},
     {n:'Weighted Sit-Up',eq:DB_EQ,c:0,w:['bench',0.25,'single']},
     {n:'Farmer Carry',eq:DB_EQ,c:0},
@@ -281,6 +282,18 @@ const MUSCLE_TARGETS = {
     {label:'Wrists & forearms', desk:1, names:['Hammer Curl','Zottman Curl','Towel Curl','Farmer Carry','Renegade Row']},
     {label:'Core & trunk stability', desk:1, names:['Plank','Side Plank','Dead Bug','Pallof Press','Hollow Body Hold','Farmer Carry']},
   ],
+  /* Anterior pelvic tilt: the pelvis pulled forward by hip flexors and the
+     lower back, with too little pull back from glutes, hamstrings and the deep
+     core. Each lever is a slot. The full block takes one move from every slot,
+     so you never get three glute moves; each lever is also on offer alone.
+     A slot's cue is the posterior-tilt instruction that makes the move count. */
+  'Anterior pelvic tilt':[
+    {label:'Full APT block', apt:1, slots:'all'},
+    {label:'APT · Glutes (tuck the pelvis)', apt:1, slots:['glutes']},
+    {label:'APT · Hamstrings', apt:1, slots:['hams']},
+    {label:'APT · Deep core (posterior tilt)', apt:1, slots:['core']},
+    {label:'APT · Hip-flexor length (split stance)', apt:1, slots:['split']},
+  ],
   Chest:[
     {label:'Upper chest', names:['Incline Barbell Bench Press','Incline Dumbbell Press','Incline Dumbbell Fly','Decline Push-Up']},
     {label:'Lower chest', names:['Decline Barbell Bench Press','Dips','Incline Push-Up','Cable Crossover']},
@@ -323,3 +336,23 @@ const MUSCLE_TARGETS = {
     {label:'Conditioning finisher', names:['Burpees','Jump Rope','Battle Ropes','Kettlebell Swings','High Knees','Jumping Jacks','Mountain Climber']},
   ],
 };
+
+/* The levers anterior pelvic tilt is worked through (see MUSCLE_TARGETS). */
+const APT_SLOTS = {
+  glutes:{ names:['Glute Bridge','Hip Thrust','Single-Leg Hip Thrust','Frog Pump','Cable Pull-Through'],
+    cue:'Tuck your tailbone and pull your ribs down before you lift. Drive through the heels and finish with a glute squeeze — the low back should not arch at the top.' },
+  hams:{ names:['Romanian Deadlift','Lying Leg Curl','Seated Leg Curl','Nordic Curl','Single-Leg RDL'],
+    cue:'Keep your ribs stacked over your pelvis the whole rep. Hinge or curl without letting the low back arch — the stretch belongs in the hamstrings.' },
+  core:{ names:['Dead Bug','Reverse Crunch','Hollow Body Hold','Plank','Hanging Knee Raise','Ab Wheel Rollout'],
+    cue:'Flatten your low back into the floor (or tuck the pelvis in a plank) and keep it there for the whole set. If it starts to arch, shorten the lever.' },
+  split:{ names:['Bulgarian Split Squat','Reverse Lunge','Walking Lunge'],
+    cue:'Tuck the pelvis on the back leg until you feel a stretch across the front of that hip, and keep it tucked as you lower.' },
+};
+/* Resolve slot keys into the slot objects, and give every slotted target the
+   full list of its movements as `names`, which the rest of the app reads. */
+for(const cat in MUSCLE_TARGETS) MUSCLE_TARGETS[cat].forEach(t=>{
+  if(!t.slots) return;
+  const keys = t.slots==='all' ? Object.keys(APT_SLOTS) : t.slots;
+  t.slots = keys.map(k=>APT_SLOTS[k]);
+  t.names = [...new Set(t.slots.flatMap(x=>x.names))];
+});
