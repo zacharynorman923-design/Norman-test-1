@@ -68,8 +68,12 @@ your browser and your data stays on your device.
   is scaled (+5% / 0 / −3% / −8%), and lifts logged in reps or seconds get their
   target shifted instead. The rating shows on the collapsed row, so you can see
   why a weight went up.
-- **Swap and regenerate.** Swap any exercise for another in the same group, or
-  regenerate the whole week.
+- **Pick your own swaps.** Tap ⇄ on any exercise for a list of everything in
+  the same category you can do with your equipment — split into compound and
+  accessory, with anything already on that day greyed out. A swap keeps the
+  slot's role: an abs-finisher move stays in the finisher, an added block keeps
+  its label, a cardio session keeps its prescription. Or regenerate the whole
+  week.
 - **Abs finisher.** Optionally append a 2-move core block to every training day.
   This is the only place ab work is programmed — no training day mixes it into
   its main list — so core volume is a single deliberate switch.

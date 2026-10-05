@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v21';
+const APP_VERSION = 'split-v22';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -243,7 +243,8 @@ function renderProgram(animate){
         <div class="nm">${l.name}<em>${v.tag}</em></div>
         <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div></div>
         ${chevron}
-        <button class="swap" data-di="${di}" data-li="${li}" aria-label="Swap ${l.name}" title="Swap this exercise">⇄</button>
+        <label class="swap" title="Pick another exercise"><span aria-hidden="true">⇄</span>
+          <select class="swapsel" data-di="${di}" data-li="${li}" aria-label="Swap ${l.name} for another exercise">${swapOptionsHTML(d,l)}</select></label>
         ${loggedLine}
       </div>`;
       if(open){
@@ -535,23 +536,51 @@ function removeBlock(di,title){
   });
   EDIT=null; renderProgram(false);
 }
-function swapLift(di,li){
-  const day=curWeekdays()[di]; if(!day||day.rest) return;
-  const cur=day.lifts[li], group=cur.group;
-  if(cur.cardio){                       // keep the session — swap only the modality
-    const opts=cardioPool(cur.pool||[], PROGRAM.equip).filter(x=>x.n!==cur.name);
-    if(!opts.length) return;
-    const pick=opts[Math.floor(Math.random()*opts.length)];
-    day.lifts[li]=Object.assign({}, cur, {name:pick.n});
-    EDIT=null; renderProgram(false); return;
+/* What a lift can be swapped for: the same category, filtered by your
+   equipment. A cardio session offers its own modalities, an added block its
+   target's movements, and a regular lift its muscle group — split into
+   compound and accessory. Anything already on the day is listed but can't be
+   picked twice. */
+function swapChoices(day, l){
+  const eq=PROGRAM.equip;
+  if(l.cardio) return [{label:l.cardio+' options', items:cardioPool(l.pool||[], eq)}];
+  if(l.addon){
+    const t=findTarget(l.addon);
+    if(t) return [{label:l.addon, items:targetPool(t.names, eq).map(f=>f.ex)}];
   }
-  const used=new Set(day.lifts.map(l=>l.name));
-  let pool=getPool(group,PROGRAM.equip).filter(x=>!used.has(x.n));
-  if(!pool.length) pool=getPool(group,PROGRAM.equip).filter(x=>x.n!==cur.name);
-  if(!pool.length) return;
-  const ex=pool[Math.floor(Math.random()*pool.length)];
-  const nl=mkLift(ex,group,PROGRAM.goal,cur.finisher);
-  if(cur.finisher) nl.base={sets:'3',reps:'12–15',rest:'30 s',tag:'abs'};
+  const pool=getPool(l.group, eq);
+  if(l.finisher) return [{label:'Core', items:pool}];
+  return [{label:'Compound', items:pool.filter(x=>x.c)},
+          {label:'Accessory', items:pool.filter(x=>!x.c)}].filter(g=>g.items.length);
+}
+function swapOptionsHTML(day, l){
+  const taken=new Set(day.lifts.map(x=>x.name));
+  return swapChoices(day,l).map(g=>`<optgroup label="${g.label}">${g.items.map(x=>{
+    const cur=x.n===l.name, dup=!cur && taken.has(x.n);
+    return `<option value="${x.n}"${cur?' selected':''}${dup?' disabled':''}>${x.n}${dup?' — already today':''}</option>`;
+  }).join('')}</optgroup>`).join('');
+}
+/* Put the chosen exercise in this slot, for the week you're viewing. It keeps
+   whatever role the slot had — an abs-finisher set, an added block's scheme
+   and label, a cardio session's prescription — and otherwise takes the
+   sets and reps that suit the new exercise. */
+function replaceLift(di, li, name){
+  const day=curWeekdays()[di]; if(!day||day.rest) return;
+  const cur=day.lifts[li]; if(!cur || cur.name===name) return;
+  let nl;
+  if(cur.cardio){
+    nl=Object.assign({}, cur, {name});
+  } else {
+    const found=findExercise(name); if(!found) return;
+    nl=mkLift(found.ex, found.group, PROGRAM.goal, cur.finisher);
+    if(cur.finisher) nl.base={sets:'3',reps:'12–15',rest:'30 s',tag:'abs'};
+    if(cur.addon){
+      const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
+      if(found.group!=='cardio') nl.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+      else nl.base.tag='added';
+      nl.addon=cur.addon;
+    }
+  }
   day.lifts[li]=nl; day.inten=dayIntensity(day.lifts,PROGRAM.goal);
   EDIT=null; renderProgram(false);
 }
@@ -565,13 +594,17 @@ document.getElementById('program').addEventListener('click', e=>{
   const rn=e.target.closest('.restnow'); if(rn){ startRest(+rn.dataset.sec, rn.dataset.name); return; }
   const cl=e.target.closest('.logclear'); if(cl){ clearLog(+cl.dataset.di,+cl.dataset.li); return; }
   const wk=e.target.closest('.wk'); if(wk){ EDIT=null; WEEK=parseInt(wk.dataset.wk,10); renderProgram(false); return; }
-  const sw=e.target.closest('.swap'); if(sw){ swapLift(+sw.dataset.di,+sw.dataset.li); return; }
+  if(e.target.closest('.swap')) return;            // the picker opens; the row stays as it is
   const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
   if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }
   if(e.target.closest('#expdata')){ exportData(); return; }
   if(e.target.closest('#impdata')){ document.getElementById('impfile').click(); return; }
   if(e.target.closest('#clearlog')){ if(confirm('Clear all logged sets? This cannot be undone.')){ LOG.sets={}; for(const k in PENDING_DIFF) delete PENDING_DIFF[k]; saveStore(); renderProgram(false); } return; }
+});
+document.getElementById('program').addEventListener('change', e=>{
+  const sel=e.target.closest('.swapsel'); if(!sel) return;
+  replaceLift(+sel.dataset.di, +sel.dataset.li, sel.value);
 });
 /* Keyboard: Enter/Space toggles a focused lift row (but not while typing in it). */
 document.getElementById('program').addEventListener('keydown', e=>{
@@ -586,7 +619,7 @@ document.getElementById('program').addEventListener('keydown', e=>{
     }
   }
   if(e.key!=='Enter' && e.key!==' ') return;
-  if(e.target.closest('input,button')) return;
+  if(e.target.closest('input,button,select')) return;
   const lift=e.target.closest('.lift'); if(!lift || !lift.dataset.k) return;
   e.preventDefault();
   const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false);
