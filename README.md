@@ -43,12 +43,13 @@ your browser and your data stays on your device.
 - **Fresh exercises each week.** Your split and weekly structure stay fixed, but
   every week draws a different selection of exercises for each day — cycling
   through the library instead of repeating the same lifts.
-- **Exercise guidance.** Tap any lift to see step-by-step form cues, the
-  muscles it targets, and a looping animated figure demonstrating the movement.
-  The figure is a proportioned body built from one skeleton — fixed bone
-  lengths, elbows and knees solved by inverse kinematics — set in its
-  equipment: the bench, the bar, the rack, the floor. All drawn inline as SVG,
-  so it works offline with no images to load.
+- **Exercise guidance.** Tap any lift for step-by-step form cues and an
+  animated demo of that movement — a proportioned figure built from one skeleton
+  (fixed bone lengths, elbows and knees solved by inverse kinematics), set in its
+  equipment. The muscles it works are painted on the figure — main movers in red,
+  helpers lighter — and named in the "works" line; a dashed path shows the route
+  the bar, hands or hips travel through a rep. Tap the demo to see it large. All
+  drawn inline as SVG, so it works offline with no images to load.
 - **Per-set logging, set by set.** The same expanded panel records the weight and
   completed reps for *every* set. Hit **✓** on a row (or press Enter) to bank
   that set mid-workout and the panel stays open on the next one — or fill the
