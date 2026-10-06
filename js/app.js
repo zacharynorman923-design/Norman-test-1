@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v23';
+const APP_VERSION = 'split-v24';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -16,6 +16,8 @@ const PENDING_DIFF = {};
 /* Which set row to focus after the next render: null = the first one,
    {row:-1} = leave focus where it is. */
 let FOCUS = null;
+/* Whether the movement demo is shown large — stays as you leave it. */
+let BIGDEMO = false;
 
 function occKey(di,li,name){ return `${WEEK}:${di}:${li}:${name}`; }
 /* Most recent logged entry for an exercise, across every day/week — used to
@@ -345,7 +347,7 @@ function renderProgram(animate){
           </div>`;
         }
         const cueHTML = l.cue ? `<div class="cardio-cue">${l.cue}</div>` : '';
-        liftsHTML+=`<div class="expando">${cueHTML}${howtoBlock(l)}${logHTML}</div>`;
+        liftsHTML+=`<div class="expando">${cueHTML}${howtoBlock(l, BIGDEMO)}${logHTML}</div>`;
       }
     });
     const pct=Math.round(Math.max(.2,Math.min(1,d.inten*factor))*100);
@@ -597,6 +599,13 @@ document.getElementById('program').addEventListener('click', e=>{
   const cl=e.target.closest('.logclear'); if(cl){ clearLog(+cl.dataset.di,+cl.dataset.li); return; }
   const wk=e.target.closest('.wk'); if(wk){ EDIT=null; WEEK=parseInt(wk.dataset.wk,10); renderProgram(false); return; }
   if(e.target.closest('.swap')) return;            // the picker opens; the row stays as it is
+  const dm=e.target.closest('.demo');
+  if(dm){
+    BIGDEMO=!BIGDEMO;
+    document.querySelectorAll('#program .howto').forEach(h=>h.classList.toggle('big', BIGDEMO));
+    dm.setAttribute('aria-label', (BIGDEMO?'Shrink':'Enlarge')+' the demo');
+    return;
+  }
   const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
   if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }

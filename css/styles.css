@@ -157,7 +157,14 @@ header{padding:52px 0 30px}
 /* expanded panel: how-to + per-set logger share one tinted container */
 .expando{border-top:1px solid rgba(0,0,0,.08);background:rgba(51,85,255,.045)}
 .howto{display:flex;gap:16px;padding:15px 18px;align-items:flex-start}
-.demo{flex-shrink:0}
+.demo{flex-shrink:0;background:none;border:0;padding:0;cursor:zoom-in;-webkit-tap-highlight-color:transparent}
+.howto.big .demo{cursor:zoom-out}
+/* tap the demo to see it large, with the text underneath */
+.howto.big{flex-direction:column;align-items:stretch}
+.howto.big .demo{align-self:center}
+.howto.big .figwrap{width:min(300px,78vw);height:min(300px,78vw)}
+.fig-zoom{position:absolute;right:5px;bottom:4px;font-size:11px;color:#b5b1a7;line-height:1;pointer-events:none}
+.howto.big .fig-zoom{font-size:13px}
 .figwrap{position:relative;width:112px;height:112px;background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.08);overflow:hidden}
 .fig{position:absolute;inset:0;width:100%;height:100%;color:#22242b}
 .fig .seg{fill:currentColor;stroke:none}          /* body segments */
@@ -172,6 +179,15 @@ header{padding:52px 0 30px}
 .fig .eq.ring{fill:none;stroke:#cbc8bf;stroke-width:3.4}
 .fig .eq.frame{fill:none;stroke:#cbc8bf;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
 .fig .gr.wave{stroke:#cfe3ea;stroke-width:3;stroke-dasharray:9 7}
+.fig .mus{stroke-linejoin:round;stroke-width:1.1}
+.fig .mus.p{fill:#ff3355;stroke:#ff3355}          /* the main movers */
+.fig .mus.s{fill:#ff8a9e;stroke:#ff8a9e;opacity:.75} /* the helpers */
+.fig .ld.ring{fill:none;stroke:var(--heat);stroke-width:2.4}
+.fig .cab{stroke:#9b978c;stroke-width:1.4}
+.fig .rope{fill:none;stroke:#7a766c;stroke-width:1.4}
+.figP{pointer-events:none}
+.figP .mv{fill:none;stroke:var(--blue);stroke-width:1.6;stroke-dasharray:3 3;stroke-linecap:round;opacity:.8}
+.figP .mv-h{fill:var(--blue);opacity:.85}
 .fig .gr{stroke:#e0dcd3;stroke-width:2.4;stroke-linecap:round}   /* the floor */
 /* three frames: start → mid → end → mid → start */
 .figA{animation:demoA 2.2s ease-in-out infinite}
@@ -184,7 +200,8 @@ header{padding:52px 0 30px}
 @keyframes demoHold{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
 .howto-txt{flex:1;min-width:0}
 .howto-h{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:9px}
-.howto-h .tg{display:block;color:#8a8577;letter-spacing:.06em;font-weight:400;margin-top:3px}
+.howto-h .tg{display:block;color:#8a8577;letter-spacing:.06em;font-weight:400;margin-top:3px;line-height:1.6}
+.howto-h .tg b{color:#e5223f;font-weight:700}
 .howto-steps{list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:7px}
 .howto-steps li{counter-increment:step;position:relative;padding-left:26px;font-size:13.5px;line-height:1.4;color:#33353c}
 .howto-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
