@@ -46,6 +46,7 @@
       <div class="chips" role="group" data-key="split">
         <button class="chip" data-val="auto" aria-pressed="true">Auto<small>matches goal</small></button>
         <button class="chip" data-val="muscle" aria-pressed="false">Muscle groups<small>one body part / day</small></button>
+        <button class="chip" data-val="custom" aria-pressed="false">Custom<small>build each day</small></button>
       </div>
     </div>
 
@@ -128,10 +129,10 @@
   <section id="program" class="hidden" aria-live="polite"></section>
 
   <section id="addon" class="brief hidden" aria-label="Add an extra block">
-    <div class="brief-head"><h2>＋ Add a block</h2><span class="step">optional</span></div>
+    <div class="brief-head"><h2 id="addonHead">＋ Add a block</h2><span class="step" id="addonStep">optional</span></div>
     <div class="field" style="border-top:none;padding-top:8px">
       <label class="flabel">Target a specific muscle</label>
-      <div class="sub2">Your weekly plan stays as it is — this appends a short extra block to one day, like the abs finisher. Pick what you want to hit and SPLIT adds movements for it, complete with how-to, suggested weights and per-set logging.</div>
+      <div class="sub2" id="addonSub">Your weekly plan stays as it is — this appends a short extra block to one day, like the abs finisher. Pick what you want to hit and SPLIT adds movements for it, complete with how-to, suggested weights and per-set logging.</div>
       <select id="addonTarget" class="select addon-target" aria-label="Muscle to target"></select>
       <p id="addonNote" class="addon-note hidden">Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.</p>
     </div>

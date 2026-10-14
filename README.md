@@ -31,7 +31,8 @@ your browser and your data stays on your device.
   dose — because those goals genuinely train differently.
 - **Smart training splits.** Auto mode picks the split that fits your weekly
   frequency (full-body, upper/lower, PPL, and rotations), or switch to a
-  muscle-group split for one body part per day.
+  muscle-group split for one body part per day — or **Custom**, which gives you
+  empty training days to build yourself, block by block.
 - **Equipment aware.** Full gym, dumbbells + bands, or bodyweight only — every
   exercise in your plan is one you can actually do. The library holds ~145
   movements across ten muscle groups, so a five-week block rarely repeats itself.
@@ -185,6 +186,23 @@ the week checks it against each goal.
 - Tap a session for its pacing cue, the how-to and the demo, and log the minutes
   when it's done. Swapping keeps the prescription and changes only the modality.
 - The **deload week** keeps the three easy sessions and drops the two hard ones.
+
+## Building a custom week
+
+Pick **Custom** as the split style and each training day starts empty. Every
+empty day has its own **＋ Add a block** button, which opens the panel with that
+day already chosen; pick a muscle, add it, and repeat until the day is the
+session you want.
+
+- On a custom day the blocks *are* the workout, so each move gets full working
+  sets for your goal — compound lifts heavier, accessories lighter — and heavy
+  compounds lead within each block.
+- The day is titled after what you built ("Upper chest + Lats").
+- Added for every week, each week draws different moves for the same blocks.
+- **↻ Reshuffle exercises** draws fresh moves for every block and keeps them
+  where you put them, instead of regenerating the week away.
+- The abs finisher and cardio schedule still slot in around your days.
+- Rebuilding the week asks first, since it clears the blocks (logged sets stay).
 
 ## Adding a block
 

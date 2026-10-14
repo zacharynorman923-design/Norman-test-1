@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v25';
+const APP_VERSION = 'split-v26';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -359,11 +359,23 @@ function renderProgram(animate){
     });
     const pct=Math.round(Math.max(.2,Math.min(1,d.inten*factor))*100);
     const style = animate ? `style="animation-delay:${delay.toFixed(2)}s"` : '';
-    daysHTML+=`<div class="day train${di===today?' today':''}" ${style}>
-      <div class="day-top"><span class="dow">${d.label}</span><span class="focus">${d.type}</span>
+    /* A custom day you haven't built yet says so, and every custom day keeps
+       a way to add the next block right where you're looking. */
+    let customHTML='';
+    if(d.custom){
+      const built=d.lifts.some(l=>l.addon);
+      customHTML = built
+        ? `<button class="dayadd more" type="button" data-di="${di}">＋ Add another block to ${d.label}</button>`
+        : `<div class="dayempty"><span>Nothing here yet — build ${d.label} from blocks.</span>
+             <button class="dayadd" type="button" data-di="${di}">＋ Add a block</button></div>`;
+    }
+    daysHTML+=`<div class="day train${di===today?' today':''}${d.custom?' custom':''}" ${style}>
+      <div class="day-top"><span class="dow">${d.label}</span><span class="focus${d.custom?' custom':''}">${d.type}</span>
         <span class="intensity"><div class="lab">${intensityLabel(d.inten*factor)}</div>
           <div class="bar"><i data-w="${pct}"></i></div></span></div>
-      <div class="lifts">${liftsHTML}</div></div>`;
+      ${d.custom && !d.lifts.some(l=>l.addon) ? customHTML : ''}
+      <div class="lifts">${liftsHTML}</div>
+      ${d.custom && d.lifts.some(l=>l.addon) ? customHTML : ''}</div>`;
   });
 
   const weekPills=[1,2,3,4,5].map(w=>`<button class="wk${w===5?' deload':''}" data-wk="${w}" aria-pressed="${w===WEEK}">${w===5?'Deload':'Wk '+w}</button>`).join('');
@@ -420,7 +432,7 @@ function renderProgram(animate){
     <div class="week${animate?'':' static'}">${daysHTML}</div>
     ${cardioHTML}
     <div class="actions">
-      <button class="ghost" id="regen">↻ Regenerate exercises</button>
+      <button class="ghost" id="regen">↻ ${p.custom?'Reshuffle exercises':'Regenerate exercises'}</button>
       <button class="ghost" id="edit">↑ Change brief</button>
       ${anyLog?`<button class="ghost" id="clearlog">⌫ Clear all logs (${logCount})</button>`:''}
     </div>
@@ -541,7 +553,7 @@ function allWeekDays(di){
 function removeBlock(di,title){
   allWeekDays(di).forEach(day=>{
     day.lifts = day.lifts.filter(l=>l.addon!==title);
-    day.inten = dayIntensity(day.lifts, PROGRAM.goal);
+    retitle(day);
   });
   EDIT=null; renderProgram(false);
 }
@@ -586,7 +598,7 @@ function replaceLift(di, li, name){
     if(cur.finisher) nl.base={sets:'3',reps:'12–15',rest:'30 s',tag:'abs'};
     if(cur.addon){
       const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
-      if(found.ex.rx) { /* stretches and drills keep their own hold / reps */ }
+      if(found.ex.rx || day.custom) { /* own hold / reps, or the full scheme on a custom day */ }
       else if(found.group!=='cardio') nl.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
       else nl.base.tag='added';
       nl.addon=cur.addon;
@@ -615,7 +627,13 @@ document.getElementById('program').addEventListener('click', e=>{
     return;
   }
   const lift=e.target.closest('.lift'); if(lift && lift.dataset.k){ const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false); return; }
-  if(e.target.closest('#regen')){ EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true); return; }
+  if(e.target.closest('#regen')){
+    EDIT=null;
+    if(PROGRAM.custom) reshuffleBlocks(); else { PROGRAM=generate(); WEEK=1; }
+    renderProgram(!PROGRAM.custom); return;
+  }
+  const da=e.target.closest('.dayadd');
+  if(da){ startBlockFor(+da.dataset.di); return; }
   if(e.target.closest('#edit')){ document.querySelector('.brief').scrollIntoView({behavior:'smooth',block:'start'}); return; }
   if(e.target.closest('#expdata')){ exportData(); return; }
   if(e.target.closest('#impdata')){ document.getElementById('impfile').click(); return; }
@@ -644,6 +662,8 @@ document.getElementById('program').addEventListener('keydown', e=>{
   const k=lift.dataset.k; EDIT=(EDIT===k?null:k); renderProgram(false);
 });
 document.getElementById('build').addEventListener('click',()=>{
+  const built = PROGRAM && PROGRAM.custom && Object.values(PROGRAM.weeks||{}).some(w=>w.some(d=>d.lifts && d.lifts.some(l=>l.addon)));
+  if(built && !confirm('Rebuild the week? Your custom days start over empty — the blocks you added are cleared. Logged sets are kept.')) return;
   EDIT=null; PROGRAM=generate(); WEEK=1; renderProgram(true);
   requestAnimationFrame(()=>document.getElementById('program').scrollIntoView({behavior:'smooth',block:'start'}));
 });
@@ -702,9 +722,25 @@ function findTarget(label){
 }
 
 /* Populate both dropdowns; only show targets trainable with this equipment. */
+function startBlockFor(di){
+  refreshAddonUI();
+  if(addonDay.querySelector(`option[value="${di}"]`)) addonDay.value=String(di);
+  addonSec.scrollIntoView({behavior:'smooth', block:'start'});
+  setTimeout(()=>{ try{ addonTarget.focus({preventScroll:true}); }catch(e){} }, 350);
+}
+const ADDON_COPY = {
+  add:{ head:'＋ Add a block', step:'optional',
+        sub:'Your weekly plan stays as it is — this appends a short extra block to one day, like the abs finisher. Pick what you want to hit and SPLIT adds movements for it, complete with how-to, suggested weights and per-set logging.' },
+  build:{ head:'＋ Build your days', step:'custom split',
+          sub:'Pick a muscle, pick a day, add it — and repeat until each day is the session you want. Each block brings up to three movements with full working sets, how-to, suggested weights and per-set logging. Stack as many as you like; a block of the same target replaces the old one.' },
+};
 function refreshAddonUI(){
   if(!PROGRAM){ addonSec.classList.add('hidden'); return; }
   addonSec.classList.remove('hidden');
+  const copy = PROGRAM.custom ? ADDON_COPY.build : ADDON_COPY.add;
+  document.getElementById('addonHead').textContent=copy.head;
+  document.getElementById('addonStep').textContent=copy.step;
+  document.getElementById('addonSub').textContent=copy.sub;
 
   const prevDay=addonDay.value;
   addonDay.innerHTML = curWeekdays()
@@ -724,47 +760,80 @@ function refreshAddonUI(){
   refreshAddonNote();
 }
 
+/* What a custom day is called: the blocks it's built from. */
+function customTitle(day){
+  const labels=[...new Set(day.lifts.filter(l=>l.addon).map(l=>l.addon))]
+    .map(x=>x.replace(/^(APT|Toe walking) · /,''));
+  if(!labels.length) return 'Custom';
+  return labels.length<=2 ? labels.join(' + ') : labels.slice(0,2).join(' + ')+` +${labels.length-2}`;
+}
+function retitle(day){
+  if(day.custom) day.type=customTitle(day);
+  day.inten=dayIntensity(day.lifts, PROGRAM.goal);
+}
+/* Put one block onto one day (replacing a block of the same target). It goes
+   in ahead of the abs finisher and any cardio, which belong at the end. On a
+   custom day the block *is* the workout, so each move takes its proper
+   sets and reps — compound or accessory — rather than the add-on scheme. */
+function placeBlock(day, label, target){
+  const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
+  day.lifts = day.lifts.filter(l=>l.addon!==label);
+  const already = new Set(day.lifts.map(l=>l.name));           // don't repeat what the day already programs
+  const picked=[];
+  const add=(f, lever, cue)=>{
+    const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
+    if(f.ex.rx || day.custom) { /* own hold / reps, or the full scheme on a custom day */ }
+    else if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+    else l.base.tag='added';
+    l.addon=label;
+    if(lever!=null){ l.lever=lever; l.cue=cue; }
+    picked.push(l); already.add(f.ex.n);
+  };
+  if(target.slots && target.slots.length>1){
+    // one move from each lever, so the block is balanced
+    target.slots.forEach((slot,si)=>{
+      const all=targetPool(slot.names, PROGRAM.equip);
+      const fresh=all.filter(f=>!already.has(f.ex.n));
+      const pick=shuffle(fresh.length?fresh:all)[0];
+      if(pick) add(pick, si, slot.cue);
+    });
+  } else {
+    const slot = target.slots ? target.slots[0] : null;
+    let pool = targetPool(target.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
+    if(!pool.length) pool = targetPool(target.names, PROGRAM.equip);
+    shuffle(pool).slice(0,3).forEach(f=>add(f, slot?0:null, slot?slot.cue:null));
+  }
+  // heavy compound moves first within a block (a multi-lever block keeps its lever order)
+  if(!(target.slots && target.slots.length>1)) picked.sort((a,b)=>(b.compound?1:0)-(a.compound?1:0));
+  let at=day.lifts.findIndex(l=>l.finisher || l.cardio);
+  if(at<0) at=day.lifts.length;
+  day.lifts.splice(at, 0, ...picked);
+  retitle(day);
+  return picked.length;
+}
 function addBlock(label, di, everyWeek){
   const target=findTarget(label); if(!target) return 0;
-  const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
-
   const targets=[];
   if(PROGRAM.weeks){
     if(everyWeek){ for(const w in PROGRAM.weeks) targets.push(PROGRAM.weeks[w]); }
     else targets.push(PROGRAM.weeks[WEEK] || PROGRAM.weekdays);
   } else targets.push(PROGRAM.weekdays);
-
   let added=0;
   targets.forEach(days=>{
     const day=days[di]; if(!day || day.rest) return;
-    day.lifts = day.lifts.filter(l=>l.addon!==label);           // replace a block of the same target
-    const already = new Set(day.lifts.map(l=>l.name));          // don't repeat what the day already programs
-    const add=(f, lever, cue)=>{
-      const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
-      if(f.ex.rx) { /* stretches and drills keep their own hold / reps */ }
-      else if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
-      else l.base.tag='added';
-      l.addon=label;
-      if(lever!=null){ l.lever=lever; l.cue=cue; }
-      day.lifts.push(l); already.add(f.ex.n); added++;
-    };
-    if(target.slots && target.slots.length>1){
-      // one move from each lever, so the block is balanced
-      target.slots.forEach((slot,si)=>{
-        const all=targetPool(slot.names, PROGRAM.equip);
-        const fresh=all.filter(f=>!already.has(f.ex.n));
-        const pick=shuffle(fresh.length?fresh:all)[0];
-        if(pick) add(pick, si, slot.cue);
-      });
-    } else {
-      const slot = target.slots ? target.slots[0] : null;
-      let pool = targetPool(target.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
-      if(!pool.length) pool = targetPool(target.names, PROGRAM.equip);
-      shuffle(pool).slice(0,3).forEach(f=>add(f, slot?0:null, slot?slot.cue:null));
-    }
-    day.inten=dayIntensity(day.lifts, PROGRAM.goal);
+    added=Math.max(added, placeBlock(day, label, target));
   });
-  return added ? Math.min(target.slots ? Math.max(3,target.slots.length) : 3, added) : 0;
+  return added;
+}
+/* A custom week's "regenerate": keep every block where you put it and draw
+   fresh moves for each, week by week — instead of wiping the days you built. */
+function reshuffleBlocks(){
+  for(const w in PROGRAM.weeks) PROGRAM.weeks[w].forEach(day=>{
+    if(!day || day.rest || !day.lifts) return;
+    [...new Set(day.lifts.filter(l=>l.addon).map(l=>l.addon))].forEach(label=>{
+      const t=findTarget(label); if(t) placeBlock(day, label, t);
+    });
+  });
 }
 
 addonBuild.addEventListener('click', ()=>{
