@@ -94,6 +94,7 @@ function targetCount(length, exp){
   return Math.max(3,Math.min(8,base+adj));
 }
 function liftBase(ex,group,goal){
+  if(ex.rx) return {sets:ex.rx.s, reps:ex.rx.r, rest:ex.rx.rest, tag:ex.rx.tag};
   if(group==='cardio') return {sets:'',reps:CARDIO_RX[Math.floor(Math.random()*CARDIO_RX.length)],rest:'—',tag:'metcon'};
   const sp=(SCHEME[goal]||SCHEME.general)[ex.c?'comp':'iso'];
   return {sets:sp.s,reps:sp.r,rest:sp.rest,tag:ex.c?'compound':'accessory'};

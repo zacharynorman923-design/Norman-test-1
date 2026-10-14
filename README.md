@@ -208,6 +208,14 @@ finisher, but aimed wherever you want.
   it is always balanced; each lever is also on offer alone. Every move carries
   the posterior-tilt cue that makes it count, and swapping one stays within its
   lever.
+- A **Toe walking** group stretches the calves and Achilles that hold the heel
+  up, opens up ankle bend, and strengthens the shins that lift the toes:
+  **Calf & Achilles stretches** (one straight-knee stretch, one bent-knee
+  stretch, one ankle-mobility drill), a **Full block** that adds shin work or a
+  heel-first walking drill, or **Shins & heel-first walking** alone. Stretches
+  are held and logged in seconds, prefilled with the target hold; stretched
+  muscles are painted blue in the demo, worked muscles red. The note in the
+  panel says when toe walking is worth a professional's look.
 - Choose the day, and whether it applies **every week** or only the one you're
   viewing.
 - SPLIT draws up to three movements for that target from the exercise library,
