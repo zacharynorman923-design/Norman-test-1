@@ -156,6 +156,7 @@ const EX = {
     {n:'Clamshell',eq:ALL_EQ,c:0,rx:{s:'3',r:'15 / side',rest:'30 s',tag:'control'}},
     {n:'Banded Lateral Walk',eq:DB_EQ,c:0,rx:{s:'3',r:'12 steps / side',rest:'30 s',tag:'control'}},
     {n:'Copenhagen Plank',eq:ALL_EQ,c:0,rx:{s:'3',r:'15–30 s / side',rest:'30 s',tag:'control'}},
+    {n:'Lacrosse Ball Glute Release',eq:ALL_EQ,c:0,rx:{s:'1',r:'60–90 s / side',rest:'—',tag:'release'}},
   ],
   cardio:[
     {n:'Rowing Intervals',eq:G,c:0},{n:'Assault Bike Sprints',eq:G,c:0},{n:'Incline Treadmill Walk',eq:G,c:0},
@@ -323,6 +324,9 @@ const MUSCLE_TARGETS = {
      Back: glute stretches and gradual hinge loading. Deep pinch: strength and
      control while staying out of the range that pinches. */
   'Hip pain':[
+    /* A set daily routine for deep gluteal / piriformis tightness from sitting:
+       exact moves and doses, every day, about 10 minutes. */
+    {label:'Hip pain · Deep glute / piriformis — daily', hip:1, daily:1, slots:['piriFig4','piriBall','piriHipFlex']},
     {label:'Hip pain · Front of hip / groin', hip:1, slots:['hipflex','hipglutes','adductor','hipcore']},
     {label:'Hip pain · Outside of hip', hip:1, slots:['abduct','singleleg','lateral']},
     {label:'Hip pain · Back of hip / buttock', hip:1, slots:['glutestretch','hipglutes','hinge']},
@@ -414,7 +418,15 @@ const BLOCK_SLOTS = {
   hinge:{ names:['Romanian Deadlift','Single-Leg RDL','Cable Pull-Through'],
     cue:'Push the hips back with a long spine. Load the back of the hip gradually — light and slow before heavy.' },
   painfree:{ names:['90/90 Hip Switch','Half-Kneeling Hip Flexor Stretch'],
-    cue:'Move only through range that doesn\'t pinch. While it\'s irritable, skip deep squats and knee-to-chest positions.' }
+    cue:'Move only through range that doesn\'t pinch. While it\'s irritable, skip deep squats and knee-to-chest positions.' },
+  /* A slot's `rx` overrides the move's own prescription — the daily routine
+     doses these differently from the general blocks. */
+  piriFig4:{ names:['Figure-4 Stretch'], rx:{s:'2',r:'45–60 s / side',rest:'15 s',tag:'stretch'},
+    cue:'Pull the thigh toward your chest until the deep buttock stretches. This is the position that eases the ache — it lengthens exactly the muscles that sitting keeps compressed and short.' },
+  piriBall:{ names:['Lacrosse Ball Glute Release'], rx:{s:'1',r:'60–90 s / side',rest:'—',tag:'release'},
+    cue:'Sit on the ball just above and outside the sit bone and stay on the tender spots, 60–90 seconds. Then cross that leg over the other knee to deepen the pressure. Tender is fine; sharp, burning or tingling down the leg is not.' },
+  piriHipFlex:{ names:['Half-Kneeling Hip Flexor Stretch'], rx:{s:'2',r:'45 s / side',rest:'15 s',tag:'stretch'},
+    cue:'Squeeze the glute on the kneeling side before you shift forward. It deepens the stretch and works against the anterior tilt that feeds this.' }
 };
 /* Resolve slot keys into the slot objects, and give every slotted target the
    full list of its movements as `names`, which the rest of the app reads. */

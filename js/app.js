@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v27';
+const APP_VERSION = 'split-v28';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -232,7 +232,7 @@ function renderProgram(animate){
       if(v.sets!==''){
         const load=suggestLoad(l, v.reps, WEEK, anchors, unit);
         if(load && !(load.bw && l.group==='mobility')){ metaTxt=`<span class="load">${load.txt}</span> · ${v.rest}`; if(load.num!=null) num=load.num; }
-        else if(l.group==='mobility') metaTxt=`${v.rest} rest`;
+        else if(l.group==='mobility') metaTxt = v.rest && v.rest!=='—' ? `${v.rest} rest` : '';
       }
       const key=`${di}:${li}`;
       const loggable = v.sets!=='' || mode==='mins';
@@ -370,7 +370,7 @@ function renderProgram(animate){
              <button class="dayadd" type="button" data-di="${di}">＋ Add a block</button></div>`;
     }
     daysHTML+=`<div class="day train${di===today?' today':''}${d.custom?' custom':''}" ${style}>
-      <div class="day-top"><span class="dow">${d.label}</span><span class="focus${d.custom?' custom':''}">${d.type}</span>
+      <div class="day-top"><span class="dow">${d.label}</span><span class="focus${(d.custom||d.mobilityDay)?' custom':''}">${d.type}</span>
         <span class="intensity"><div class="lab">${intensityLabel(d.inten*factor)}</div>
           <div class="bar"><i data-w="${pct}"></i></div></span></div>
       ${d.custom && !d.lifts.some(l=>l.addon) ? customHTML : ''}
@@ -551,10 +551,22 @@ function allWeekDays(di){
   return out;
 }
 function removeBlock(di,title){
-  allWeekDays(di).forEach(day=>{
-    day.lifts = day.lifts.filter(l=>l.addon!==title);
-    retitle(day);
-  });
+  const daily = curWeekdays()[di] && curWeekdays()[di].lifts.some(l=>l.addon===title && l.daily);
+  if(daily){
+    const weeks = PROGRAM.weeks ? Object.values(PROGRAM.weeks) : [PROGRAM.weekdays];
+    weeks.forEach(days=>days.forEach((d,i)=>{
+      if(d.rest || !d.lifts) return;
+      d.lifts = d.lifts.filter(l=>l.addon!==title);
+      if(d.mobilityDay && !d.lifts.length) days[i]={label:d.label, rest:true};   // back to a rest day
+      else retitle(d);
+    }));
+  } else {
+    allWeekDays(di).forEach(day=>{
+      day.lifts = day.lifts.filter(l=>l.addon!==title);
+      if(day.mobilityDay && !day.lifts.length) Object.assign(day,{rest:true});
+      else retitle(day);
+    });
+  }
   EDIT=null; renderProgram(false);
 }
 /* What a lift can be swapped for: the same category, filtered by your
@@ -682,7 +694,19 @@ const addonBuild = document.getElementById('addonBuild');
 const addonStatus= document.getElementById('addonStatus');
 
 let addonAllWeeks = true;
-addonTarget.addEventListener('change', refreshAddonNote);
+addonTarget.addEventListener('change', ()=>{ refreshAddonNote(); refreshDayOptions(); });
+/* The day list: training days, plus "Every day" when the target is a daily
+   routine — which is then the default. */
+function refreshDayOptions(){
+  if(!PROGRAM) return;
+  const prev=addonDay.value;
+  const t=findTarget(addonTarget.value), daily=!!(t && t.daily);
+  addonDay.innerHTML = (daily ? `<option value="all">Every day (rest days too)</option>` : '') + curWeekdays()
+    .map((d,di)=> (d.rest || d.cardioDay || d.mobilityDay) ? '' : `<option value="${di}">${d.label} · ${d.type}</option>`).join('');
+  if(daily && addonDay.dataset.daily!=='1') addonDay.value='all';
+  else if(prev && addonDay.querySelector(`option[value="${prev}"]`)) addonDay.value=prev;
+  addonDay.dataset.daily = daily ? '1' : '';
+}
 addonEvery.addEventListener('click', ()=>{
   addonAllWeeks=!addonAllWeeks;
   addonEvery.setAttribute('aria-pressed', addonAllWeeks?'true':'false');
@@ -743,10 +767,7 @@ function refreshAddonUI(){
   document.getElementById('addonStep').textContent=copy.step;
   document.getElementById('addonSub').textContent=copy.sub;
 
-  const prevDay=addonDay.value;
-  addonDay.innerHTML = curWeekdays()
-    .map((d,di)=> (d.rest || d.cardioDay) ? '' : `<option value="${di}">${d.label} · ${d.type}</option>`).join('');
-  if(prevDay && addonDay.querySelector(`option[value="${prevDay}"]`)) addonDay.value=prevDay;
+  refreshDayOptions();
 
   const prevTarget=addonTarget.value;
   let html='';
@@ -764,12 +785,12 @@ function refreshAddonUI(){
 /* What a custom day is called: the blocks it's built from. */
 function customTitle(day){
   const labels=[...new Set(day.lifts.filter(l=>l.addon).map(l=>l.addon))]
-    .map(x=>x.replace(/^(APT|Toe walking) · /,''));
+    .map(x=>x.replace(/^(APT|Toe walking|Hip pain) · /,'').replace(/ — daily$/,''));
   if(!labels.length) return 'Custom';
   return labels.length<=2 ? labels.join(' + ') : labels.slice(0,2).join(' + ')+` +${labels.length-2}`;
 }
 function retitle(day){
-  if(day.custom) day.type=customTitle(day);
+  if(day.custom || day.mobilityDay) day.type=customTitle(day);
   day.inten=dayIntensity(day.lifts, PROGRAM.goal);
 }
 /* Put one block onto one day (replacing a block of the same target). It goes
@@ -788,6 +809,9 @@ function placeBlock(day, label, target){
     else l.base.tag='added';
     l.addon=label;
     if(lever!=null){ l.lever=lever; l.cue=cue; }
+    const sl = lever!=null && target.slots ? target.slots[lever] : null;
+    if(sl && sl.rx) l.base={sets:sl.rx.s, reps:sl.rx.r, rest:sl.rx.rest, tag:sl.rx.tag};   // the routine's dose
+    if(target.daily) l.daily=true;
     picked.push(l); already.add(f.ex.n);
   };
   if(target.slots && target.slots.length>1){
@@ -817,6 +841,19 @@ function placeBlock(day, label, target){
   retitle(day);
   return picked.length;
 }
+/* A daily routine goes on all seven days. A rest day that picks it up becomes
+   a light day of its own (it's still a rest day from lifting); removing the
+   routine turns it back into a rest day. */
+function addDaily(label, everyWeek){
+  const target=findTarget(label); if(!target) return 0;
+  const weeks = PROGRAM.weeks ? (everyWeek ? Object.values(PROGRAM.weeks) : [PROGRAM.weeks[WEEK]]) : [PROGRAM.weekdays];
+  let added=0;
+  weeks.forEach(days=>days.forEach((d,i)=>{
+    if(d.rest) days[i]={label:d.label, rest:false, mobilityDay:true, type:'', lifts:[], inten:0.2};
+    added=Math.max(added, placeBlock(days[i], label, target));
+  }));
+  return added;
+}
 function addBlock(label, di, everyWeek){
   const target=findTarget(label); if(!target) return 0;
   const targets=[];
@@ -845,9 +882,16 @@ function reshuffleBlocks(){
 addonBuild.addEventListener('click', ()=>{
   if(!PROGRAM){ addonSetStatus('Build your week first.','err'); return; }
   const label=addonTarget.value;
+  if(!label){ addonSetStatus('Pick a muscle to target.','err'); return; }
+  if(addonDay.value==='all'){
+    const n=addDaily(label, addonAllWeeks);
+    if(!n){ addonSetStatus('No movements available for that routine with your equipment.','err'); return; }
+    saveSession(); EDIT=null; renderProgram(false);
+    addonSetStatus(`Added “${label}” — ${n} moves on every day${addonAllWeeks?', every week':' this week'}. The ✕ on it removes it from every day.`,'ok');
+    return;
+  }
   const di=parseInt(addonDay.value,10);
   const day=curWeekdays()[di];
-  if(!label){ addonSetStatus('Pick a muscle to target.','err'); return; }
   if(!day || day.rest){ addonSetStatus('Pick a training day.','err'); return; }
 
   const n=addBlock(label, di, addonAllWeeks);
