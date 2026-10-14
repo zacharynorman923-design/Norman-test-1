@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v26';
+const APP_VERSION = 'split-v27';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -156,7 +156,7 @@ function rxMinutes(rx){
 /* Seconds to start a hold from, read off a timed prescription ("30–45 s"
    starts at 30). Anything else starts blank. */
 function rxSeconds(rx){
-  const m=String(rx||'').match(/^(\d+)(?:\s*–\s*\d+)?\s*s$/);
+  const m=String(rx||'').match(/^(\d+)(?:\s*–\s*\d+)?\s*s(?:\s*\/\s*side)?$/);
   return m ? m[1] : '';
 }
 function nextMins(m, diff){
@@ -224,7 +224,7 @@ function renderProgram(animate){
       const v=weekAdjust(l.base,WEEK,l.compound);
       if(v.sets) totalSets+=parseInt(v.sets,10);
       const mode = logMode(l);
-      const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × ${/\d\s*s$/.test(v.reps) ? v.reps : 'hold'}` : `${v.sets} × ${v.reps}`) : v.reps;
+      const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × ${/\d\s*s(\s*\/\s*side)?$/.test(v.reps) ? v.reps : 'hold'}` : `${v.sets} × ${v.reps}`) : v.reps;
       const done = LOG.sets[occKey(di,li,l.name)];       // logged on THIS day/week
       const suggest = done ? null : lastForName(l.name);  // else: last time you did it
       const src = done || suggest;                        // prefill source for the logger
@@ -595,11 +595,11 @@ function replaceLift(di, li, name){
   } else {
     const found=findExercise(name); if(!found) return;
     nl=mkLift(found.ex, found.group, PROGRAM.goal, cur.finisher);
-    if(cur.finisher) nl.base={sets:'3',reps:'12–15',rest:'30 s',tag:'abs'};
+    if(cur.finisher) nl.base={sets:'3',reps:isHold(name)?HOLD_RX:'12–15',rest:'30 s',tag:'abs'};
     if(cur.addon){
       const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
       if(found.ex.rx || day.custom) { /* own hold / reps, or the full scheme on a custom day */ }
-      else if(found.group!=='cardio') nl.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+      else if(found.group!=='cardio') nl.base={sets:iso.s, reps:isHold(found.ex.n)?HOLD_RX:iso.r, rest:iso.rest, tag:'added'};
       else nl.base.tag='added';
       nl.addon=cur.addon;
       if(cur.lever!=null){ nl.lever=cur.lever; nl.cue=cur.cue; }
@@ -699,13 +699,14 @@ function targetPool(names, equip){
 }
 const addonNote = document.getElementById('addonNote');
 const TARGET_NOTES = {
+  hip:'Hip pain has a few common sources, and where it hurts points to which — pick the option that matches. These are general strengthening and mobility moves, not a diagnosis or treatment; work in a pain-free range. See a doctor or physical therapist if the pain is severe, wakes you at night, follows a fall or injury, comes with numbness, tingling or pain down the leg, makes the hip lock or give way, or isn\u2019t improving after a few weeks.',
   toe:'Habitual toe walking usually comes from tight calves and Achilles holding the heel up, plus a toes-first habit. These stretch the calf and Achilles, open up ankle bend, and strengthen the shins that lift your toes. Hold stretches without bouncing. Toe walking that is persistent, one-sided, or comes with pain, stiffness or weakness can have other causes — have a physical therapist or doctor look at it.',
   desk:'Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.',
   apt:'Anterior pelvic tilt is a balance problem: hip flexors and the lower back pull the pelvis forward, and glutes, hamstrings and the deep core don\u2019t pull it back enough. These moves build the side that pulls back, with a cue on each for doing them in a posterior tilt — pair them with hip-flexor stretching. General fitness guidance, not treatment; see a clinician for back pain that is severe, persistent, or follows an injury.',
 };
 function targetNote(label){
   const t=findTarget(label);
-  return !t ? '' : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
+  return !t ? '' : t.hip ? TARGET_NOTES.hip : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
 }
 function refreshAddonNote(){
   const note=targetNote(addonTarget.value);
@@ -783,20 +784,25 @@ function placeBlock(day, label, target){
   const add=(f, lever, cue)=>{
     const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
     if(f.ex.rx || day.custom) { /* own hold / reps, or the full scheme on a custom day */ }
-    else if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+    else if(f.group!=='cardio') l.base={sets:iso.s, reps:isHold(f.ex.n)?HOLD_RX:iso.r, rest:iso.rest, tag:'added'};
     else l.base.tag='added';
     l.addon=label;
     if(lever!=null){ l.lever=lever; l.cue=cue; }
     picked.push(l); already.add(f.ex.n);
   };
   if(target.slots && target.slots.length>1){
-    // one move from each lever, so the block is balanced
-    target.slots.forEach((slot,si)=>{
-      const all=targetPool(slot.names, PROGRAM.equip);
-      const fresh=all.filter(f=>!already.has(f.ex.n));
-      const pick=shuffle(fresh.length?fresh:all)[0];
+    // One move from each lever, so the block is balanced. Levers with the
+    // fewest options for your equipment choose first, so a move that's the
+    // only one left for a lever isn't taken by another; a lever with nothing
+    // fresh left is skipped rather than repeating a move.
+    const order=target.slots.map((slot,si)=>({slot,si,n:targetPool(slot.names, PROGRAM.equip).length}))
+      .sort((a,b)=>a.n-b.n);
+    order.forEach(({slot,si})=>{
+      const fresh=targetPool(slot.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
+      const pick=shuffle(fresh)[0];
       if(pick) add(pick, si, slot.cue);
     });
+    picked.sort((a,b)=>a.lever-b.lever);                        // back in lever order
   } else {
     const slot = target.slots ? target.slots[0] : null;
     let pool = targetPool(target.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));

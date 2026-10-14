@@ -93,8 +93,15 @@ function targetCount(length, exp){
   const adj={beginner:-1,intermediate:0,advanced:1}[exp];
   return Math.max(3,Math.min(8,base+adj));
 }
+/* A hold is prescribed in seconds, not reps — "3 × 30–45 s", not "3 × 10–12". */
+const HOLD_RX='30–45 s';
+function isHold(name){ return typeof isTimedExercise==='function' && isTimedExercise(name); }
 function liftBase(ex,group,goal){
   if(ex.rx) return {sets:ex.rx.s, reps:ex.rx.r, rest:ex.rx.rest, tag:ex.rx.tag};
+  if(group!=='cardio' && isHold(ex.n)){
+    const sp=(SCHEME[goal]||SCHEME.general).iso;
+    return {sets:sp.s, reps:HOLD_RX, rest:sp.rest, tag:ex.c?'compound':'accessory'};
+  }
   if(group==='cardio') return {sets:'',reps:CARDIO_RX[Math.floor(Math.random()*CARDIO_RX.length)],rest:'—',tag:'metcon'};
   const sp=(SCHEME[goal]||SCHEME.general)[ex.c?'comp':'iso'];
   return {sets:sp.s,reps:sp.r,rest:sp.rest,tag:ex.c?'compound':'accessory'};
@@ -115,7 +122,7 @@ function pickLifts(dayType,count,queues,goal){
 }
 function absFinisher(usedNames, equip, goal){
   const pool=getPool('core',equip).filter(x=>!usedNames.has(x.n));
-  return shuffle(pool).slice(0,2).map(ex=>{ const l=mkLift(ex,'core',goal,true); l.base={sets:'3',reps:'12–15',rest:'30 s',tag:'abs'}; return l; });
+  return shuffle(pool).slice(0,2).map(ex=>{ const l=mkLift(ex,'core',goal,true); l.base={sets:'3',reps:isHold(ex.n)?HOLD_RX:'12–15',rest:'30 s',tag:'abs'}; return l; });
 }
 function dayIntensity(lifts, goal){
   if(!lifts.length) return 0;

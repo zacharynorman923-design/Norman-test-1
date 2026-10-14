@@ -226,6 +226,13 @@ finisher, but aimed wherever you want.
   it is always balanced; each lever is also on offer alone. Every move carries
   the posterior-tilt cue that makes it count, and swapping one stays within its
   lever.
+- A **Hip pain** group has one block per place it hurts, because what helps
+  differs by location: **Front of hip / groin** (hip-flexor length, glutes,
+  inner thigh, pelvic control), **Outside of hip** (the side glute, without
+  stretches that press on the sore spot), **Back of hip / buttock** (glute
+  stretches, gradual hinge loading), and **Deep pinch in the joint** (strength
+  and control while staying out of the range that pinches). The panel note
+  lists when to see a doctor or physical therapist instead.
 - A **Toe walking** group stretches the calves and Achilles that hold the heel
   up, opens up ankle bend, and strengthens the shins that lift the toes:
   **Calf & Achilles stretches** (one straight-knee stretch, one bent-knee

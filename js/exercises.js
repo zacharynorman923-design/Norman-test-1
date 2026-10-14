@@ -149,6 +149,13 @@ const EX = {
     {n:'Knee-to-Wall Ankle Mobilization',eq:ALL_EQ,c:0,rx:{s:'2',r:'10 / side',rest:'20 s',tag:'mobility'}},
     {n:'Heel Walks',eq:ALL_EQ,c:0,rx:{s:'3',r:'30 s',rest:'30 s',tag:'drill'}},
     {n:'Heel-to-Toe Walk',eq:ALL_EQ,c:0,rx:{s:'3',r:'45 s',rest:'20 s',tag:'drill'}},
+    {n:'Half-Kneeling Hip Flexor Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s / side',rest:'15 s',tag:'stretch'}},
+    {n:'Figure-4 Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s / side',rest:'15 s',tag:'stretch'}},
+    {n:'90/90 Hip Switch',eq:ALL_EQ,c:0,rx:{s:'2',r:'8 / side',rest:'20 s',tag:'mobility'}},
+    {n:'Side-Lying Hip Abduction',eq:ALL_EQ,c:0,rx:{s:'3',r:'12–15 / side',rest:'30 s',tag:'control'}},
+    {n:'Clamshell',eq:ALL_EQ,c:0,rx:{s:'3',r:'15 / side',rest:'30 s',tag:'control'}},
+    {n:'Banded Lateral Walk',eq:DB_EQ,c:0,rx:{s:'3',r:'12 steps / side',rest:'30 s',tag:'control'}},
+    {n:'Copenhagen Plank',eq:ALL_EQ,c:0,rx:{s:'3',r:'15–30 s / side',rest:'30 s',tag:'control'}},
   ],
   cardio:[
     {n:'Rowing Intervals',eq:G,c:0},{n:'Assault Bike Sprints',eq:G,c:0},{n:'Incline Treadmill Walk',eq:G,c:0},
@@ -310,6 +317,17 @@ const MUSCLE_TARGETS = {
   /* Toe walking: tight calves and Achilles hold the heel up, and habit lands
      the toes first. The stretches buy back ankle bend; the shin work and gait
      drills make heel-first the easy way to walk. */
+  /* Hip pain: where it hurts points to what usually helps, so each option is
+     one location. Front: hip-flexor length, glutes, groin, control. Outside:
+     the side glute, built without stretches that press on the sore spot.
+     Back: glute stretches and gradual hinge loading. Deep pinch: strength and
+     control while staying out of the range that pinches. */
+  'Hip pain':[
+    {label:'Hip pain · Front of hip / groin', hip:1, slots:['hipflex','hipglutes','adductor','hipcore']},
+    {label:'Hip pain · Outside of hip', hip:1, slots:['abduct','singleleg','lateral']},
+    {label:'Hip pain · Back of hip / buttock', hip:1, slots:['glutestretch','hipglutes','hinge']},
+    {label:'Hip pain · Deep pinch in the joint', hip:1, slots:['painfree','hipglutes','hipcore']},
+  ],
   'Toe walking':[
     {label:'Toe walking · Calf & Achilles stretches', toe:1, slots:['gastroc','soleus','ankle']},
     {label:'Toe walking · Full block', toe:1, slots:['gastroc','soleus','ankle','shin']},
@@ -376,7 +394,27 @@ const BLOCK_SLOTS = {
   ankle:{ names:['Knee-to-Wall Ankle Mobilization','Deep Squat Hold'],
     cue:'Drive the knee forward over the toes without the heel lifting. Every bit of ankle bend you gain is room to land heel-first.' },
   shin:{ names:['Tibialis Raise','Heel Walks','Heel-to-Toe Walk'],
-    cue:'Your shins lift the front of the foot. Land on the heel and roll through to the toes — strong shins make that the easy way to walk.' }
+    cue:'Your shins lift the front of the foot. Land on the heel and roll through to the toes — strong shins make that the easy way to walk.' },
+  hipflex:{ names:['Half-Kneeling Hip Flexor Stretch'],
+    cue:'Tuck the pelvis on the kneeling side first, then shift forward an inch. The stretch belongs at the front of the hip — if you feel it in the low back, tuck more and lean less.' },
+  hipglutes:{ names:['Glute Bridge','Single-Leg Hip Thrust','Hip Thrust','Frog Pump'],
+    cue:'Drive through the heels and finish with a glute squeeze, ribs down. Stop short of any position that pinches.' },
+  adductor:{ names:['Copenhagen Plank','Side Plank'],
+    cue:'Start short — knee on the bench — and build toward the foot. The inner thigh should feel worked, never sharp.' },
+  hipcore:{ names:['Dead Bug','Pallof Press','Side Plank'],
+    cue:'Keep the pelvis still while the arms and legs move. That control is what stops the hip taking strain it shouldn\'t.' },
+  abduct:{ names:['Side-Lying Hip Abduction','Clamshell','Side Plank'],
+    cue:'Lead with the heel, toes angled slightly down, and lift only as high as you can without rolling back. Slow up, slower down.' },
+  singleleg:{ names:['Step-Up','Single-Leg RDL','Single-Leg Hip Thrust'],
+    cue:'Keep the pelvis level over the standing leg — no dropping or hitching the other hip.' },
+  lateral:{ names:['Banded Lateral Walk','Side Plank'],
+    cue:'Stay a little low with toes forward and keep tension on the band the whole time. Short, controlled steps.' },
+  glutestretch:{ names:['Figure-4 Stretch','90/90 Hip Switch'],
+    cue:'Ease in and breathe. A stretch in the buttock is the goal — a sharp or burning pain running down the leg is not.' },
+  hinge:{ names:['Romanian Deadlift','Single-Leg RDL','Cable Pull-Through'],
+    cue:'Push the hips back with a long spine. Load the back of the hip gradually — light and slow before heavy.' },
+  painfree:{ names:['90/90 Hip Switch','Half-Kneeling Hip Flexor Stretch'],
+    cue:'Move only through range that doesn\'t pinch. While it\'s irritable, skip deep squats and knee-to-chest positions.' }
 };
 /* Resolve slot keys into the slot objects, and give every slotted target the
    full list of its movements as `names`, which the rest of the app reads. */
