@@ -9,7 +9,7 @@
    straight away.
 
    Keep VERSION in step with APP_VERSION in js/app.js. */
-const VERSION = 'split-v24';
+const VERSION = 'split-v25';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 

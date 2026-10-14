@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v24';
+const APP_VERSION = 'split-v25';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -153,6 +153,12 @@ function rxMinutes(rx){
   const m=String(rx).match(/(\d+)\s*(?:–\s*\d+\s*)?min/);
   return m ? m[1] : '';
 }
+/* Seconds to start a hold from, read off a timed prescription ("30–45 s"
+   starts at 30). Anything else starts blank. */
+function rxSeconds(rx){
+  const m=String(rx||'').match(/^(\d+)(?:\s*–\s*\d+)?\s*s$/);
+  return m ? m[1] : '';
+}
 function nextMins(m, diff){
   const d=diff&&DIFF_BY[diff];
   if(!d || !d.rep) return m;
@@ -218,14 +224,15 @@ function renderProgram(animate){
       const v=weekAdjust(l.base,WEEK,l.compound);
       if(v.sets) totalSets+=parseInt(v.sets,10);
       const mode = logMode(l);
-      const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × hold` : `${v.sets} × ${v.reps}`) : v.reps;
+      const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × ${/\d\s*s$/.test(v.reps) ? v.reps : 'hold'}` : `${v.sets} × ${v.reps}`) : v.reps;
       const done = LOG.sets[occKey(di,li,l.name)];       // logged on THIS day/week
       const suggest = done ? null : lastForName(l.name);  // else: last time you did it
       const src = done || suggest;                        // prefill source for the logger
       let metaTxt=v.rest, num='';
       if(v.sets!==''){
         const load=suggestLoad(l, v.reps, WEEK, anchors, unit);
-        if(load){ metaTxt=`<span class="load">${load.txt}</span> · ${v.rest}`; if(load.num!=null) num=load.num; }
+        if(load && !(load.bw && l.group==='mobility')){ metaTxt=`<span class="load">${load.txt}</span> · ${v.rest}`; if(load.num!=null) num=load.num; }
+        else if(l.group==='mobility') metaTxt=`${v.rest} rest`;
       }
       const key=`${di}:${li}`;
       const loggable = v.sets!=='' || mode==='mins';
@@ -280,7 +287,7 @@ function renderProgram(animate){
                 <span class="lb-u">min</span>${tick}
               </div>`;
             } else if(mode==='time'){
-              const pv = s ? s.sec : carry ? carry.sec : (last ? nextSecs(last.sec,lastDiff) : '');
+              const pv = s ? s.sec : carry ? carry.sec : (last ? nextSecs(last.sec,lastDiff) : rxSeconds(v.reps));
               rowsHTML+=`<div class="${cls}">
                 <span class="lb-n">Set ${i+1}</span>
                 <input class="lt" type="number" inputmode="numeric" value="${pv}" placeholder="—" aria-label="Set ${i+1} hold seconds">
@@ -317,7 +324,7 @@ function renderProgram(animate){
           const curDiff = PENDING_DIFF[key] || (done && done.diff) || '';
           const dchips = DIFF_LEVELS.map(d=>{
             // "missed reps" means nothing on a 40-minute walk
-            const lab = (mode==='mins' && d.k==='fail') ? 'Cut it short' : d.label;
+            const lab = ((mode==='mins' || mode==='time') && d.k==='fail') ? 'Cut it short' : d.label;
             return `<button class="dchip${curDiff===d.k?' on':''}" type="button" data-diff="${d.k}" aria-pressed="${curDiff===d.k}">${lab}</button>`;
           }).join('');
           const dNote = curDiff && DIFF_BY[curDiff] ? DIFF_BY[curDiff].note
@@ -579,7 +586,8 @@ function replaceLift(di, li, name){
     if(cur.finisher) nl.base={sets:'3',reps:'12–15',rest:'30 s',tag:'abs'};
     if(cur.addon){
       const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
-      if(found.group!=='cardio') nl.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+      if(found.ex.rx) { /* stretches and drills keep their own hold / reps */ }
+      else if(found.group!=='cardio') nl.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
       else nl.base.tag='added';
       nl.addon=cur.addon;
       if(cur.lever!=null){ nl.lever=cur.lever; nl.cue=cur.cue; }
@@ -671,12 +679,13 @@ function targetPool(names, equip){
 }
 const addonNote = document.getElementById('addonNote');
 const TARGET_NOTES = {
+  toe:'Habitual toe walking usually comes from tight calves and Achilles holding the heel up, plus a toes-first habit. These stretch the calf and Achilles, open up ankle bend, and strengthen the shins that lift your toes. Hold stretches without bouncing. Toe walking that is persistent, one-sided, or comes with pain, stiffness or weakness can have other causes — have a physical therapist or doctor look at it.',
   desk:'Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.',
   apt:'Anterior pelvic tilt is a balance problem: hip flexors and the lower back pull the pelvis forward, and glutes, hamstrings and the deep core don\u2019t pull it back enough. These moves build the side that pulls back, with a cue on each for doing them in a posterior tilt — pair them with hip-flexor stretching. General fitness guidance, not treatment; see a clinician for back pain that is severe, persistent, or follows an injury.',
 };
 function targetNote(label){
   const t=findTarget(label);
-  return !t ? '' : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
+  return !t ? '' : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
 }
 function refreshAddonNote(){
   const note=targetNote(addonTarget.value);
@@ -732,7 +741,8 @@ function addBlock(label, di, everyWeek){
     const already = new Set(day.lifts.map(l=>l.name));          // don't repeat what the day already programs
     const add=(f, lever, cue)=>{
       const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
-      if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
+      if(f.ex.rx) { /* stretches and drills keep their own hold / reps */ }
+      else if(f.group!=='cardio') l.base={sets:iso.s, reps:iso.r, rest:iso.rest, tag:'added'};
       else l.base.tag='added';
       l.addon=label;
       if(lever!=null){ l.lever=lever; l.cue=cue; }

@@ -137,6 +137,19 @@ const EX = {
     {n:'Weighted Sit-Up',eq:DB_EQ,c:0,w:['bench',0.25,'single']},
     {n:'Farmer Carry',eq:DB_EQ,c:0},
   ],
+  /* Stretches and mobility drills. No split template draws from this group,
+     so these only ever appear in blocks you add. `rx` is the move's own
+     prescription — a stretch is held, not lifted for 10–12. */
+  mobility:[
+    {n:'Wall Calf Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s',rest:'15 s',tag:'stretch'}},
+    {n:'Bent-Knee Calf Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s',rest:'15 s',tag:'stretch'}},
+    {n:'Towel Calf Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s',rest:'15 s',tag:'stretch'}},
+    {n:'Eccentric Heel Drop',eq:ALL_EQ,c:0,rx:{s:'3',r:'10–12',rest:'30 s',tag:'stretch'}},
+    {n:'Deep Squat Hold',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s',rest:'20 s',tag:'mobility'}},
+    {n:'Knee-to-Wall Ankle Mobilization',eq:ALL_EQ,c:0,rx:{s:'2',r:'10 / side',rest:'20 s',tag:'mobility'}},
+    {n:'Heel Walks',eq:ALL_EQ,c:0,rx:{s:'3',r:'30 s',rest:'30 s',tag:'drill'}},
+    {n:'Heel-to-Toe Walk',eq:ALL_EQ,c:0,rx:{s:'3',r:'45 s',rest:'20 s',tag:'drill'}},
+  ],
   cardio:[
     {n:'Rowing Intervals',eq:G,c:0},{n:'Assault Bike Sprints',eq:G,c:0},{n:'Incline Treadmill Walk',eq:G,c:0},
     {n:'Kettlebell Swings',eq:DB_EQ,c:0},{n:'Dumbbell Thrusters',eq:DB_EQ,c:1},{n:'Burpees',eq:ALL_EQ,c:1},
@@ -288,11 +301,19 @@ const MUSCLE_TARGETS = {
      so you never get three glute moves; each lever is also on offer alone.
      A slot's cue is the posterior-tilt instruction that makes the move count. */
   'Anterior pelvic tilt':[
-    {label:'Full APT block', apt:1, slots:'all'},
+    {label:'Full APT block', apt:1, slots:['glutes','hams','core','split']},
     {label:'APT · Glutes (tuck the pelvis)', apt:1, slots:['glutes']},
     {label:'APT · Hamstrings', apt:1, slots:['hams']},
     {label:'APT · Deep core (posterior tilt)', apt:1, slots:['core']},
     {label:'APT · Hip-flexor length (split stance)', apt:1, slots:['split']},
+  ],
+  /* Toe walking: tight calves and Achilles hold the heel up, and habit lands
+     the toes first. The stretches buy back ankle bend; the shin work and gait
+     drills make heel-first the easy way to walk. */
+  'Toe walking':[
+    {label:'Toe walking · Calf & Achilles stretches', toe:1, slots:['gastroc','soleus','ankle']},
+    {label:'Toe walking · Full block', toe:1, slots:['gastroc','soleus','ankle','shin']},
+    {label:'Toe walking · Shins & heel-first walking', toe:1, slots:['shin']},
   ],
   Chest:[
     {label:'Upper chest', names:['Incline Barbell Bench Press','Incline Dumbbell Press','Incline Dumbbell Fly','Decline Push-Up']},
@@ -337,8 +358,9 @@ const MUSCLE_TARGETS = {
   ],
 };
 
-/* The levers anterior pelvic tilt is worked through (see MUSCLE_TARGETS). */
-const APT_SLOTS = {
+/* The levers a multi-part block is built from (see MUSCLE_TARGETS): each is a
+   pool of moves plus the cue that makes them count. */
+const BLOCK_SLOTS = {
   glutes:{ names:['Glute Bridge','Hip Thrust','Single-Leg Hip Thrust','Frog Pump','Cable Pull-Through'],
     cue:'Tuck your tailbone and pull your ribs down before you lift. Drive through the heels and finish with a glute squeeze — the low back should not arch at the top.' },
   hams:{ names:['Romanian Deadlift','Lying Leg Curl','Seated Leg Curl','Nordic Curl','Single-Leg RDL'],
@@ -347,12 +369,19 @@ const APT_SLOTS = {
     cue:'Flatten your low back into the floor (or tuck the pelvis in a plank) and keep it there for the whole set. If it starts to arch, shorten the lever.' },
   split:{ names:['Bulgarian Split Squat','Reverse Lunge','Walking Lunge'],
     cue:'Tuck the pelvis on the back leg until you feel a stretch across the front of that hip, and keep it tucked as you lower.' },
+  gastroc:{ names:['Wall Calf Stretch','Towel Calf Stretch','Eccentric Heel Drop'],
+    cue:'Back knee straight, heel pinned to the floor, toes pointing straight ahead. Ease in until you feel the upper calf, then hold and breathe — no bouncing.' },
+  soleus:{ names:['Bent-Knee Calf Stretch','Deep Squat Hold'],
+    cue:'Bend the knee and keep the heel down: the stretch moves low, toward the Achilles. That lower calf is what pulls you up onto your toes.' },
+  ankle:{ names:['Knee-to-Wall Ankle Mobilization','Deep Squat Hold'],
+    cue:'Drive the knee forward over the toes without the heel lifting. Every bit of ankle bend you gain is room to land heel-first.' },
+  shin:{ names:['Tibialis Raise','Heel Walks','Heel-to-Toe Walk'],
+    cue:'Your shins lift the front of the foot. Land on the heel and roll through to the toes — strong shins make that the easy way to walk.' }
 };
 /* Resolve slot keys into the slot objects, and give every slotted target the
    full list of its movements as `names`, which the rest of the app reads. */
 for(const cat in MUSCLE_TARGETS) MUSCLE_TARGETS[cat].forEach(t=>{
   if(!t.slots) return;
-  const keys = t.slots==='all' ? Object.keys(APT_SLOTS) : t.slots;
-  t.slots = keys.map(k=>APT_SLOTS[k]);
+  t.slots = t.slots.map(k=>BLOCK_SLOTS[k]);
   t.names = [...new Set(t.slots.flatMap(x=>x.names))];
 });

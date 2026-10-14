@@ -17,6 +17,7 @@ const GROUP_TARGET = {
   calves:'Calves',
   core:'Core · abs',
   cardio:'Full body · conditioning',
+  mobility:'Mobility · flexibility',
 };
 
 const HOWTO = {
@@ -173,6 +174,14 @@ const HOWTO = {
   'Steady Run':['Run at a conversational pace, not a hard one.','Land under your hips with a quick, light cadence.','Keep the effort even and finish feeling you could go further.'],
   'Ruck Walk':['Load a pack to 10–20% of bodyweight, straps snug and high on the back.','Walk tall — chest up, ribs down, steady stride.','Rolling ground beats flat; keep the pace brisk but conversational.'],
   'Weighted Vest Walk':['Start with a vest around 10% of bodyweight.','Walk tall and brisk, arms swinging naturally.','Add incline before you add weight.'],
+  'Wall Calf Stretch':['Hands on a wall, one foot stepped back, toes pointing straight ahead.','Keep the back knee straight and press that heel into the floor.','Lean in until the upper calf stretches; hold, breathe, and switch sides.'],
+  'Bent-Knee Calf Stretch':['Same stance as the wall calf stretch, back foot a little closer in.','Bend the back knee while keeping its heel firmly down.','Feel it low in the calf toward the Achilles; hold and switch sides.'],
+  'Towel Calf Stretch':['Sit tall with legs straight, a towel looped around the ball of one foot.','Pull the towel to draw your toes back toward you, knee staying straight.','Hold at a firm stretch, then switch feet.'],
+  'Eccentric Heel Drop':['Stand on the edge of a step on the balls of your feet, holding a rail.','Rise up on both feet, then shift onto one.','Lower that heel slowly — 3–4 seconds — below the step, and repeat.'],
+  'Deep Squat Hold':['Feet shoulder-width, toes turned out slightly.','Sit all the way down with heels flat on the floor; hold something if you need to.','Keep the chest up and breathe; push the knees out over the toes.'],
+  'Knee-to-Wall Ankle Mobilization':['Half-kneel facing a wall, front foot a few inches from it.','Drive the front knee forward to touch the wall, heel staying down.','Return and repeat; inch the foot back as it gets easier.'],
+  'Heel Walks':['Stand tall and lift the front of both feet off the floor.','Walk forward on your heels only, toes pulled up the whole time.','Short, steady steps; rest when the shins burn.'],
+  'Heel-to-Toe Walk':['Walk slowly with a deliberate heel strike on every step.','Roll from heel to the ball of the foot, then push off through the toes.','Keep it unhurried — you are teaching the pattern, not walking fast.'],
   'Reverse Crunch':['Lie on your back, knees bent at 90°, hands by your sides.','Curl your hips off the floor by tilting the pelvis back toward your ribs — not by swinging the legs.','Lower slowly until the low back is flat again; stop before it arches.'],
   'Swim Laps':['Push off long, body flat and level at the surface.','Roll to breathe rather than lifting the head.','Swim easy laps with short rests — the effort stays conversational.'],
 };
@@ -247,7 +256,7 @@ const PATTERN = {
   'Donkey Calf Raise':'calf',
   'Farmer Walk on Toes':'carry',
   'Calf Jump':'calf',
-  'Tibialis Raise':'calf',
+  'Tibialis Raise':'tibraise',
   'Hanging Knee Raise':'hang',
   'Toes-to-Bar':'hang',
   'Bicycle Crunch':'core',
@@ -271,9 +280,12 @@ const PATTERN = {
   'Ruck Walk':'walk', 'Weighted Vest Walk':'walk',
   'Incline Treadmill Walk':'walk', 'Stair Climber':'walk',
   'Swim Laps':'swim',
+  'Wall Calf Stretch':'calfstretch', 'Bent-Knee Calf Stretch':'soleusstretch', 'Towel Calf Stretch':'towelstretch',
+  'Eccentric Heel Drop':'heeldrop', 'Deep Squat Hold':'deepsquat', 'Knee-to-Wall Ankle Mobilization':'kneewall',
+  'Heel Walks':'heelwalk', 'Heel-to-Toe Walk':'walk',
   'Reverse Crunch':'core',
 };
-const GROUP_PATTERN = {chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
+const GROUP_PATTERN = {mobility:'calfstretch',chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
 
 /* ===================== MOVEMENT DEMOS =====================
    The figure is built from one skeleton with fixed bone lengths, so it keeps
@@ -412,6 +424,7 @@ const REGIONS = {
   hams:     [['thigh',-1, .22, .92, .6]],
   calves:   [['shin', -1, .06, .56, .66]],
   tibialis: [['shin',  1, .1, .72, .52]],
+  achilles: [['shin', -1, .58, .98, .5]],
   delts:    [['uarm',  0, -.14, .3, .96]],
   frontdelt:[['uarm',  1, -.12, .34, .66]],
   sidedelt: [['uarm',  0, -.14, .28, .9]],
@@ -423,7 +436,7 @@ const REGIONS = {
 const MUSCLE_NAMES = {
   chest:'Chest', abs:'Abs', obliques:'Obliques', lats:'Lats', upperback:'Upper back',
   lowback:'Lower back', glutes:'Glutes', quads:'Quads', hams:'Hamstrings', calves:'Calves',
-  tibialis:'Shins', delts:'Shoulders', frontdelt:'Front delts', sidedelt:'Side delts',
+  tibialis:'Shins', achilles:'Achilles', delts:'Shoulders', frontdelt:'Front delts', sidedelt:'Side delts',
   reardelt:'Rear delts', biceps:'Biceps', triceps:'Triceps', forearms:'Forearms',
 };
 function band(a,b,wa,wb,side,t0,t1,frac,nrm){
@@ -455,7 +468,9 @@ function musclesOn(part, s, spec, mus){
     segs.push(['uarm', g.sh, g.el, WID.uarm[0], WID.uarm[1], angOf(g.sh,g.el)-90*f]);
     segs.push(['farm', g.el, g.wr, WID.farm[0], WID.farm[1], angOf(g.el,g.wr)-90*f]); });
   let out='';
-  [['s',mus.s||[]],['p',mus.p||[]]].forEach(([cls,list])=>list.forEach(m=>{
+  // a stretch paints what's being lengthened, in a cool tone, not what's working
+  const P = mus.stretch ? 'st' : 'p', S = mus.stretch ? 'st s' : 's';
+  [[S,mus.s||[]],[P,mus.p||[]]].forEach(([cls,list])=>list.forEach(m=>{
     (REGIONS[m]||[]).forEach(([bone,side,t0,t1,frac])=>{
       // a face-on view only shows the regions on the side facing you
       if(view==='front' && side<0) return;
@@ -578,6 +593,9 @@ const WALLL = `<rect class="eq" x="15" y="6" width="5" height="91" rx="1.6"/>` +
 const WALLR = `<rect class="eq" x="60" y="2" width="5" height="95" rx="1.6"/>` + FLOORSVG;
 const RACKBAR = `<rect class="eq" x="70" y="38" width="4" height="59" rx="1.4"/><circle class="eq" cx="64" cy="48" r="2.8"/>` + FLOORSVG;
 const PULLEY = `<rect class="eq" x="94" y="6" width="4" height="91" rx="1.4"/>` + FLOORSVG;
+const WALLFRONT = `<rect class="eq" x="84" y="6" width="5" height="91" rx="1.6"/>` + FLOORSVG;
+const WALLBACK = `<rect class="eq" x="14" y="6" width="5" height="91" rx="1.6"/>` + FLOORSVG;
+const STEPEDGE = `<rect class="eq" x="47" y="84" width="45" height="13" rx="2"/><line class="eq bar" x1="74" y1="46" x2="74" y2="84"/>` + FLOORSVG;
 const PAD = `<rect class="eq" x="14" y="91" width="12" height="6" rx="2"/>` + FLOORSVG;
 
 /* Each pattern: two authored poses plus the props behind and in front. */
@@ -772,6 +790,36 @@ const MOVES = {
     a:{hip:[44,64], torso:-40, hand:[52,74], elbow:1, feet:[[42,97],[52,97]], head:-30},
     b:{hip:[50,58], torso:-90, hand:[76,34], elbow:1, feet:[[42,97],[52,97]]} },
 
+  /* ---- stretches and drills for toe walking ---- */
+  calfstretch:{ static:true, back:WALLFRONT,
+    a:{hip:[52,64], torso:-70, hand:[81,42], elbow:-1, feet:[[67,97],[29,97]], knees:[1,1], toes:[0,0]} },
+
+  soleusstretch:{ static:true, back:WALLFRONT,
+    a:{hip:[52,70], torso:-72, hand:[81,46], elbow:-1, feet:[[66,97],[37,97]], knees:[1,1], toes:[0,0]} },
+
+  towelstretch:{ static:true, back:FLOORSVG, box:'10 40 84 60',
+    a:{hip:[34,92], torso:-80, hand:[56,76], elbow:1, foot:[72,94], knee:1, toe:-70,
+       fx:'<path class="towel" d="M56,76 L74.6,87"/><path class="towel far" d="M54,77 L72.6,88"/>'} },
+
+  heeldrop:{ back:STEPEDGE, box:'0 -8 100 108', path:'foot', poff:[-7,0],
+    a:{hip:[44,42], torso:-90, hand:[72,52], elbow:1, feet:[[46,80],[44,80]], toe:30},
+    b:{hip:[44,51], torso:-90, hand:[72,58], elbow:1, feet:[[46,89],[45,89]], toe:-36} },
+
+  deepsquat:{ static:true, back:FLOORSVG,
+    a:{hip:[42,84], torso:-62, hand:[60,66], elbow:1, feet:[[47,97],[52,97]], knee:-1, toe:-8} },
+
+  kneewall:{ back:WALLFRONT, path:'knee',
+    a:{hip:[44,76], torso:-86, hand:[80,52], elbow:-1, feet:[[24,95],[70,97]], knees:[-1,-1], toes:[180,0]},
+    b:{hip:[52,74], torso:-82, hand:[81,50], elbow:-1, feet:[[24,95],[70,97]], knees:[-1,-1], toes:[180,0]} },
+
+  heelwalk:{ back:FLOORSVG, path:false,
+    a:{hip:[50,57], torso:-88, feet:[[40,96],[60,95]], hands:[[57,57],[44,58]], elbows:[-1,1], toes:[-40,-40]},
+    b:{hip:[50,57], torso:-88, feet:[[60,95],[40,96]], hands:[[44,58],[57,57]], elbows:[-1,1], toes:[-40,-40]} },
+
+  tibraise:{ back:WALLBACK, path:false,
+    a:{hip:[26,61], torso:-86, hand:[28,62], elbow:1, feet:[[44,96],[46,96]], toe:0},
+    b:{hip:[26,61], torso:-86, hand:[28,62], elbow:1, feet:[[44,96],[46,96]], toe:-42} },
+
 };
 
 /* What each movement works — p: the main movers, s: the helpers. Patterns
@@ -801,7 +849,11 @@ const PATTERN_MUSCLES = {
   facepull:{p:['reardelt','upperback']},             reardelt:{p:['reardelt','upperback']},
   frontraise:{p:['frontdelt']},                      ohext:{p:['triceps']},
   skull:{p:['triceps']},                             kickback:{p:['triceps']},
-  pike:{p:['delts'], s:['triceps','upperback']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
+  pike:{p:['delts'], s:['triceps','upperback']},
+  calfstretch:{p:['calves'], s:['achilles'], stretch:true}, soleusstretch:{p:['achilles'], s:['calves'], stretch:true},
+  towelstretch:{p:['calves'], s:['achilles','hams'], stretch:true}, heeldrop:{p:['calves','achilles'], stretch:true},
+  deepsquat:{p:['achilles'], s:['glutes'], stretch:true}, kneewall:{p:['achilles'], s:['calves'], stretch:true},
+  heelwalk:{p:['tibialis']},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
 };
 const EX_MUSCLES = {
   'Close-Grip Bench Press':{p:['triceps','chest'], s:['frontdelt']},
@@ -818,6 +870,7 @@ const EX_MUSCLES = {
   'Prone Y-Raise':{p:['upperback','reardelt'], s:['lowback']},
   'Superman Hold':{p:['lowback','glutes'], s:['upperback']},
   'Tibialis Raise':{p:['tibialis']},
+  'Heel-to-Toe Walk':{p:['tibialis'], s:['calves']},
   'Farmer Walk on Toes':{p:['calves','forearms'], s:['upperback']},
   'Sissy Squat':{p:['quads']}, 'Hack Squat':{p:['quads'], s:['glutes']}, 'Front Squat':{p:['quads'], s:['glutes','upperback']},
   'Step-Up':{p:['glutes','quads']},
@@ -838,8 +891,9 @@ function patternOf(l){ return PATTERN[l.name] || GROUP_PATTERN[l.group] || 'card
 function musclesFor(l){ return EX_MUSCLES[l.name] || PATTERN_MUSCLES[patternOf(l)] || null; }
 
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */
-const TIME_PATTERNS = ['hold','carry','wallsit','sideplank','hollow','handstand'];
-const TIMED_BY_NAME = { 'Superman Hold':true };   // shares a demo with a rep exercise
+const TIME_PATTERNS = ['hold','carry','wallsit','sideplank','hollow','handstand',
+                      'calfstretch','soleusstretch','towelstretch','deepsquat','heelwalk'];
+const TIMED_BY_NAME = { 'Superman Hold':true, 'Heel-to-Toe Walk':true };   // shares a demo with a rep exercise
 function isTimedExercise(name){ return !!TIMED_BY_NAME[name] || TIME_PATTERNS.indexOf(PATTERN[name])!==-1; }
 
 /* ---- builders (pure; called from the renderer) ---- */
@@ -857,8 +911,9 @@ function movementDemo(l){
 function musclesLine(l){
   const m=musclesFor(l);
   if(!m) return GROUP_TARGET[l.group] || '';
-  const P=(m.p||[]).map(k=>`<b>${MUSCLE_NAMES[k]||k}</b>`), S=(m.s||[]).map(k=>MUSCLE_NAMES[k]||k);
-  return P.concat(S).join(' · ');
+  const b = m.stretch ? '<b class="st">' : '<b>';
+  const P=(m.p||[]).map(k=>`${b}${MUSCLE_NAMES[k]||k}</b>`), S=(m.s||[]).map(k=>MUSCLE_NAMES[k]||k);
+  return (m.stretch ? 'Stretches · ' : '') + P.concat(S).join(' · ');
 }
 function howtoBlock(l, big){
   const steps = HOWTO[l.name] || ['Perform with control through a full range of motion.'];
