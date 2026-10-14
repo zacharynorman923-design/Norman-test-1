@@ -189,6 +189,7 @@ const HOWTO = {
   'Clamshell':['Lie on your side, hips and knees bent, feet together.','Keeping the feet touching, open the top knee as far as the pelvis stays still.','Close slowly; add a band above the knees when it gets easy.'],
   'Banded Lateral Walk':['Band around the legs above the knees or at the ankles, feet hip-width.','Sit into a slight squat and step sideways, keeping the band taut.','Take short, controlled steps, then walk back the other way.'],
   'Copenhagen Plank':['Side plank on your forearm with the top leg resting on a bench — knee on it to start.','Lift your hips so the body is straight, bottom leg hovering under the bench.','Hold, keeping the hips high, then switch sides; build to the foot on the bench.'],
+  'Lacrosse Ball Glute Release':['Sit on the floor with a lacrosse or tennis ball under one buttock, just above and outside the sit bone; lean back on your hands.','Roll slowly to find a tender spot and stay on it for 60–90 seconds, breathing.','To go deeper, cross that ankle over the other knee. Tender is fine — stop if you feel tingling or pain down the leg.'],
   'Reverse Crunch':['Lie on your back, knees bent at 90°, hands by your sides.','Curl your hips off the floor by tilting the pelvis back toward your ribs — not by swinging the legs.','Lower slowly until the low back is flat again; stop before it arches.'],
   'Swim Laps':['Push off long, body flat and level at the surface.','Roll to breathe rather than lifting the head.','Swim easy laps with short rests — the effort stays conversational.'],
 };
@@ -292,6 +293,7 @@ const PATTERN = {
   'Heel Walks':'heelwalk', 'Heel-to-Toe Walk':'walk',
   'Half-Kneeling Hip Flexor Stretch':'hipflexstretch', 'Figure-4 Stretch':'fig4', '90/90 Hip Switch':'ninety',
   'Side-Lying Hip Abduction':'sideabd', 'Clamshell':'clamshell', 'Banded Lateral Walk':'latwalk', 'Copenhagen Plank':'copenhagen',
+  'Lacrosse Ball Glute Release':'ballrelease',
   'Reverse Crunch':'core',
 };
 const GROUP_PATTERN = {mobility:'calfstretch',chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
@@ -863,6 +865,11 @@ const MOVES = {
   copenhagen:{ static:true, back:LOWBENCH, view:'front', box:'4 40 94 60',
     a:{flat:true, hip:[52,80], torso:197, hands:[[38,95],[30,58]], elbows:[1,1], feet:[[84,90],[88,76]], knees:[1,1], toes:[0,0], head:202} },
 
+
+  ballrelease:{ static:true, back:FLOORSVG, box:'4 40 92 60',
+    a:{hip:[44,89], torso:-120, head:-100, hands:[[24,93],[26,93]], elbows:[-1,-1], feet:[[78,96],[64,80]], knees:[-1,-1], toes:[0,-40],
+       fx:'<circle class="ball" cx="45" cy="94" r="3.2"/>'} },
+
 };
 
 /* What each movement works — p: the main movers, s: the helpers. Patterns
@@ -900,7 +907,7 @@ const PATTERN_MUSCLES = {
   hipflexstretch:{p:['hipflexors'], s:['quads'], stretch:true}, fig4:{p:['glutes'], s:['glutemed'], stretch:true},
   ninety:{p:['glutes','hipflexors'], stretch:true},  sideabd:{p:['glutemed']},
   clamshell:{p:['glutemed'], s:['glutes']},          latwalk:{p:['glutemed'], s:['quads']},
-  copenhagen:{p:['adductors'], s:['obliques']},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
+  copenhagen:{p:['adductors'], s:['obliques']},     ballrelease:{p:['glutes'], s:['glutemed'], stretch:true},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
 };
 const EX_MUSCLES = {
   'Close-Grip Bench Press':{p:['triceps','chest'], s:['frontdelt']},
@@ -940,7 +947,7 @@ function musclesFor(l){ return EX_MUSCLES[l.name] || PATTERN_MUSCLES[patternOf(l
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */
 const TIME_PATTERNS = ['hold','carry','wallsit','sideplank','hollow','handstand',
                       'calfstretch','soleusstretch','towelstretch','deepsquat','heelwalk',
-                      'hipflexstretch','fig4','copenhagen'];
+                      'hipflexstretch','fig4','copenhagen','ballrelease'];
 const TIMED_BY_NAME = { 'Superman Hold':true, 'Heel-to-Toe Walk':true };   // shares a demo with a rep exercise
 function isTimedExercise(name){ return !!TIMED_BY_NAME[name] || TIME_PATTERNS.indexOf(PATTERN[name])!==-1; }
 

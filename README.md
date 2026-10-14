@@ -226,6 +226,13 @@ finisher, but aimed wherever you want.
   it is always balanced; each lever is also on offer alone. Every move carries
   the posterior-tilt cue that makes it count, and swapping one stays within its
   lever.
+- **Deep glute / piriformis — daily** (first in the Hip pain group) is a fixed
+  ten-minute routine for deep gluteal tightness from sitting: figure-4 stretch
+  2 × 45–60 s per side, lacrosse-ball glute release 60–90 s per side, and a
+  half-kneeling hip flexor stretch with the glute squeezed, 2 × 45 s per side.
+  Daily routines offer **Every day** in the day list (and pick it by default):
+  the routine goes on all seven days, rest days included, and one ✕ removes it
+  from all of them.
 - A **Hip pain** group has one block per place it hurts, because what helps
   differs by location: **Front of hip / groin** (hip-flexor length, glutes,
   inner thigh, pelvic control), **Outside of hip** (the side glute, without
