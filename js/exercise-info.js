@@ -182,6 +182,13 @@ const HOWTO = {
   'Knee-to-Wall Ankle Mobilization':['Half-kneel facing a wall, front foot a few inches from it.','Drive the front knee forward to touch the wall, heel staying down.','Return and repeat; inch the foot back as it gets easier.'],
   'Heel Walks':['Stand tall and lift the front of both feet off the floor.','Walk forward on your heels only, toes pulled up the whole time.','Short, steady steps; rest when the shins burn.'],
   'Heel-to-Toe Walk':['Walk slowly with a deliberate heel strike on every step.','Roll from heel to the ball of the foot, then push off through the toes.','Keep it unhurried — you are teaching the pattern, not walking fast.'],
+  'Half-Kneeling Hip Flexor Stretch':['Kneel on one knee, the other foot flat in front, both at 90°.','Tuck the pelvis under on the kneeling side and squeeze that glute.','Shift forward an inch until the front of the hip stretches; hold, then switch.'],
+  'Figure-4 Stretch':['Lie on your back, knees bent, and cross one ankle over the other knee.','Reach through and hold behind the bottom thigh.','Draw it toward your chest until the outer buttock stretches; hold, then switch.'],
+  '90/90 Hip Switch':['Sit tall with both knees bent to 90°, legs dropped to one side.','Lift and rotate both knees over to the other side without using your hands, if you can.','Move slowly and only as far as stays pain-free; alternate sides.'],
+  'Side-Lying Hip Abduction':['Lie on your side, bottom knee bent, top leg straight and in line with your body.','Lift the top leg, heel leading and toes angled slightly down.','Lower slowly; keep your hips stacked — no rolling back.'],
+  'Clamshell':['Lie on your side, hips and knees bent, feet together.','Keeping the feet touching, open the top knee as far as the pelvis stays still.','Close slowly; add a band above the knees when it gets easy.'],
+  'Banded Lateral Walk':['Band around the legs above the knees or at the ankles, feet hip-width.','Sit into a slight squat and step sideways, keeping the band taut.','Take short, controlled steps, then walk back the other way.'],
+  'Copenhagen Plank':['Side plank on your forearm with the top leg resting on a bench — knee on it to start.','Lift your hips so the body is straight, bottom leg hovering under the bench.','Hold, keeping the hips high, then switch sides; build to the foot on the bench.'],
   'Reverse Crunch':['Lie on your back, knees bent at 90°, hands by your sides.','Curl your hips off the floor by tilting the pelvis back toward your ribs — not by swinging the legs.','Lower slowly until the low back is flat again; stop before it arches.'],
   'Swim Laps':['Push off long, body flat and level at the surface.','Roll to breathe rather than lifting the head.','Swim easy laps with short rests — the effort stays conversational.'],
 };
@@ -283,6 +290,8 @@ const PATTERN = {
   'Wall Calf Stretch':'calfstretch', 'Bent-Knee Calf Stretch':'soleusstretch', 'Towel Calf Stretch':'towelstretch',
   'Eccentric Heel Drop':'heeldrop', 'Deep Squat Hold':'deepsquat', 'Knee-to-Wall Ankle Mobilization':'kneewall',
   'Heel Walks':'heelwalk', 'Heel-to-Toe Walk':'walk',
+  'Half-Kneeling Hip Flexor Stretch':'hipflexstretch', 'Figure-4 Stretch':'fig4', '90/90 Hip Switch':'ninety',
+  'Side-Lying Hip Abduction':'sideabd', 'Clamshell':'clamshell', 'Banded Lateral Walk':'latwalk', 'Copenhagen Plank':'copenhagen',
   'Reverse Crunch':'core',
 };
 const GROUP_PATTERN = {mobility:'calfstretch',chest:'pressh',back:'pullh',shoulders:'pressv',biceps:'curl',triceps:'ext',quads:'squat',posterior:'hinge',calves:'calf',core:'core',cardio:'cardio'};
@@ -425,6 +434,9 @@ const REGIONS = {
   calves:   [['shin', -1, .06, .56, .66]],
   tibialis: [['shin',  1, .1, .72, .52]],
   achilles: [['shin', -1, .58, .98, .5]],
+  hipflexors:[['torso', 1, -.06, .16, .6], ['thigh', 1, 0, .32, .6]],
+  glutemed: [['torso', 0, -.06, .12, .7], ['thigh', 0, 0, .26, .8]],
+  adductors:[['thigh', 0, .12, .8, .5]],
   delts:    [['uarm',  0, -.14, .3, .96]],
   frontdelt:[['uarm',  1, -.12, .34, .66]],
   sidedelt: [['uarm',  0, -.14, .28, .9]],
@@ -436,7 +448,7 @@ const REGIONS = {
 const MUSCLE_NAMES = {
   chest:'Chest', abs:'Abs', obliques:'Obliques', lats:'Lats', upperback:'Upper back',
   lowback:'Lower back', glutes:'Glutes', quads:'Quads', hams:'Hamstrings', calves:'Calves',
-  tibialis:'Shins', achilles:'Achilles', delts:'Shoulders', frontdelt:'Front delts', sidedelt:'Side delts',
+  tibialis:'Shins', achilles:'Achilles', hipflexors:'Hip flexors', glutemed:'Glute med', adductors:'Adductors', delts:'Shoulders', frontdelt:'Front delts', sidedelt:'Side delts',
   reardelt:'Rear delts', biceps:'Biceps', triceps:'Triceps', forearms:'Forearms',
 };
 function band(a,b,wa,wb,side,t0,t1,frac,nrm){
@@ -596,6 +608,7 @@ const PULLEY = `<rect class="eq" x="94" y="6" width="4" height="91" rx="1.4"/>` 
 const WALLFRONT = `<rect class="eq" x="84" y="6" width="5" height="91" rx="1.6"/>` + FLOORSVG;
 const WALLBACK = `<rect class="eq" x="14" y="6" width="5" height="91" rx="1.6"/>` + FLOORSVG;
 const STEPEDGE = `<rect class="eq" x="47" y="84" width="45" height="13" rx="2"/><line class="eq bar" x1="74" y1="46" x2="74" y2="84"/>` + FLOORSVG;
+const LOWBENCH = `<rect class="eq" x="74" y="76" width="22" height="6" rx="2.2"/><rect class="eq" x="88" y="82" width="4" height="15" rx="1.4"/>` + FLOORSVG;
 const PAD = `<rect class="eq" x="14" y="91" width="12" height="6" rx="2"/>` + FLOORSVG;
 
 /* Each pattern: two authored poses plus the props behind and in front. */
@@ -820,6 +833,36 @@ const MOVES = {
     a:{hip:[26,61], torso:-86, hand:[28,62], elbow:1, feet:[[44,96],[46,96]], toe:0},
     b:{hip:[26,61], torso:-86, hand:[28,62], elbow:1, feet:[[44,96],[46,96]], toe:-42} },
 
+
+  /* ---- hip pain ---- */
+  hipflexstretch:{ static:true, back:FLOORSVG,
+    a:{hip:[46,76], torso:-92, hands:[[52,76],[52,76]], elbows:[1,1], feet:[[66,97],[22,95]], knees:[-1,-1], toes:[0,180]} },
+
+  fig4:{ static:true, back:FLOORSVG, box:'4 54 92 46',
+    a:{hip:[56,91], torso:180, head:186, hand:[70,80], elbow:-1, feet:[[80,96],[71,78]], knees:[-1,-1], toes:[0,-60]} },
+
+  ninety:{ back:FLOORSVG, view:'front', box:'4 30 92 70', path:false,
+    a:{flat:true, hip:[50,90], torso:-98, hands:[[34,94],[68,94]], elbows:[1,-1], feet:[[22,95],[46,95]], knees:[1,1]},
+    m:{flat:true, hip:[50,90], torso:-90, hands:[[33,94],[67,94]], elbows:[1,-1], feet:[[40,95],[60,95]], knees:[1,-1]},
+    b:{flat:true, hip:[50,90], torso:-82, hands:[[32,94],[66,94]], elbows:[1,-1], feet:[[54,95],[78,95]], knees:[-1,-1]} },
+
+  sideabd:{ back:FLOORSVG, view:'front', box:'2 46 96 54', path:'foot',
+    a:{flat:true, hip:[52,88], torso:182, head:188, hands:[[18,86],[44,82]], elbows:[1,-1], feet:[[90,95],[90,92]], knees:[-1,1], toes:[0,0]},
+    b:{flat:true, hip:[52,88], torso:182, head:188, hands:[[18,86],[44,82]], elbows:[1,-1], feet:[[90,95],[86,66]], knees:[-1,1], toes:[0,-30]} },
+
+  clamshell:{ back:FLOORSVG, view:'front', box:'2 50 96 50', path:'knee',
+    a:{flat:true, hip:[50,88], torso:182, head:188, hands:[[16,86],[42,82]], elbows:[1,-1], feet:[[72,95],[72,92]], knees:[1,1], toes:[0,0]},
+    b:{flat:true, hip:[50,88], torso:182, head:188, hands:[[16,86],[42,82]], elbows:[1,-1], feet:[[72,95],[72,92]], knees:[1,-1], toes:[0,0]} },
+
+  latwalk:{ back:FLOORSVG, view:'front', path:false,
+    a:{flat:true, hip:[50,64], torso:-90, hands:[[44,50],[56,50]], elbows:[1,-1], feet:[[42,97],[56,97]], knees:[1,-1],
+       fx:'<line class="band" x1="43" y1="89" x2="55" y2="89"/>'},
+    b:{flat:true, hip:[50,64], torso:-90, hands:[[44,50],[56,50]], elbows:[1,-1], feet:[[36,97],[64,97]], knees:[1,-1],
+       fx:'<line class="band" x1="38" y1="89" x2="62" y2="89"/>'} },
+
+  copenhagen:{ static:true, back:LOWBENCH, view:'front', box:'4 40 94 60',
+    a:{flat:true, hip:[52,80], torso:197, hands:[[38,95],[30,58]], elbows:[1,1], feet:[[84,90],[88,76]], knees:[1,1], toes:[0,0], head:202} },
+
 };
 
 /* What each movement works — p: the main movers, s: the helpers. Patterns
@@ -853,7 +896,11 @@ const PATTERN_MUSCLES = {
   calfstretch:{p:['calves'], s:['achilles'], stretch:true}, soleusstretch:{p:['achilles'], s:['calves'], stretch:true},
   towelstretch:{p:['calves'], s:['achilles','hams'], stretch:true}, heeldrop:{p:['calves','achilles'], stretch:true},
   deepsquat:{p:['achilles'], s:['glutes'], stretch:true}, kneewall:{p:['achilles'], s:['calves'], stretch:true},
-  heelwalk:{p:['tibialis']},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
+  heelwalk:{p:['tibialis']},
+  hipflexstretch:{p:['hipflexors'], s:['quads'], stretch:true}, fig4:{p:['glutes'], s:['glutemed'], stretch:true},
+  ninety:{p:['glutes','hipflexors'], stretch:true},  sideabd:{p:['glutemed']},
+  clamshell:{p:['glutemed'], s:['glutes']},          latwalk:{p:['glutemed'], s:['quads']},
+  copenhagen:{p:['adductors'], s:['obliques']},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
 };
 const EX_MUSCLES = {
   'Close-Grip Bench Press':{p:['triceps','chest'], s:['frontdelt']},
@@ -892,7 +939,8 @@ function musclesFor(l){ return EX_MUSCLES[l.name] || PATTERN_MUSCLES[patternOf(l
 
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */
 const TIME_PATTERNS = ['hold','carry','wallsit','sideplank','hollow','handstand',
-                      'calfstretch','soleusstretch','towelstretch','deepsquat','heelwalk'];
+                      'calfstretch','soleusstretch','towelstretch','deepsquat','heelwalk',
+                      'hipflexstretch','fig4','copenhagen'];
 const TIMED_BY_NAME = { 'Superman Hold':true, 'Heel-to-Toe Walk':true };   // shares a demo with a rep exercise
 function isTimedExercise(name){ return !!TIMED_BY_NAME[name] || TIME_PATTERNS.indexOf(PATTERN[name])!==-1; }
 

@@ -192,6 +192,7 @@ header{padding:52px 0 30px}
 .fig .mus.st.s{fill:#8cc2ff;stroke:#8cc2ff;opacity:.8}
 .fig .towel{fill:none;stroke:#d6a35a;stroke-width:2.2;stroke-linecap:round}
 .fig .towel.far{opacity:.5}
+.fig .band{stroke:#5a9e4b;stroke-width:2.6;stroke-linecap:round}
 .fig .ld.ring{fill:none;stroke:var(--heat);stroke-width:2.4}
 .fig .cab{stroke:#9b978c;stroke-width:1.4}
 .fig .rope{fill:none;stroke:#7a766c;stroke-width:1.4}
