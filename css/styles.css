@@ -106,6 +106,12 @@ header{padding:52px 0 30px}
 .day.rest.today .dow::after{color:var(--blue-bright)}
 .day-top{display:flex;align-items:center;gap:14px;padding:15px 18px 12px}
 .dow{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a8577;min-width:34px}
+.focus.custom{font-size:clamp(17px,4.6vw,24px);line-height:1.05}
+.dayempty{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 14px 14px;padding:14px;border:1.5px dashed rgba(0,0,0,.18);border-radius:12px;font-size:13.5px;color:#6a6a62}
+.dayadd{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 13px;font-family:'Archivo';font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dayadd:hover{background:var(--blue-bright)}
+.dayadd.more{display:block;width:calc(100% - 28px);margin:8px 14px 14px;background:none;color:var(--blue);border:1.5px dashed rgba(51,85,255,.4)}
+.dayadd.more:hover{background:rgba(51,85,255,.06);color:var(--blue)}
 .focus{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(22px,6vw,32px);line-height:.9;text-transform:uppercase;letter-spacing:.01em;flex:1}
 .intensity{min-width:92px;text-align:right}
 .intensity .lab{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#8a8577;margin-bottom:4px}

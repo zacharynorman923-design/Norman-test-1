@@ -131,10 +131,13 @@ function intensityLabel(v){ return v<0.5?'Light':v<0.72?'Moderate':'Hard'; }
 function buildWeekdays(layout, slots, count, queues, goal, equip, abs){
   const weekdays=WEEKDAYS.map(l=>({label:l,rest:true}));
   layout.forEach((type,k)=>{
-    const {lifts,used}=pickLifts(type,count,queues,goal);
+    // a custom day starts empty — you build it from blocks
+    const custom = type==='Custom';
+    const {lifts,used} = custom ? {lifts:[], used:new Set()} : pickLifts(type,count,queues,goal);
     if(abs && type!=='Conditioning'){ absFinisher(used,equip,goal).forEach(l=>lifts.push(l)); }
     const slot=slots[k];
     weekdays[slot]={label:WEEKDAYS[slot],rest:false,type,lifts,inten:dayIntensity(lifts,goal)};
+    if(custom) weekdays[slot].custom=true;
   });
   return weekdays;
 }
@@ -228,7 +231,8 @@ function applyCardio(weekdays, aim, equip, week){
 function generate(){
   const {goal,days,exp,equip,length,split,abs}=state;
   const aim = cardioOn() ? 'all' : 'none';
-  const layout = (split==='muscle') ? muscleSplit(days) : chooseSplit(days,goal,exp);
+  const layout = split==='custom' ? Array(days).fill('Custom')
+               : split==='muscle' ? muscleSplit(days) : chooseSplit(days,goal,exp);
   const queues=buildQueues(equip);           // shared across weeks -> week-to-week variation
   const count=targetCount(length,exp);
   const slots=DAY_SLOTS[days];
@@ -240,9 +244,10 @@ function generate(){
     if(w===1) cardioSummary=placed;
   }
   const uniq=[...new Set(layout)];
-  const splitName = split==='muscle' ? 'Body-part split'
+  const splitName = split==='custom' ? 'Custom split' : split==='muscle' ? 'Body-part split'
       : (uniq.length<=2 ? uniq.join(' / ') : (days===6?'Push · Pull · Legs ×2':uniq.slice(0,3).join(' · ')));
   const A=CARDIO_AIMS[aim];
   const cardio = cardioSummary.length ? {aim, label:A.label, sub:A.sub, note:A.note, sessions:cardioSummary} : null;
-  return {meta:GOAL_META[goal], weeks, weekdays:weeks[1], days, length, splitName, goal, equip, abs, cardio};
+  return {meta:GOAL_META[goal], weeks, weekdays:weeks[1], days, length, splitName, goal, equip, abs, cardio,
+          custom: split==='custom'};
 }
