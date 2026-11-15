@@ -186,6 +186,13 @@ const HOWTO = {
   'Figure-4 Stretch':['Lie on your back, knees bent, and cross one ankle over the other knee.','Reach through and hold behind the bottom thigh.','Draw it toward your chest until the outer buttock stretches; hold, then switch.'],
   '90/90 Hip Switch':['Sit tall with both knees bent to 90°, legs dropped to one side.','Lift and rotate both knees over to the other side without using your hands, if you can.','Move slowly and only as far as stays pain-free; alternate sides.'],
   'Side-Lying Hip Abduction':['Lie on your side, bottom knee bent, top leg straight and in line with your body.','Lift the top leg, heel leading and toes angled slightly down.','Lower slowly; keep your hips stacked — no rolling back.'],
+  'Chin Tuck':['Stand with your back and head against a wall, or sit tall.','Glide your chin straight back, making a double chin, without tipping the head down.','Hold 5 seconds, relax, repeat. You should feel the front of the neck work, not strain.'],
+  'Neck Isometric Hold':['Sit or stand tall with the chin slightly tucked.','Press your palm into your forehead and resist with your neck so the head doesn\'t move. Use about a third of your effort.','Hold 10 seconds, then repeat pressing on the back and each side of the head.'],
+  'Wall Angel':['Stand with your heels a few inches from a wall; head, upper back and backside touching it.','Raise the arms to a goalpost with elbows and wrists against the wall.','Slide them overhead as far as you can keep everything touching, then back down.'],
+  'Band Pull-Apart':['Hold a light band at shoulder height, arms straight and hands shoulder-width apart.','Pull the band apart until it touches your chest, squeezing the shoulder blades together.','Return slowly; keep the shoulders down away from your ears.'],
+  'Cat-Cow':['Start on hands and knees: hands under shoulders, knees under hips.','Cow: let the belly drop and lift your chest and gaze.','Cat: round your back up toward the ceiling and tuck the chin. Move slowly between the two.'],
+  'Foam Roller Thoracic Extension':['Lie with a foam roller (or a rolled towel) across your mid-back, knees bent, hands supporting your head.','Keep the hips down and gently arch back over the roller.','Return, shift it an inch up, repeat. Keep it on the mid-back, never the low back.'],
+  'Bird Dog':['Start on hands and knees with a flat back.','Reach one arm forward and the opposite leg back until both are level with your body.','Hold 3 seconds without the hips tipping, return, then switch sides.'],
   'Clamshell':['Lie on your side, hips and knees bent, feet together.','Keeping the feet touching, open the top knee as far as the pelvis stays still.','Close slowly; add a band above the knees when it gets easy.'],
   'Banded Lateral Walk':['Band around the legs above the knees or at the ankles, feet hip-width.','Sit into a slight squat and step sideways, keeping the band taut.','Take short, controlled steps, then walk back the other way.'],
   'Copenhagen Plank':['Side plank on your forearm with the top leg resting on a bench — knee on it to start.','Lift your hips so the body is straight, bottom leg hovering under the bench.','Hold, keeping the hips high, then switch sides; build to the foot on the bench.'],
@@ -292,6 +299,8 @@ const PATTERN = {
   'Eccentric Heel Drop':'heeldrop', 'Deep Squat Hold':'deepsquat', 'Knee-to-Wall Ankle Mobilization':'kneewall',
   'Heel Walks':'heelwalk', 'Heel-to-Toe Walk':'walk',
   'Half-Kneeling Hip Flexor Stretch':'hipflexstretch', 'Figure-4 Stretch':'fig4', '90/90 Hip Switch':'ninety',
+  'Chin Tuck':'chintuck', 'Neck Isometric Hold':'neckiso', 'Wall Angel':'wallangel', 'Band Pull-Apart':'bandpull',
+  'Cat-Cow':'catcow', 'Foam Roller Thoracic Extension':'thoracicext', 'Bird Dog':'birddog',
   'Side-Lying Hip Abduction':'sideabd', 'Clamshell':'clamshell', 'Banded Lateral Walk':'latwalk', 'Copenhagen Plank':'copenhagen',
   'Lacrosse Ball Glute Release':'ballrelease',
   'Reverse Crunch':'core',
@@ -446,12 +455,15 @@ const REGIONS = {
   biceps:   [['uarm',  1, .26, .92, .6]],
   triceps:  [['uarm', -1, .22, .96, .62]],
   forearms: [['farm',  0, .05, .76, .86]],
+  neckflex: [['neck',  1, .25, 1.45, .55]],
+  neck:     [['neck',  0, .25, 1.4, .85]],
 };
 const MUSCLE_NAMES = {
   chest:'Chest', abs:'Abs', obliques:'Obliques', lats:'Lats', upperback:'Upper back',
   lowback:'Lower back', glutes:'Glutes', quads:'Quads', hams:'Hamstrings', calves:'Calves',
   tibialis:'Shins', achilles:'Achilles', hipflexors:'Hip flexors', glutemed:'Glute med', adductors:'Adductors', delts:'Shoulders', frontdelt:'Front delts', sidedelt:'Side delts',
   reardelt:'Rear delts', biceps:'Biceps', triceps:'Triceps', forearms:'Forearms',
+  neckflex:'Deep neck flexors', neck:'Neck',
 };
 function band(a,b,wa,wb,side,t0,t1,frac,nrm){
   const L=[], R=[], steps=6;
@@ -474,6 +486,7 @@ function musclesOn(part, s, spec, mus){
   const f=spec.f||1, view=spec.view||'side';
   const segs=[];
   if(part==='torso') segs.push(['torso', s.hip, s.sh, WID.waist, WID.sh, angOf(s.hip,s.sh)+90*f]);
+  if(part==='neck') segs.push(['neck', s.sh, s.nk, 4.2, 3.4, angOf(s.sh,s.nk)+90*f]);
   const limbs = view==='side' ? [1] : [0,1];
   if(part==='leg') limbs.forEach(i=>{ const g=s.legs[i];
     segs.push(['thigh', g.hip, g.kn, WID.thigh[0], WID.thigh[1], angOf(g.hip,g.kn)-90*f]);
@@ -516,6 +529,7 @@ function figure(f, spec, cls, mus){
   g += limb(s.sh, s.nk, 4.2, 3.4, N);                      // neck
   g += `<ellipse class="seg" cx="${n1(s.hd[0])}" cy="${n1(s.hd[1])}" rx="6.1" ry="6.9"
          transform="rotate(${n1(s.hAng+90)} ${n1(s.hd[0])} ${n1(s.hd[1])})"/>`;
+  g += musclesOn('neck', s, spec, mus);                    // the short neck hides under the shoulders, so paint it over them
   g += limb(s.legs[1].hip, s.legs[1].kn, WID.thigh[0], WID.thigh[1], N)
      + limb(s.legs[1].kn, s.legs[1].an, WID.shin[0], WID.shin[1], N)
      + limb(s.legs[1].an, s.legs[1].toe, 3.2, 2.3, N);
@@ -870,6 +884,42 @@ const MOVES = {
     a:{hip:[44,89], torso:-120, head:-100, hands:[[24,93],[26,93]], elbows:[-1,-1], feet:[[78,96],[64,80]], knees:[-1,-1], toes:[0,-40],
        fx:'<circle class="ball" cx="45" cy="94" r="3.2"/>'} },
 
+  /* ---- neck and back ---- */
+  chintuck:{ back:WALLBACK, path:'head',
+    a:{hip:[26,58], torso:-90, head:-72, hand:[28,58], elbow:1, feet:[[30,97],[34,97]]},
+    b:{hip:[26,58], torso:-90, head:-94, hand:[28,58], elbow:1, feet:[[30,97],[34,97]]} },
+
+  neckiso:{ static:true, back:FLOORSVG, view:'front',
+    a:{flat:true, hip:[50,58], torso:-90, head:-90, hands:[[41,58],[57.5,18]], elbows:[1,1], feet:[[44,97],[56,97]], knees:[1,-1]} },
+
+  wallangel:{ view:'back', back:FLOORSVG, path:'hand',
+    a:{flat:true, hip:[50,58], torso:-90, hands:[[30,19],[70,19]], elbows:[-1,1], feet:[[44,97],[56,97]], knees:[1,-1]},
+    b:{flat:true, hip:[50,58], torso:-90, hands:[[41,5],[59,5]], elbows:[-1,1], feet:[[44,97],[56,97]], knees:[1,-1]} },
+
+  bandpull:{ view:'back', back:FLOORSVG, path:'hand',
+    a:{flat:true, hip:[50,58], torso:-90, hands:[[36,36],[64,36]], elbows:[-1,1], feet:[[44,97],[56,97]], knees:[1,-1],
+       fx:'<line class="band" x1="36" y1="36" x2="64" y2="36"/>'},
+    b:{flat:true, hip:[50,58], torso:-90, hands:[[17,33],[83,33]], elbows:[-1,1], feet:[[44,97],[56,97]], knees:[1,-1],
+       fx:'<line class="band" x1="17" y1="33" x2="83" y2="33"/>'} },
+
+  /* The spine is one straight bone, so cat and cow add the curve: a hump over
+     the mid-back for cat, a sag under it for cow. */
+  catcow:{ back:FLOORSVG, box:'0 46 100 54', f:-1, path:'head',
+    a:{hip:[62,75], torso:191, head:222, hand:[37,95], elbow:1, foot:[81,95], knee:1, toe:0,
+       fx:'<ellipse class="seg" cx="50" cy="76" rx="9" ry="3.6"/>'},
+    b:{hip:[62,74], torso:198, head:140, hand:[37,95], elbow:1, foot:[81,95], knee:1, toe:0,
+       fx:'<ellipse class="seg" cx="50" cy="66.4" rx="9.5" ry="4"/>'} },
+
+  thoracicext:{ back:FLOORSVG, box:'4 50 92 50', path:'head',
+    a:{hip:[64,88], torso:196, head:206, hands:[[30,73],[30,73]], elbows:[-1,-1], foot:[86,97], knee:-1, toe:-25,
+       fx:'<circle class="ball roller" cx="47" cy="92.5" r="4.5"/>', fxBehind:true},
+    b:{hip:[64,88], torso:187, head:174, hands:[[25,80],[25,80]], elbows:[-1,-1], foot:[86,97], knee:-1, toe:-25,
+       fx:'<circle class="ball roller" cx="47" cy="92.5" r="4.5"/>', fxBehind:true} },
+
+  birddog:{ back:FLOORSVG, box:'0 46 100 54', f:-1, path:'hand',
+    a:{hip:[58,75], torso:195, head:200, hands:[[33,95],[33,95]], elbows:[1,1], feet:[[77,95],[77,95]], knees:[1,1], toe:0},
+    b:{hip:[58,75], torso:195, head:196, hands:[[33,95],[6,63]], elbows:[1,1], feet:[[96,71],[77,95]], knees:[1,1], toes:[-10,0]} },
+
 };
 
 /* What each movement works — p: the main movers, s: the helpers. Patterns
@@ -907,6 +957,10 @@ const PATTERN_MUSCLES = {
   hipflexstretch:{p:['hipflexors'], s:['quads'], stretch:true}, fig4:{p:['glutes'], s:['glutemed'], stretch:true},
   ninety:{p:['glutes','hipflexors'], stretch:true},  sideabd:{p:['glutemed']},
   clamshell:{p:['glutemed'], s:['glutes']},          latwalk:{p:['glutemed'], s:['quads']},
+  chintuck:{p:['neckflex']},                         neckiso:{p:['neck'], s:['upperback']},
+  wallangel:{p:['upperback','reardelt'], s:['lowback']}, bandpull:{p:['reardelt','upperback']},
+  catcow:{p:['lowback','upperback'], s:['abs'], stretch:true}, thoracicext:{p:['upperback'], s:['abs'], stretch:true},
+  birddog:{p:['lowback','glutes'], s:['abs','delts']},
   copenhagen:{p:['adductors'], s:['obliques']},     ballrelease:{p:['glutes'], s:['glutemed'], stretch:true},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
 };
 const EX_MUSCLES = {
@@ -947,7 +1001,7 @@ function musclesFor(l){ return EX_MUSCLES[l.name] || PATTERN_MUSCLES[patternOf(l
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */
 const TIME_PATTERNS = ['hold','carry','wallsit','sideplank','hollow','handstand',
                       'calfstretch','soleusstretch','towelstretch','deepsquat','heelwalk',
-                      'hipflexstretch','fig4','copenhagen','ballrelease'];
+                      'hipflexstretch','fig4','copenhagen','ballrelease','neckiso'];
 const TIMED_BY_NAME = { 'Superman Hold':true, 'Heel-to-Toe Walk':true };   // shares a demo with a rep exercise
 function isTimedExercise(name){ return !!TIMED_BY_NAME[name] || TIME_PATTERNS.indexOf(PATTERN[name])!==-1; }
 

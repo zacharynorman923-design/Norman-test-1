@@ -157,6 +157,14 @@ const EX = {
     {n:'Banded Lateral Walk',eq:DB_EQ,c:0,rx:{s:'3',r:'12 steps / side',rest:'30 s',tag:'control'}},
     {n:'Copenhagen Plank',eq:ALL_EQ,c:0,rx:{s:'3',r:'15–30 s / side',rest:'30 s',tag:'control'}},
     {n:'Lacrosse Ball Glute Release',eq:ALL_EQ,c:0,rx:{s:'1',r:'60–90 s / side',rest:'—',tag:'release'}},
+    /* neck and back */
+    {n:'Chin Tuck',eq:ALL_EQ,c:0,rx:{s:'2',r:'10 (5 s hold)',rest:'30 s',tag:'control'}},
+    {n:'Neck Isometric Hold',eq:ALL_EQ,c:0,rx:{s:'4',r:'10 s',rest:'15 s',tag:'control'}},
+    {n:'Wall Angel',eq:ALL_EQ,c:0,rx:{s:'2',r:'10–12',rest:'30 s',tag:'control'}},
+    {n:'Band Pull-Apart',eq:DB_EQ,c:0,rx:{s:'3',r:'15–20',rest:'30 s',tag:'control'}},
+    {n:'Cat-Cow',eq:ALL_EQ,c:0,rx:{s:'2',r:'8–10 slow',rest:'15 s',tag:'mobility'}},
+    {n:'Foam Roller Thoracic Extension',eq:ALL_EQ,c:0,rx:{s:'2',r:'8–10',rest:'20 s',tag:'mobility'}},
+    {n:'Bird Dog',eq:ALL_EQ,c:0,rx:{s:'3',r:'8 / side (3 s hold)',rest:'30 s',tag:'control'}},
   ],
   cardio:[
     {n:'Rowing Intervals',eq:G,c:0},{n:'Assault Bike Sprints',eq:G,c:0},{n:'Incline Treadmill Walk',eq:G,c:0},
@@ -336,6 +344,15 @@ const MUSCLE_TARGETS = {
     {label:'Hip pain · Back of hip / buttock', hip:1, slots:['glutestretch','hipglutes','hinge']},
     {label:'Hip pain · Deep pinch in the joint', hip:1, slots:['painfree','hipglutes','hipcore']},
   ],
+  /* Neck and back: the neck responds to deep-flexor endurance and a strong
+     upper back that holds the head over the shoulders; back popping without
+     pain is usually stiffness, so it gets daily range plus the trunk muscles
+     that hold the spine steady. */
+  'Neck & back':[
+    {label:'Neck & back · Daily mobility', nb:1, daily:1, slots:['nbTuck','nbCatCow','nbThoracic','nbAngel']},
+    {label:'Neck · Strengthen', nb:1, slots:['neckDeep','neckScap','neckRow','neckCarry']},
+    {label:'Back · Popping & stiffness', nb:1, slots:['backMobility','backStability','backExt','backRow']},
+  ],
   'Toe walking':[
     {label:'Toe walking · Calf & Achilles stretches', toe:1, slots:['gastroc','soleus','ankle']},
     {label:'Toe walking · Full block', toe:1, slots:['gastroc','soleus','ankle','shin']},
@@ -439,7 +456,32 @@ const BLOCK_SLOTS = {
   piriHinge:{ names:['Romanian Deadlift','Single-Leg RDL','Cable Pull-Through'],
     cue:'Load the back of the hip with a long spine and the ribs stacked. Normal training is fine as long as it doesn\'t raise the ache: start light, add weight only when the next day feels the same or better.' },
   piriCore:{ names:['Dead Bug','Reverse Crunch','Pallof Press'],
-    cue:'Flatten the low back and keep it there. A stronger deep core holds the pelvis out of the forward tilt that keeps the deep glute under strain.' }
+    cue:'Flatten the low back and keep it there. A stronger deep core holds the pelvis out of the forward tilt that keeps the deep glute under strain.' },
+  /* Neck & back */
+  nbTuck:{ names:['Chin Tuck'], rx:{s:'1',r:'10 (5 s hold)',rest:'—',tag:'control'},
+    cue:'Glide the chin straight back, making a double chin, without tipping the head down. Hold 5 seconds. It undoes the head-forward posture that screens pull you into.' },
+  nbCatCow:{ names:['Cat-Cow'], rx:{s:'1',r:'10 slow',rest:'—',tag:'mobility'},
+    cue:'Move one segment at a time, tailbone first and head last. Slow is the point: take the whole spine through its range so it stops feeling locked up.' },
+  nbThoracic:{ names:['Foam Roller Thoracic Extension'], rx:{s:'1',r:'10',rest:'—',tag:'mobility'},
+    cue:'Roller under the mid-back, hands supporting the head, hips down. Arch back over it, then shift the roller an inch and repeat. Keep it off the lower back.' },
+  nbAngel:{ names:['Wall Angel'], rx:{s:'1',r:'10',rest:'—',tag:'control'},
+    cue:'Back of the head, upper back and backside on the wall, ribs down. Slide only as high as you can keep everything touching.' },
+  neckDeep:{ names:['Chin Tuck','Neck Isometric Hold'],
+    cue:'The deep neck muscles are built for endurance, not big loads: steady holds, no straining, no pain. Keep the chin slightly tucked throughout.' },
+  neckScap:{ names:['Wall Angel','Band Pull-Apart','Prone Y-Raise','Face Pull'],
+    cue:'Set the shoulders down and back before each rep, and keep them away from the ears. These muscles hold the head over the shoulders so the neck doesn\'t have to.' },
+  neckRow:{ names:['Chest-Supported Row','Seated Cable Row','One-Arm Dumbbell Row','Inverted Row'],
+    cue:'Lead with the elbows and squeeze the shoulder blades together at the end. Keep the neck long: don\'t jut the chin to finish the rep.' },
+  neckCarry:{ names:['Farmer Carry'],
+    cue:'Heavy in the hands, tall through the crown, shoulders down and back. The upper traps work to hold the load without shrugging.' },
+  backMobility:{ names:['Cat-Cow','Foam Roller Thoracic Extension'],
+    cue:'Popping without pain is usually just a stiff joint moving. Taking the spine through its range every day tends to make it feel looser and pop less.' },
+  backStability:{ names:['Bird Dog','Side Plank','Dead Bug'],
+    cue:'Keep the spine still while the arms and legs move: brace lightly and breathe. Steady trunk muscles take the strain off the joints that pop.' },
+  backExt:{ names:['Superman Hold','Hyperextension','Prone Y-Raise'],
+    cue:'Long spine, glutes squeezed, lift from the upper back without cranking the neck up. Stop the rep before the low back pinches.' },
+  backRow:{ names:['Chest-Supported Row','Seated Cable Row','One-Arm Dumbbell Row','Inverted Row'],
+    cue:'Pull the shoulder blades back and down, chest tall. A strong mid-back holds the stiff stretch between the shoulder blades in better shape.' }
 };
 /* Resolve slot keys into the slot objects, and give every slotted target the
    full list of its movements as `names`, which the rest of the app reads. */

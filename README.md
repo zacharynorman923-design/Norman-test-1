@@ -239,6 +239,13 @@ finisher, but aimed wherever you want.
   (clamshell, side-lying abduction, banded walk), a light-to-heavy hinge for
   the back of the hip, and deep core work against the forward tilt. One move
   from each lever, each with its cue.
+- A **Neck & back** group: **Daily mobility** (chin tucks, cat-cow, foam-roller
+  thoracic extension, wall angels: one set each, about five minutes, every
+  day); **Neck · Strengthen** (deep neck flexors, shoulder blades, upper-back
+  rows, a loaded carry); and **Back · Popping & stiffness** (spine mobility,
+  trunk stability such as bird dog, back extensors, rows). The panel note
+  explains that painless popping is generally harmless, and lists the signs
+  that need a clinician.
 - A **Hip pain** group has one block per place it hurts, because what helps
   differs by location: **Front of hip / groin** (hip-flexor length, glutes,
   inner thigh, pelvic control), **Outside of hip** (the side glute, without
