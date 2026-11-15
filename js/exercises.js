@@ -327,6 +327,10 @@ const MUSCLE_TARGETS = {
     /* A set daily routine for deep gluteal / piriformis tightness from sitting:
        exact moves and doses, every day, about 10 minutes. */
     {label:'Hip pain · Deep glute / piriformis — daily', hip:1, daily:1, slots:['piriFig4','piriBall','piriHipFlex']},
+    /* Its strength half, for training days: the weak bridge (glute max), the
+       side glute and deep rotators that sit around the piriformis, the back of
+       the hip under load, and the deep core that pulls against the tilt. */
+    {label:'Hip pain · Deep glute / piriformis — strengthen', hip:1, slots:['piriBridge','piriRotate','piriHinge','piriCore']},
     {label:'Hip pain · Front of hip / groin', hip:1, slots:['hipflex','hipglutes','adductor','hipcore']},
     {label:'Hip pain · Outside of hip', hip:1, slots:['abduct','singleleg','lateral']},
     {label:'Hip pain · Back of hip / buttock', hip:1, slots:['glutestretch','hipglutes','hinge']},
@@ -426,7 +430,16 @@ const BLOCK_SLOTS = {
   piriBall:{ names:['Lacrosse Ball Glute Release'], rx:{s:'1',r:'60–90 s / side',rest:'—',tag:'release'},
     cue:'Sit on the ball just above and outside the sit bone and stay on the tender spots, 60–90 seconds. Then cross that leg over the other knee to deepen the pressure. Tender is fine; sharp, burning or tingling down the leg is not.' },
   piriHipFlex:{ names:['Half-Kneeling Hip Flexor Stretch'], rx:{s:'2',r:'45 s / side',rest:'15 s',tag:'stretch'},
-    cue:'Squeeze the glute on the kneeling side before you shift forward. It deepens the stretch and works against the anterior tilt that feeds this.' }
+    cue:'Squeeze the glute on the kneeling side before you shift forward. It deepens the stretch and works against the anterior tilt that feeds this.' },
+  /* The strengthening half of the deep-glute plan. */
+  piriBridge:{ names:['Glute Bridge','Single-Leg Hip Thrust','Hip Thrust','Frog Pump'],
+    cue:'This is the weak bridge you noticed: rebuild it. Ribs down, tailbone tucked, drive through the heels and hold the squeeze for a second at the top. Graduate from both legs to one leg to a loaded thrust as the reps get easy.' },
+  piriRotate:{ names:['Clamshell','Side-Lying Hip Abduction','Banded Lateral Walk'],
+    cue:'These train the side glute and the deep rotators around the piriformis, so it stops doing their job and stops tightening up. Keep the pelvis stacked, move slowly, and feel it at the side and back of the hip, not the front.' },
+  piriHinge:{ names:['Romanian Deadlift','Single-Leg RDL','Cable Pull-Through'],
+    cue:'Load the back of the hip with a long spine and the ribs stacked. Normal training is fine as long as it doesn\'t raise the ache: start light, add weight only when the next day feels the same or better.' },
+  piriCore:{ names:['Dead Bug','Reverse Crunch','Pallof Press'],
+    cue:'Flatten the low back and keep it there. A stronger deep core holds the pelvis out of the forward tilt that keeps the deep glute under strain.' }
 };
 /* Resolve slot keys into the slot objects, and give every slotted target the
    full list of its movements as `names`, which the rest of the app reads. */

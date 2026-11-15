@@ -233,6 +233,12 @@ finisher, but aimed wherever you want.
   Daily routines offer **Every day** in the day list (and pick it by default):
   the routine goes on all seven days, rest days included, and one ✕ removes it
   from all of them.
+- **Deep glute / piriformis — strengthen** is the routine's strength half, for
+  training days: a bridge progression for the glutes (both legs → one leg →
+  loaded thrust), the side glute and deep rotators around the piriformis
+  (clamshell, side-lying abduction, banded walk), a light-to-heavy hinge for
+  the back of the hip, and deep core work against the forward tilt. One move
+  from each lever, each with its cue.
 - A **Hip pain** group has one block per place it hurts, because what helps
   differs by location: **Front of hip / groin** (hip-flexor length, glutes,
   inner thigh, pelvic control), **Outside of hip** (the side glute, without
