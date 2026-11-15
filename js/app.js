@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v29';
+const APP_VERSION = 'split-v30';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -726,11 +726,12 @@ const TARGET_NOTES = {
   hip:'Hip pain has a few common sources, and where it hurts points to which — pick the option that matches. These are general strengthening and mobility moves, not a diagnosis or treatment; work in a pain-free range. See a doctor or physical therapist if the pain is severe, wakes you at night, follows a fall or injury, comes with numbness, tingling or pain down the leg, makes the hip lock or give way, or isn\u2019t improving after a few weeks.',
   toe:'Habitual toe walking usually comes from tight calves and Achilles holding the heel up, plus a toes-first habit. These stretch the calf and Achilles, open up ankle bend, and strengthen the shins that lift your toes. Hold stretches without bouncing. Toe walking that is persistent, one-sided, or comes with pain, stiffness or weakness can have other causes — have a physical therapist or doctor look at it.',
   desk:'Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.',
+  nb:'Neck and back trouble from sitting usually comes from stiffness and muscles that tire, not damage. The neck does better with endurance in the deep neck muscles and a strong upper back holding the head over the shoulders. Back popping or cracking without pain is common and generally harmless: it\u2019s gas releasing as a stiff joint moves, not something slipping out of place. Daily movement and a steadier trunk usually make it feel looser. General fitness guidance, not treatment. See a doctor or physical therapist for pain that is severe or follows an injury; for numbness, tingling or weakness in the arms or legs; for headaches or dizziness with neck movement; or if popping comes with pain, swelling or locking.',
   apt:'Anterior pelvic tilt is a balance problem: hip flexors and the lower back pull the pelvis forward, and glutes, hamstrings and the deep core don\u2019t pull it back enough. These moves build the side that pulls back, with a cue on each for doing them in a posterior tilt — pair them with hip-flexor stretching. General fitness guidance, not treatment; see a clinician for back pain that is severe, persistent, or follows an injury.',
 };
 function targetNote(label){
   const t=findTarget(label);
-  return !t ? '' : t.hip ? TARGET_NOTES.hip : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
+  return !t ? '' : t.hip ? TARGET_NOTES.hip : t.nb ? TARGET_NOTES.nb : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
 }
 function refreshAddonNote(){
   const note=targetNote(addonTarget.value);
