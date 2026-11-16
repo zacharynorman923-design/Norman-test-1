@@ -248,7 +248,7 @@ function irICS(){
     'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', `DESCRIPTION:${summary}`, 'END:VALARM',
     'END:VEVENT'];
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//SPLIT//Right hip IR//EN','CALSCALE:GREGORIAN',
-    ...ev('irhip-ab', start, 'Right hip: Blocks A + B', 'Mobility then active control\\, about 12 minutes. Log it in SPLIT.', `FREQ=DAILY;COUNT=${left}`),
+    ...ev('irhip-ab', start, 'Right hip: Blocks A + B', 'Mobility then active control\\, about 14 minutes. Log it in SPLIT.', `FREQ=DAILY;COUNT=${left}`),
     ...ev('irhip-check', sunday, 'Right hip: weekly IR check', 'Seated internal rotation\\, right and left\\, in degrees. Log it in SPLIT.', `FREQ=WEEKLY;BYDAY=SU;COUNT=${Math.max(1, Math.ceil(left/7))}`),
     'END:VCALENDAR'];
   const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/calendar'});
@@ -282,7 +282,7 @@ function irTick(){
     const [h,m]=(IR.remind.time||'19:00').split(':').map(Number);
     if(now.getHours()*60+now.getMinutes() >= h*60+m){
       IR.remind.last=today; irSave();
-      if(!irLoggedDays(IR_AB).has(today)) irNotify('Right hip: time for A + B', 'Mobility, then active control, about 12 minutes.', 'irhip-ab');
+      if(!irLoggedDays(IR_AB).has(today)) irNotify('Right hip: time for A + B', 'Mobility, then active control, about 14 minutes.', 'irhip-ab');
     }
   }
   if(IR.sit.on && Date.now()-irSitAt >= IR.sit.every*60000){
