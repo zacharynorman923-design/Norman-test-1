@@ -72,19 +72,20 @@ function irWeekOf(iso){ return Math.floor(irDays(IR.start, iso)/7)+1; }
 function irChart(){
   const C=IR.checks;
   if(!C.length) return `<div class="ir-empty">No checks yet. Your first one sets the baseline.</div>`;
-  const W=320, H=170, L=30, R=12, T=12, B=26, maxY=60;
+  const W=320, H=170, L=30, R=20, T=12, B=26, maxY=60;
   const x=i=> C.length===1 ? (L+(W-R))/2 : L + i*((W-R-L)/(C.length-1));
   const y=v=> T + (1-Math.max(0,Math.min(maxY,v))/maxY)*(H-T-B);
   const line=(k,cls)=>`<polyline class="${cls}" points="${C.map((c,i)=>x(i).toFixed(1)+','+y(c[k]).toFixed(1)).join(' ')}"/>`
     + C.map((c,i)=>`<circle class="${cls}" cx="${x(i).toFixed(1)}" cy="${y(c[k]).toFixed(1)}" r="3.4"><title>${c[k]}°</title></circle>`).join('');
   const grid=[0,15,30,45,60].map(v=>`<line class="ir-grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text class="ir-ax" x="${L-6}" y="${y(v)+3.5}" text-anchor="end">${v}°</text>`).join('');
   const band=`<rect class="ir-band" x="${L}" y="${y(IR_NORMAL[1])}" width="${W-R-L}" height="${y(IR_NORMAL[0])-y(IR_NORMAL[1])}"/>`
-    + `<text class="ir-bandt" x="${W-R-4}" y="${y(IR_NORMAL[1])+11}" text-anchor="end">normal ${IR_NORMAL[0]}–${IR_NORMAL[1]}°</text>`;
+    + `<text class="ir-bandt" x="${L+5}" y="${y(IR_NORMAL[0])-4}">normal ${IR_NORMAL[0]}–${IR_NORMAL[1]}°</text>`;
   const gaps=C.map((c,i)=>{
     const ya=y(c.r), yb=y(c.l);
     return `<line class="ir-gapl" x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${ya.toFixed(1)}" y2="${yb.toFixed(1)}"/>`;
   }).join('');
-  const labels=C.map((c,i)=>`<text class="ir-ax" x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${irFmt(c.d,{day:'numeric',month:'short'})}</text>`).join('');
+  const anchor=i=> C.length>1 && i===C.length-1 ? 'end' : (C.length>1 && i===0 ? 'start' : 'middle');
+  const labels=C.map((c,i)=>`<text class="ir-ax" x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="${anchor(i)}">${irFmt(c.d,{day:'numeric',month:'short'})}</text>`).join('');
   return `<svg class="ir-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Seated internal rotation, right and left, over time">
     ${band}${grid}${gaps}${line('l','ir-left')}${line('r','ir-right')}${labels}</svg>
     <div class="ir-legend"><span class="k r"></span>Right <span class="k l"></span>Left <span class="k g"></span>Gap</div>`;
@@ -139,7 +140,7 @@ function irRender(){
   const last=IR.checks[IR.checks.length-1];
   const list=IR.checks.slice().reverse().map(c=>`<li>
       ${c.photo?`<img class="ir-thumb" src="${c.photo}" alt="Check photo, ${irFmt(c.d)}">`:'<span class="ir-thumb none"></span>'}
-      <span class="ir-d">${irFmt(c.d)}${IR.start?` · wk ${irWeekOf(c.d)}`:''}</span>
+      <span class="ir-d">${irFmt(c.d,{day:'numeric',month:'short'})}${IR.start?` <i>wk ${irWeekOf(c.d)}</i>`:''}</span>
       <span class="ir-v">R ${c.r}° · L ${c.l}°</span><b class="ir-g">Δ ${irGap(c)}°</b>
       <button class="ir-del" type="button" data-d="${c.d}" aria-label="Delete the check from ${irFmt(c.d)}">✕</button></li>`).join('');
   const notifOK = typeof Notification!=='undefined';

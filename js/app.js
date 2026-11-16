@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v31';
+const APP_VERSION = 'split-v32';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
