@@ -239,6 +239,26 @@ finisher, but aimed wherever you want.
   (clamshell, side-lying abduction, banded walk), a light-to-heavy hinge for
   the back of the hip, and deep core work against the forward tilt. One move
   from each lever, each with its cue.
+- **Right Hip Mobility (IR Restriction)** is a four-week routine for limited
+  internal rotation in the right hip. Picking it installs two blocks:
+  **A + B** (six mobility holds, then two active-control drills) on every day,
+  and **C** (banded walks, side-lying leg raises, glute bridges, dead bugs) on
+  three days a week, leg and pull days first. Moves carry a **Right side** /
+  **Both sides** tag, and the block shows its A / B / C sections. Timed holds
+  get a **▶ Start hold** button on the timer bar; the set logs itself when the
+  hold ends and rolls into the rest. A **progress panel** under the week
+  covers:
+  - each week's A + B days and C sessions;
+  - the Sunday check: seated internal rotation, right and left in degrees,
+    with an optional photo;
+  - a right-vs-left chart against the 30–45° normal range;
+  - at week 4, *"Consider PT evaluation / hip X-ray"* if the gap hasn't
+    narrowed.
+
+  Reminders: an evening A + B nudge (in-app when the app is open, plus a
+  calendar file that works with it closed) and an optional stand-up reminder
+  every 30 or 45 minutes while the app is open. The data lives in
+  `split_irhip_v1` and goes into backups.
 - A **Neck & back** group: **Daily mobility** (chin tucks, cat-cow, foam-roller
   thoracic extension, wall angels: one set each, about five minutes, every
   day); **Neck · Strengthen** (deep neck flexors, shoulder blades, upper-back

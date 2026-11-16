@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v30';
+const APP_VERSION = 'split-v31';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -70,7 +70,7 @@ function loadStore(){ try{
   const r2=localStorage.getItem('split_log_v2');
   if(r2){ const o=JSON.parse(r2);
     if(o&&typeof o==='object'){ const out={};
-      for(const k in o){ const n=normalizeEntry(o[k]); if(n){ n.name=o[k].name; n.ts=o[k].ts||0; out[k]=n; } }
+      for(const k in o){ const n=normalizeEntry(o[k]); if(n){ n.name=o[k].name; n.ts=o[k].ts||0; if(o[k].addon) n.addon=o[k].addon; out[k]=n; } }
       LOG.sets=out; }
     return; }
   // migrate the old name-keyed store: those become history-only suggestions
@@ -209,7 +209,7 @@ function renderProgram(animate){
         <span class="rnote">${restNotes[d.label.charCodeAt(0)%restNotes.length]}</span></div>`;
       return;
     }
-    delay+=0.06; let finisherShown=false, blockShown=null, cardioShown=null, liftsHTML='';
+    delay+=0.06; let finisherShown=false, blockShown=null, cardioShown=null, secShown=null, liftsHTML='';
     d.lifts.forEach((l,li)=>{
       if(l.finisher && !finisherShown){ liftsHTML+=`<div class="finisher-label">＋ Abs finisher</div>`; finisherShown=true; }
       if(l.cardio && !d.cardioDay && l.cardio!==cardioShown){
@@ -220,7 +220,10 @@ function renderProgram(animate){
         blockShown=l.addon;
         liftsHTML+=`<div class="finisher-label addon-label">＋ ${l.addon}
           <button class="blockrm" data-di="${di}" data-title="${l.addon}" title="Remove this block" aria-label="Remove the ${l.addon} block">✕</button></div>`;
+        secShown=null;
       }
+      // a routine's own sections (A · Mobility, B · Active control …)
+      if(l.addon && l.sec && l.sec!==secShown){ secShown=l.sec; liftsHTML+=`<div class="sec-label">${l.sec}</div>`; }
       const v=weekAdjust(l.base,WEEK,l.compound);
       if(v.sets) totalSets+=parseInt(v.sets,10);
       const mode = logMode(l);
@@ -249,7 +252,7 @@ function renderProgram(animate){
       }
       const chevron = `<span class="liftexp" aria-hidden="true">${open?'▾':'▸'}</span>`;
       liftsHTML+=`<div class="lift expandable${open?' open':''}${l.cardio?' cardio-row':''}" data-k="${key}" data-di="${di}" data-li="${li}" role="button" tabindex="0" aria-expanded="${open}">
-        <div class="nm">${l.name}<em>${v.tag}</em></div>
+        <div class="nm">${l.name}<em>${v.tag}</em>${l.side?`<span class="side-chip${l.side==='right'?' r':''}">${l.side==='right'?'Right side':'Both sides'}</span>`:''}</div>
         <div class="prescribe"><div class="rx">${rxTxt}</div><div class="meta">${metaTxt}</div></div>
         ${chevron}
         <label class="swap" title="Pick another exercise"><span aria-hidden="true">⇄</span>
@@ -339,11 +342,12 @@ function renderProgram(animate){
           const addWtBtn = mode==='reps' ? `<button class="addwt" type="button">＋ Add weight (vest / belt)</button>` : '';
           logHTML=`<div class="logbox${showWeight?' show-weight':''}" data-di="${di}" data-li="${li}">
             <div class="lb-head">${head}</div>
-            <div class="lb-sub">${mode==='mins' ? 'Tick it off when the session is done.' : 'Hit ✓ on a set to bank it mid-workout — or fill them all in and save at the end.'}</div>
+            <div class="lb-sub">${mode==='mins' ? 'Tick it off when the session is done.' : mode==='time' && rxSeconds(v.reps) ? 'Start the hold timer and the set banks itself when time is up, or enter seconds and hit ✓.' : 'Hit ✓ on a set to bank it mid-workout — or fill them all in and save at the end.'}</div>
             <div class="lb-sets">${rowsHTML}</div>
             ${addWtBtn}
             ${diffHTML}
             <div class="lb-foot">
+              ${mode==='time' && rxSeconds(v.reps) ? `<button class="holdnow" type="button">▶ Start ${rxSeconds(v.reps)} s hold</button>` : ''}
               ${parseRest(v.rest)?`<button class="restnow" type="button" data-sec="${parseRest(v.rest)}" data-name="${l.name}">⏱ Rest ${v.rest}</button>`:''}
               ${done?`<button class="logclear" data-di="${di}" data-li="${li}">Clear</button>`:'<span></span>'}
               <div class="lb-btns">
@@ -457,6 +461,7 @@ function renderProgram(animate){
   }
   FOCUS=null;
   if(typeof refreshAddonUI==='function') refreshAddonUI();   // optional AI add-on panel
+  if(typeof irRender==='function') irRender();               // right-hip progress panel
   saveSession();
 }
 
@@ -485,7 +490,7 @@ function commitSets(di,li,l,mode,sets){
   sets=trimSets(sets);
   if(!sets.some(s=>s)){ delete LOG.sets[key]; saveStore(); return null; }
   const prev=LOG.sets[key];
-  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode, name:l.name,
+  const entry={ unit:state.unit, type: l.w?l.w[2]:undefined, sets, metric:mode, name:l.name, addon:l.addon||undefined,
                 diff: PENDING_DIFF[key] || (prev&&prev.diff) || null, ts:Date.now() };
   entry.e1rm = mode==='weight' ? bestE1RM(entry) : null;
   LOG.sets[key]=entry; saveStore();
@@ -551,7 +556,7 @@ function allWeekDays(di){
   return out;
 }
 function removeBlock(di,title){
-  const daily = curWeekdays()[di] && curWeekdays()[di].lifts.some(l=>l.addon===title && l.daily);
+  const daily = curWeekdays()[di] && curWeekdays()[di].lifts.some(l=>l.addon===title && (l.daily || l.spread));
   if(daily){
     const weeks = PROGRAM.weeks ? Object.values(PROGRAM.weeks) : [PROGRAM.weekdays];
     weeks.forEach(days=>days.forEach((d,i)=>{
@@ -628,6 +633,7 @@ document.getElementById('program').addEventListener('click', e=>{
   const sv=e.target.closest('.logsave'); if(sv){ logSets(sv.closest('.logbox')); return; }
   const cc=e.target.closest('.logcancel'); if(cc){ EDIT=null; renderProgram(false); return; }
   const rn=e.target.closest('.restnow'); if(rn){ startRest(+rn.dataset.sec, rn.dataset.name); return; }
+  const hn=e.target.closest('.holdnow'); if(hn){ startHold(hn.closest('.logbox')); return; }
   const cl=e.target.closest('.logclear'); if(cl){ clearLog(+cl.dataset.di,+cl.dataset.li); return; }
   const wk=e.target.closest('.wk'); if(wk){ EDIT=null; WEEK=parseInt(wk.dataset.wk,10); renderProgram(false); return; }
   if(e.target.closest('.swap')) return;            // the picker opens; the row stays as it is
@@ -701,6 +707,14 @@ function refreshDayOptions(){
   if(!PROGRAM) return;
   const prev=addonDay.value;
   const t=findTarget(addonTarget.value), daily=!!(t && t.daily);
+  if(t && t.routine){
+    addonDay.innerHTML=`<option value="routine">A + B every day · C on 3 days (leg / pull days first)</option>`;
+    addonDay.value='routine'; addonDay.dataset.daily='r'; return;
+  }
+  if(t && t.perWeek){
+    addonDay.innerHTML=`<option value="spread">${t.perWeek} days a week (leg / pull days first)</option>`;
+    addonDay.value='spread'; addonDay.dataset.daily='s'; return;
+  }
   addonDay.innerHTML = (daily ? `<option value="all">Every day (rest days too)</option>` : '') + curWeekdays()
     .map((d,di)=> (d.rest || d.cardioDay || d.mobilityDay) ? '' : `<option value="${di}">${d.label} · ${d.type}</option>`).join('');
   if(daily && addonDay.dataset.daily!=='1') addonDay.value='all';
@@ -727,11 +741,12 @@ const TARGET_NOTES = {
   toe:'Habitual toe walking usually comes from tight calves and Achilles holding the heel up, plus a toes-first habit. These stretch the calf and Achilles, open up ankle bend, and strengthen the shins that lift your toes. Hold stretches without bouncing. Toe walking that is persistent, one-sided, or comes with pain, stiffness or weakness can have other causes — have a physical therapist or doctor look at it.',
   desk:'Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.',
   nb:'Neck and back trouble from sitting usually comes from stiffness and muscles that tire, not damage. The neck does better with endurance in the deep neck muscles and a strong upper back holding the head over the shoulders. Back popping or cracking without pain is common and generally harmless: it\u2019s gas releasing as a stiff joint moves, not something slipping out of place. Daily movement and a steadier trunk usually make it feel looser. General fitness guidance, not treatment. See a doctor or physical therapist for pain that is severe or follows an injury; for numbness, tingling or weakness in the arms or legs; for headaches or dizziness with neck movement; or if popping comes with pain, swelling or locking.',
+  irhip:'For limited internal rotation in the right hip: A + B every day (about 12 minutes, best in the evening), C on three days a week, for four weeks. Check your seated rotation angle each Sunday in the progress panel below the week. Stretch to a firm but comfortable end range and never force a pop or click. General fitness guidance, not a diagnosis. See a physical therapist or doctor for groin pain, catching, locking or clicking that hurts, pain at night, or if the gap between sides hasn\u2019t narrowed by week 4.',
   apt:'Anterior pelvic tilt is a balance problem: hip flexors and the lower back pull the pelvis forward, and glutes, hamstrings and the deep core don\u2019t pull it back enough. These moves build the side that pulls back, with a cue on each for doing them in a posterior tilt — pair them with hip-flexor stretching. General fitness guidance, not treatment; see a clinician for back pain that is severe, persistent, or follows an injury.',
 };
 function targetNote(label){
   const t=findTarget(label);
-  return !t ? '' : t.hip ? TARGET_NOTES.hip : t.nb ? TARGET_NOTES.nb : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
+  return !t ? '' : t.irhip ? TARGET_NOTES.irhip : t.hip ? TARGET_NOTES.hip : t.nb ? TARGET_NOTES.nb : t.toe ? TARGET_NOTES.toe : t.apt ? TARGET_NOTES.apt : t.desk ? TARGET_NOTES.desk : '';
 }
 function refreshAddonNote(){
   const note=targetNote(addonTarget.value);
@@ -774,7 +789,7 @@ function refreshAddonUI(){
   let html='';
   for(const cat in MUSCLE_TARGETS){
     const opts=MUSCLE_TARGETS[cat]
-      .filter(t=>targetPool(t.names, PROGRAM.equip).length)
+      .filter(t=>!t.part && (t.routine || t.fixed || targetPool(t.names, PROGRAM.equip).length))
       .map(t=>`<option value="${t.label}">${t.label}</option>`).join('');
     if(opts) html+=`<optgroup label="${cat}">${opts}</optgroup>`;
   }
@@ -786,7 +801,7 @@ function refreshAddonUI(){
 /* What a custom day is called: the blocks it's built from. */
 function customTitle(day){
   const labels=[...new Set(day.lifts.filter(l=>l.addon).map(l=>l.addon))]
-    .map(x=>x.replace(/^(APT|Toe walking|Hip pain) · /,'').replace(/ — daily$/,''));
+    .map(x=>x.replace(/^(APT|Toe walking|Hip pain|Right hip IR) · /,'').replace(/ — daily$/,''));
   if(!labels.length) return 'Custom';
   return labels.length<=2 ? labels.join(' + ') : labels.slice(0,2).join(' + ')+` +${labels.length-2}`;
 }
@@ -801,7 +816,10 @@ function retitle(day){
 function placeBlock(day, label, target){
   const iso=(SCHEME[PROGRAM.goal]||SCHEME.general).iso;
   day.lifts = day.lifts.filter(l=>l.addon!==label);
-  const already = new Set(day.lifts.map(l=>l.name));           // don't repeat what the day already programs
+  // don't repeat what the day already programs — unless it's a set routine,
+  // where every move is placed as written
+  const already = new Set(target.fixed ? [] : day.lifts.map(l=>l.name));
+  const pool = names => target.fixed ? names.map(findExercise).filter(Boolean) : targetPool(names, PROGRAM.equip);
   const picked=[];
   const add=(f, lever, cue)=>{
     const l=mkLift(f.ex, f.group, PROGRAM.goal, false);
@@ -812,7 +830,10 @@ function placeBlock(day, label, target){
     if(lever!=null){ l.lever=lever; l.cue=cue; }
     const sl = lever!=null && target.slots ? target.slots[lever] : null;
     if(sl && sl.rx) l.base={sets:sl.rx.s, reps:sl.rx.r, rest:sl.rx.rest, tag:sl.rx.tag};   // the routine's dose
+    if(sl && sl.sec) l.sec=sl.sec;
+    if(sl && sl.side) l.side=sl.side;
     if(target.daily) l.daily=true;
+    if(target.perWeek) l.spread=true;
     picked.push(l); already.add(f.ex.n);
   };
   if(target.slots && target.slots.length>1){
@@ -820,10 +841,10 @@ function placeBlock(day, label, target){
     // fewest options for your equipment choose first, so a move that's the
     // only one left for a lever isn't taken by another; a lever with nothing
     // fresh left is skipped rather than repeating a move.
-    const order=target.slots.map((slot,si)=>({slot,si,n:targetPool(slot.names, PROGRAM.equip).length}))
+    const order=target.slots.map((slot,si)=>({slot,si,n:pool(slot.names).length}))
       .sort((a,b)=>a.n-b.n);
     order.forEach(({slot,si})=>{
-      const fresh=targetPool(slot.names, PROGRAM.equip).filter(f=>!already.has(f.ex.n));
+      const fresh=pool(slot.names).filter(f=>!already.has(f.ex.n));
       const pick=shuffle(fresh)[0];
       if(pick) add(pick, si, slot.cue);
     });
@@ -855,6 +876,56 @@ function addDaily(label, everyWeek){
   }));
   return added;
 }
+/* A block that belongs on N days a week: the days whose focus matches the
+   target's `prefer` first, spread out as evenly as the week allows. If there
+   aren't enough training days it takes rest days that already carry a daily
+   routine. Returns the day indexes it chose. */
+function spreadDays(days, n, prefer){
+  const train=[], light=[];
+  days.forEach((d,i)=>{ if(!d.rest && !d.cardioDay && !d.mobilityDay) train.push(i); else if(d.mobilityDay) light.push(i); });
+  let cand=train.slice();
+  if(cand.length<n) cand=cand.concat(light);
+  if(cand.length<=n) return cand.sort((a,b)=>a-b);
+  const pref=i=>prefer && prefer.test(days[i].type||'') ? 1 : 0;
+  let best=null, bestScore=-Infinity;
+  const pick=(start, chosen)=>{
+    if(chosen.length===n){
+      const gaps=chosen.map((x,k)=>((chosen[(k+1)%n]-x+7)%7)||7);
+      const score=chosen.reduce((s,i)=>s+pref(i)*100,0) + Math.min(...gaps)*10 - chosen.filter(i=>light.includes(i)).length*50;
+      if(score>bestScore){ bestScore=score; best=chosen.slice(); }
+      return;
+    }
+    for(let k=start;k<cand.length;k++){ chosen.push(cand[k]); pick(k+1, chosen); chosen.pop(); }
+  };
+  pick(0, []);
+  return best.sort((a,b)=>a-b);
+}
+function addSpread(label, everyWeek){
+  const target=findTarget(label); if(!target) return {n:0, days:[]};
+  const weeks = PROGRAM.weeks ? (everyWeek ? Object.values(PROGRAM.weeks) : [PROGRAM.weeks[WEEK]]) : [PROGRAM.weekdays];
+  let n=0, chosen=[];
+  weeks.forEach(days=>{
+    days.forEach(d=>{ if(d.lifts) d.lifts=d.lifts.filter(l=>l.addon!==label); });
+    const at=spreadDays(days, target.perWeek, target.prefer);
+    if(days===curWeekdays()) chosen=at;
+    at.forEach(i=>{ n=Math.max(n, placeBlock(days[i], label, target)); });
+  });
+  if(!chosen.length) chosen=spreadDays(curWeekdays(), target.perWeek, target.prefer);
+  return {n, days:chosen};
+}
+/* A routine installs each of its blocks the way that block belongs: daily
+   blocks on every day, N-a-week blocks spread over the week. */
+function installRoutine(label, everyWeek){
+  const t=findTarget(label); if(!t || !t.routine) return null;
+  const out=[];
+  t.routine.forEach(pl=>{
+    const pt=findTarget(pl); if(!pt) return;
+    if(pt.daily) out.push({label:pl, n:addDaily(pl, everyWeek), where:'every day'});
+    else if(pt.perWeek){ const r=addSpread(pl, everyWeek); out.push({label:pl, n:r.n, where:r.days.map(i=>curWeekdays()[i].label).join(', ')}); }
+  });
+  if(t.irhip && typeof irStart==='function') irStart();
+  return out;
+}
 function addBlock(label, di, everyWeek){
   const target=findTarget(label); if(!target) return 0;
   const targets=[];
@@ -884,6 +955,20 @@ addonBuild.addEventListener('click', ()=>{
   if(!PROGRAM){ addonSetStatus('Build your week first.','err'); return; }
   const label=addonTarget.value;
   if(!label){ addonSetStatus('Pick a muscle to target.','err'); return; }
+  if(addonDay.value==='routine'){
+    const parts=installRoutine(label, addonAllWeeks);
+    if(!parts || !parts.some(x=>x.n)){ addonSetStatus('Could not place that routine.','err'); return; }
+    saveSession(); EDIT=null; renderProgram(false);
+    addonSetStatus(`Added “${label}”: `+parts.map(x=>`${x.label.replace(/^Right hip IR · /,'')} (${x.n} moves) on ${x.where}`).join('; ')+`${addonAllWeeks?', every week':', this week'}. Track your angle in the progress panel below.`,'ok');
+    return;
+  }
+  if(addonDay.value==='spread'){
+    const r=addSpread(label, addonAllWeeks);
+    if(!r.n){ addonSetStatus('Could not place that block.','err'); return; }
+    saveSession(); EDIT=null; renderProgram(false);
+    addonSetStatus(`Added “${label}” on ${r.days.map(i=>curWeekdays()[i].label).join(', ')}${addonAllWeeks?', every week':', this week'}.`,'ok');
+    return;
+  }
   if(addonDay.value==='all'){
     const n=addDaily(label, addonAllWeeks);
     if(!n){ addonSetStatus('No movements available for that routine with your equipment.','err'); return; }
@@ -907,7 +992,7 @@ addonBuild.addEventListener('click', ()=>{
    rest, and can be started by hand from the log panel. */
 const restEl=document.getElementById('rest'), restTimeEl=document.getElementById('restTime'),
       restFill=document.getElementById('restFill'), restLabelEl=document.getElementById('restLabel');
-let restEnd=0, restTotal=0, restTick=null;
+let restEnd=0, restTotal=0, restTick=null, restDone=null;
 /* '2 min' | '75 s' | '90 s' | '—'  ->  seconds */
 function parseRest(txt){
   const m=String(txt||'').match(/(\d+(?:\.\d+)?)\s*(min|s)\b/i);
@@ -921,22 +1006,25 @@ function drawRest(){
   restFill.style.width=(restTotal ? Math.max(0,left/restTotal)*100 : 0)+'%';
   if(left<=0 && !restEl.classList.contains('done')){
     restEl.classList.add('done');
-    restLabelEl.textContent='Next set';
+    restLabelEl.textContent = restEl.classList.contains('hold') ? 'Hold done' : 'Next set';
     restChime();
     clearInterval(restTick); restTick=null;
+    const cb=restDone; restDone=null;
+    if(cb) cb();
   }
 }
-function startRest(sec, label){
+function startRest(sec, label, onDone, hold){
   sec=Math.round(sec);
   if(!(sec>0)) return;
-  restTotal=sec; restEnd=Date.now()+sec*1000;
+  restTotal=sec; restEnd=Date.now()+sec*1000; restDone=onDone||null;
   restLabelEl.textContent=label||'Rest';
   restEl.classList.remove('hidden','done');
+  restEl.classList.toggle('hold', !!hold);
   drawRest();
   clearInterval(restTick); restTick=setInterval(drawRest,250);
 }
 function stopRest(){
-  clearInterval(restTick); restTick=null; restEnd=0;
+  clearInterval(restTick); restTick=null; restEnd=0; restDone=null;
   restEl.classList.add('hidden'); restEl.classList.remove('done');
 }
 /* A short tone and a buzz — both best-effort, both silent if the platform
@@ -955,11 +1043,40 @@ function restChime(){
     setTimeout(()=>{ try{ c.close(); }catch(e){} },900);
   }catch(e){}
 }
+/* A timed hold on the same bar: counts down the next unlogged set's seconds
+   (what's in its box, else the prescription), then banks that set and rolls
+   into the rest before the next one. */
+function startHold(box){
+  const di=+box.dataset.di, li=+box.dataset.li, wk=WEEK;
+  const l=curWeekdays()[di].lifts[li];
+  const v=weekAdjust(l.base,WEEK,l.compound);
+  const rows=[...box.querySelectorAll('.lb-set')];
+  const done=LOG.sets[occKey(di,li,l.name)];
+  let idx=rows.findIndex((r,i)=>!(done && done.sets[i]));
+  if(idx<0) idx=rows.length-1;
+  const typed=parseInt((rows[idx] && rows[idx].querySelector('.lt') || {}).value,10);
+  const sec=typed>0 ? typed : parseInt(rxSeconds(v.reps),10);
+  if(!(sec>0)) return;
+  const side = l.side==='right' ? ' · right' : '';
+  startRest(sec, `Hold · ${l.name}${side} · set ${idx+1}`, ()=>{
+    if(WEEK!==wk) return;
+    const day=curWeekdays()[di]; if(!day || !day.lifts[li] || day.lifts[li].name!==l.name) return;
+    const prev=LOG.sets[occKey(di,li,l.name)];
+    const sets=prev ? prev.sets.slice() : [];
+    while(sets.length<=idx) sets.push(null);
+    sets[idx]={sec};
+    const entry=commitSets(di,li,l,'time',sets);
+    FOCUS={row:-1}; renderProgram(false);
+    const nWant=parseInt(v.sets,10)||0;
+    if(entry && (!nWant || doneSets(entry)<nWant)) setTimeout(()=>startRest(parseRest(v.rest), l.name), 900);
+  }, true);
+}
 document.getElementById('restSkip').addEventListener('click', stopRest);
 document.getElementById('restAdd').addEventListener('click', ()=>{
   if(!restEnd) return;
   const left=Math.max(0, Math.ceil((restEnd-Date.now())/1000)) + 30;
-  startRest(left, restLabelEl.textContent==='Next set' ? 'Rest' : restLabelEl.textContent);
+  const cb=restDone, hold=restEl.classList.contains('hold') && !restEl.classList.contains('done');
+  startRest(left, /^(Next set|Hold done)$/.test(restLabelEl.textContent) ? 'Rest' : restLabelEl.textContent, hold?cb:null, hold);
 });
 
 /* ===================== BACKUP =====================
@@ -968,7 +1085,8 @@ document.getElementById('restAdd').addEventListener('click', ()=>{
    back. */
 function exportData(){
   const payload={app:'SPLIT', format:1, exportedAt:new Date().toISOString(),
-                 state, week:WEEK, program:PROGRAM, logs:LOG.sets};
+                 state, week:WEEK, program:PROGRAM, logs:LOG.sets,
+                 irhip: typeof IR!=='undefined' ? IR : undefined};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -990,9 +1108,10 @@ function importData(file){
     if(!confirm(`Restore the backup from ${when}?\n\nIt replaces what is in this browser — ${have} logged lift${have===1?'':'s'} and your current week — with ${incoming} logged lift${incoming===1?'':'s'}. This cannot be undone.`)) return;
     if(o.logs && typeof o.logs==='object'){
       const out={};
-      for(const k in o.logs){ const n=normalizeEntry(o.logs[k]); if(n){ n.name=o.logs[k].name; n.ts=o.logs[k].ts||0; out[k]=n; } }
+      for(const k in o.logs){ const n=normalizeEntry(o.logs[k]); if(n){ n.name=o.logs[k].name; n.ts=o.logs[k].ts||0; if(o.logs[k].addon) n.addon=o.logs[k].addon; out[k]=n; } }
       LOG.sets=out; saveStore();
     }
+    if(o.irhip && typeof irRestore==='function') irRestore(o.irhip);
     if(o.state) Object.assign(state, o.state);
     if(!state.max) state.max={bench:'',squat:'',deadlift:'',press:'',row:''};
     syncBriefUI();

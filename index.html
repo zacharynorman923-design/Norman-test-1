@@ -147,12 +147,19 @@
     <div id="addonStatus" class="addon-status" role="status" aria-live="polite"></div>
   </section>
 
+  <section id="irtrack" class="brief hidden" aria-label="Right hip internal rotation progress">
+    <div class="brief-head"><h2>Right hip IR · progress</h2><span class="step" id="irWeek"></span></div>
+    <div id="irBody"></div>
+  </section>
+
   <footer>
     <b>SPLIT</b> &nbsp;·&nbsp; a demo program builder &nbsp;·&nbsp; not medical advice<br>
     log your real sets to personalise loads &nbsp;·&nbsp; adjust to how the set feels &nbsp;·&nbsp; warm up first<br>
     <span class="ver" id="appver"></span>
   </footer>
 </div>
+
+<div id="irToast" class="irtoast hidden" role="status" aria-live="polite"></div>
 
 <input type="file" id="impfile" accept="application/json,.json" hidden>
 
@@ -170,6 +177,7 @@
 <script src="js/exercise-info.js"></script>
 <script src="js/scheduler.js"></script>
 <script src="js/app.js"></script>
+<script src="js/hip-ir.js"></script>
 <script>
   /* Register the service worker so the app installs and runs offline.
      updateViaCache:'none' makes the browser check sw.js itself against the

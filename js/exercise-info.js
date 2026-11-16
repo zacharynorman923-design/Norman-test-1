@@ -193,6 +193,13 @@ const HOWTO = {
   'Cat-Cow':['Start on hands and knees: hands under shoulders, knees under hips.','Cow: let the belly drop and lift your chest and gaze.','Cat: round your back up toward the ceiling and tuck the chin. Move slowly between the two.'],
   'Foam Roller Thoracic Extension':['Lie with a foam roller (or a rolled towel) across your mid-back, knees bent, hands supporting your head.','Keep the hips down and gently arch back over the roller.','Return, shift it an inch up, repeat. Keep it on the mid-back, never the low back.'],
   'Bird Dog':['Start on hands and knees with a flat back.','Reach one arm forward and the opposite leg back until both are level with your body.','Hold 3 seconds without the hips tipping, return, then switch sides.'],
+  'Prone Hip Internal Rotation Stretch':['Lie face down, forehead on your hands, knees together and bent to 90°.','Let both feet fall outward toward the floor; gravity turns the hips inward.','Relax and hold. Keep the knees together and the hips flat on the floor.'],
+  'Supine Knee Drop-In':['Lie on your back, knees bent, feet flat and wider than your hips.','Let the working knee fall inward toward the floor.','Hold without lifting that hip or rolling the pelvis; breathe and let it settle lower.'],
+  '90/90 Hold':['Sit with the front leg bent 90° in front of you and the back leg bent 90° out to the side.','Sit tall with both sit bones down, hands on the floor if you need them.','Lean gently toward the back knee until the hip turns in, then hold.'],
+  'Slow Hip Rotation Stretch':['Lie on your back with the other leg long.','Bring the working knee in and across your body while slowly straightening the leg.','Hold the end position and breathe. Ease into it; never force a pop.'],
+  'Frog Stretch':['Kneel on a soft surface on your forearms, knees out wide, shins parallel and feet turned out.','Rock your hips back toward your heels until the inner thighs stretch.','Hold, keeping your back flat; back off if the groin pinches.'],
+  'Seated Active Internal Rotation':['Sit tall on a chair or bench, knee bent 90°, thigh still.','Using only the hip muscles, swing the foot outward as far as it goes. The thigh turns inward.','Hold 5 seconds at the end, then return slowly. No hands.'],
+  '90/90 Lift-Off':['Set up in 90/90 with the working leg as the back leg.','Sit tall and lift the back foot off the floor, keeping the knee down.','Hold a beat and lower with control. Don\'t lean away to get it up.'],
   'Clamshell':['Lie on your side, hips and knees bent, feet together.','Keeping the feet touching, open the top knee as far as the pelvis stays still.','Close slowly; add a band above the knees when it gets easy.'],
   'Banded Lateral Walk':['Band around the legs above the knees or at the ankles, feet hip-width.','Sit into a slight squat and step sideways, keeping the band taut.','Take short, controlled steps, then walk back the other way.'],
   'Copenhagen Plank':['Side plank on your forearm with the top leg resting on a bench — knee on it to start.','Lift your hips so the body is straight, bottom leg hovering under the bench.','Hold, keeping the hips high, then switch sides; build to the foot on the bench.'],
@@ -301,6 +308,8 @@ const PATTERN = {
   'Half-Kneeling Hip Flexor Stretch':'hipflexstretch', 'Figure-4 Stretch':'fig4', '90/90 Hip Switch':'ninety',
   'Chin Tuck':'chintuck', 'Neck Isometric Hold':'neckiso', 'Wall Angel':'wallangel', 'Band Pull-Apart':'bandpull',
   'Cat-Cow':'catcow', 'Foam Roller Thoracic Extension':'thoracicext', 'Bird Dog':'birddog',
+  'Prone Hip Internal Rotation Stretch':'proneir', 'Supine Knee Drop-In':'kneedrop', '90/90 Hold':'ninetyhold',
+  'Slow Hip Rotation Stretch':'hiprot', 'Frog Stretch':'frog', 'Seated Active Internal Rotation':'seatedir', '90/90 Lift-Off':'ninetylift',
   'Side-Lying Hip Abduction':'sideabd', 'Clamshell':'clamshell', 'Banded Lateral Walk':'latwalk', 'Copenhagen Plank':'copenhagen',
   'Lacrosse Ball Glute Release':'ballrelease',
   'Reverse Crunch':'core',
@@ -920,6 +929,33 @@ const MOVES = {
     a:{hip:[58,75], torso:195, head:200, hands:[[33,95],[33,95]], elbows:[1,1], feet:[[77,95],[77,95]], knees:[1,1], toe:0},
     b:{hip:[58,75], torso:195, head:196, hands:[[33,95],[6,63]], elbows:[1,1], feet:[[96,71],[77,95]], knees:[1,1], toes:[-10,0]} },
 
+  /* ---- hip internal rotation ---- */
+  proneir:{ static:true, back:FLOORSVG, box:'2 50 96 50', f:-1,
+    a:{hip:[58,91], torso:180, head:186, hands:[[22,93],[24,93]], elbows:[1,1], feet:[[78,72],[78,72]], knees:[1,1], toe:-90} },
+
+  kneedrop:{ back:'', view:'front', box:'2 40 96 60', path:'knee',
+    a:{flat:true, hip:[54,80], torso:180, head:186, hands:[[24,72],[24,88]], elbows:[1,-1], feet:[[86,96],[86,64]], knees:[1,-1], toes:[0,0]},
+    b:{flat:true, hip:[54,80], torso:180, head:186, hands:[[24,72],[24,88]], elbows:[1,-1], feet:[[86,96],[86,64]], knees:[1,1], toes:[0,0]} },
+
+  ninetyhold:{ static:true, back:FLOORSVG, view:'front', box:'4 30 92 70',
+    a:{flat:true, hip:[50,90], torso:-98, hands:[[34,94],[68,94]], elbows:[1,-1], feet:[[22,95],[46,95]], knees:[1,1]} },
+
+  hiprot:{ back:FLOORSVG, box:'4 36 92 64', path:'foot',
+    a:{hip:[58,91], torso:180, head:186, hands:[[36,95],[36,95]], elbows:[1,1], feet:[[96,95],[66,66]], knees:[1,-1], toes:[-80,-40]},
+    b:{hip:[58,91], torso:180, head:186, hands:[[36,95],[36,95]], elbows:[1,1], feet:[[96,95],[54,54]], knees:[1,-1], toes:[-80,-110]} },
+
+  frog:{ static:true, back:'', view:'back', box:'4 4 92 92',
+    a:{flat:true, hip:[50,60], torso:-90, head:-90, hands:[[37,14],[63,14]], elbows:[1,-1], feet:[[26,82],[74,82]], knees:[1,-1], toes:[90,90]} },
+
+  seatedir:{ back:'<rect class="eq" x="30" y="70" width="40" height="6" rx="2.2"/><rect class="eq" x="33" y="76" width="4" height="21" rx="1.4"/><rect class="eq" x="63" y="76" width="4" height="21" rx="1.4"/>'+FLOORSVG,
+    view:'front', box:'4 0 92 100', path:'foot',
+    a:{flat:true, hip:[50,66], torso:-90, hands:[[38,70],[62,70]], elbows:[1,-1], feet:[[38,96],[62,96]], knees:[1,-1], toes:[90,90]},
+    b:{flat:true, hip:[50,66], torso:-90, hands:[[38,70],[62,70]], elbows:[1,-1], feet:[[38,96],[78,90]], knees:[1,-1], toes:[90,60]} },
+
+  ninetylift:{ back:FLOORSVG, view:'front', box:'4 30 92 70', path:'foot',
+    a:{flat:true, hip:[50,90], torso:-84, hands:[[32,94],[66,94]], elbows:[1,-1], feet:[[54,95],[78,95]], knees:[-1,-1]},
+    b:{flat:true, hip:[50,90], torso:-88, hands:[[32,94],[66,94]], elbows:[1,-1], feet:[[54,95],[77,85]], knees:[-1,-1]} },
+
 };
 
 /* What each movement works — p: the main movers, s: the helpers. Patterns
@@ -961,6 +997,10 @@ const PATTERN_MUSCLES = {
   wallangel:{p:['upperback','reardelt'], s:['lowback']}, bandpull:{p:['reardelt','upperback']},
   catcow:{p:['lowback','upperback'], s:['abs'], stretch:true}, thoracicext:{p:['upperback'], s:['abs'], stretch:true},
   birddog:{p:['lowback','glutes'], s:['abs','delts']},
+  proneir:{p:['glutemed','glutes'], stretch:true},   kneedrop:{p:['glutemed'], s:['glutes'], stretch:true},
+  ninetyhold:{p:['glutes','glutemed'], s:['hipflexors'], stretch:true}, hiprot:{p:['glutes','glutemed'], stretch:true},
+  frog:{p:['adductors'], stretch:true},              seatedir:{p:['glutemed'], s:['adductors']},
+  ninetylift:{p:['glutemed'], s:['hipflexors','obliques']},
   copenhagen:{p:['adductors'], s:['obliques']},     ballrelease:{p:['glutes'], s:['glutemed'], stretch:true},                         tibraise:{p:['tibialis']},     swing:{p:['glutes','hams'], s:['lowback','delts']},
 };
 const EX_MUSCLES = {
@@ -1001,7 +1041,8 @@ function musclesFor(l){ return EX_MUSCLES[l.name] || PATTERN_MUSCLES[patternOf(l
 /* Patterns logged in seconds rather than reps (isometric holds and carries). */
 const TIME_PATTERNS = ['hold','carry','wallsit','sideplank','hollow','handstand',
                       'calfstretch','soleusstretch','towelstretch','deepsquat','heelwalk',
-                      'hipflexstretch','fig4','copenhagen','ballrelease','neckiso'];
+                      'hipflexstretch','fig4','copenhagen','ballrelease','neckiso',
+                      'proneir','kneedrop','ninetyhold','hiprot','frog'];
 const TIMED_BY_NAME = { 'Superman Hold':true, 'Heel-to-Toe Walk':true };   // shares a demo with a rep exercise
 function isTimedExercise(name){ return !!TIMED_BY_NAME[name] || TIME_PATTERNS.indexOf(PATTERN[name])!==-1; }
 
