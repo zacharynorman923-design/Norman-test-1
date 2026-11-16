@@ -165,6 +165,14 @@ const EX = {
     {n:'Cat-Cow',eq:ALL_EQ,c:0,rx:{s:'2',r:'8–10 slow',rest:'15 s',tag:'mobility'}},
     {n:'Foam Roller Thoracic Extension',eq:ALL_EQ,c:0,rx:{s:'2',r:'8–10',rest:'20 s',tag:'mobility'}},
     {n:'Bird Dog',eq:ALL_EQ,c:0,rx:{s:'3',r:'8 / side (3 s hold)',rest:'30 s',tag:'control'}},
+    /* hip internal rotation */
+    {n:'Prone Hip Internal Rotation Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'45 s',rest:'15 s',tag:'stretch'}},
+    {n:'Supine Knee Drop-In',eq:ALL_EQ,c:0,rx:{s:'3',r:'30 s',rest:'15 s',tag:'stretch'}},
+    {n:'90/90 Hold',eq:ALL_EQ,c:0,rx:{s:'2',r:'45 s / side',rest:'15 s',tag:'stretch'}},
+    {n:'Slow Hip Rotation Stretch',eq:ALL_EQ,c:0,rx:{s:'3',r:'30–45 s',rest:'15 s',tag:'stretch'}},
+    {n:'Frog Stretch',eq:ALL_EQ,c:0,rx:{s:'2',r:'45 s',rest:'15 s',tag:'stretch'}},
+    {n:'Seated Active Internal Rotation',eq:ALL_EQ,c:0,rx:{s:'2',r:'10 (5 s hold)',rest:'20 s',tag:'control'}},
+    {n:'90/90 Lift-Off',eq:ALL_EQ,c:0,rx:{s:'2',r:'8',rest:'20 s',tag:'control'}},
   ],
   cardio:[
     {n:'Rowing Intervals',eq:G,c:0},{n:'Assault Bike Sprints',eq:G,c:0},{n:'Incline Treadmill Walk',eq:G,c:0},
@@ -353,6 +361,16 @@ const MUSCLE_TARGETS = {
     {label:'Neck · Strengthen', nb:1, slots:['neckDeep','neckScap','neckRow','neckCarry']},
     {label:'Back · Popping & stiffness', nb:1, slots:['backMobility','backStability','backExt','backRow']},
   ],
+  /* A set program for limited internal rotation in the right hip: A + B every
+     day (the `routine` installs both), C on three days a week. `fixed` means
+     every move is placed as written, whatever else the day holds. */
+  'Right hip (IR restriction)':[
+    {label:'Right Hip Mobility (IR Restriction)', irhip:1, routine:['Right hip IR · A+B Mobility & control','Right hip IR · C Strength']},
+    {label:'Right hip IR · A+B Mobility & control', irhip:1, part:1, daily:1, fixed:1,
+     slots:['irBall','irProne','irDrop','ir9090','irRot','irFrog','irSeated','irLift']},
+    {label:'Right hip IR · C Strength', irhip:1, part:1, perWeek:3, prefer:/leg|lower|pull|back|posterior|glute|ham/i, fixed:1,
+     slots:['irWalk','irAbd','irBridge','irBug']},
+  ],
   'Toe walking':[
     {label:'Toe walking · Calf & Achilles stretches', toe:1, slots:['gastroc','soleus','ankle']},
     {label:'Toe walking · Full block', toe:1, slots:['gastroc','soleus','ankle','shin']},
@@ -480,6 +498,32 @@ const BLOCK_SLOTS = {
     cue:'Keep the spine still while the arms and legs move: brace lightly and breathe. Steady trunk muscles take the strain off the joints that pop.' },
   backExt:{ names:['Superman Hold','Hyperextension','Prone Y-Raise'],
     cue:'Long spine, glutes squeezed, lift from the upper back without cranking the neck up. Stop the rep before the low back pinches.' },
+  /* Right hip internal rotation. `sec` heads a run of moves within the block,
+     `side` says which side to do. */
+  irBall:{ names:['Lacrosse Ball Glute Release'], sec:'A · Mobility', side:'right', rx:{s:'1',r:'90 s',rest:'—',tag:'release'},
+    cue:'Ball in the deep glute, between the sit bone and the bony point on the outside of the hip. Stay on tender spots and breathe; tender is fine, sharp or tingling down the leg is not.' },
+  irProne:{ names:['Prone Hip Internal Rotation Stretch'], sec:'A · Mobility', side:'both', rx:{s:'3',r:'45 s',rest:'15 s',tag:'stretch'},
+    cue:'Face down, knees together and bent to 90°. Let both feet fall outward under their own weight; that turns the hips inward. Relax into it rather than pushing.' },
+  irDrop:{ names:['Supine Knee Drop-In'], sec:'A · Mobility', side:'right', rx:{s:'3',r:'30 s',rest:'15 s',tag:'stretch'},
+    cue:'On your back, feet wider than the hips. Let the right knee fall inward toward the floor and hold; keep the pelvis flat rather than rolling with it.' },
+  ir9090:{ names:['90/90 Hold'], sec:'A · Mobility', side:'right', rx:{s:'2',r:'45 s',rest:'15 s',tag:'stretch'},
+    cue:'Right leg is the back leg: knee bent 90°, shin out to the side. Sit tall and lean gently toward the back knee until you feel the hip turn in.' },
+  irRot:{ names:['Slow Hip Rotation Stretch'], sec:'A · Mobility', side:'right', rx:{s:'3',r:'30–45 s',rest:'15 s',tag:'stretch'},
+    cue:'Bring the right knee in and across while slowly straightening the leg, then hold the end position. Ease into it; don\'t force a pop.' },
+  irFrog:{ names:['Frog Stretch'], sec:'A · Mobility', side:'both', rx:{s:'2',r:'45 s',rest:'15 s',tag:'stretch'},
+    cue:'Knees wide on a soft surface, shins parallel, then rock the hips back until the inner thighs stretch. Back off before the groin pinches.' },
+  irSeated:{ names:['Seated Active Internal Rotation'], sec:'B · Active control', side:'right', rx:{s:'2',r:'10 (5 s hold)',rest:'20 s',tag:'control'},
+    cue:'Sit tall, knee at 90° and thigh still. Swing the foot outward using only the hip muscles, with no hands, and hold 5 seconds at the end. This is how you own the new range.' },
+  irLift:{ names:['90/90 Lift-Off'], sec:'B · Active control', side:'right', rx:{s:'2',r:'8',rest:'20 s',tag:'control'},
+    cue:'In 90/90 with the right leg behind, sit tall and lift the back foot off the floor without leaning away. A small lift with control beats a big one with a lean.' },
+  irWalk:{ names:['Banded Lateral Walk'], sec:'C · Strength', rx:{s:'3',r:'15 each way',rest:'45 s',tag:'strength'},
+    cue:'Band above the knees, stay a little low, toes forward. 15 steps one way, 15 back, with tension on the band the whole time.' },
+  irAbd:{ names:['Side-Lying Hip Abduction'], sec:'C · Strength', side:'right', rx:{s:'3',r:'15',rest:'45 s',tag:'strength'},
+    cue:'Lie on your left side and lift the right leg, heel leading and toes angled slightly down. Don\'t let the hips roll back.' },
+  irBridge:{ names:['Glute Bridge'], sec:'C · Strength', rx:{s:'3',r:'12 (2 s squeeze)',rest:'45 s',tag:'strength'},
+    cue:'Ribs down, drive through the heels, and squeeze the glutes for 2 seconds at the top of every rep.' },
+  irBug:{ names:['Dead Bug'], sec:'C · Strength', rx:{s:'3',r:'8 / side',rest:'45 s',tag:'strength'},
+    cue:'Low back flat to the floor the whole set. Reach the opposite arm and leg slowly and stop before the back arches.' },
   backRow:{ names:['Chest-Supported Row','Seated Cable Row','One-Arm Dumbbell Row','Inverted Row'],
     cue:'Pull the shoulder blades back and down, chest tall. A strong mid-back holds the stiff stretch between the shoulder blades in better shape.' }
 };
@@ -489,4 +533,10 @@ for(const cat in MUSCLE_TARGETS) MUSCLE_TARGETS[cat].forEach(t=>{
   if(!t.slots) return;
   t.slots = t.slots.map(k=>BLOCK_SLOTS[k]);
   t.names = [...new Set(t.slots.flatMap(x=>x.names))];
+});
+/* A routine is several blocks installed together; its movements are theirs. */
+for(const cat in MUSCLE_TARGETS) MUSCLE_TARGETS[cat].forEach(t=>{
+  if(!t.routine) return;
+  const parts=t.routine.map(l=>MUSCLE_TARGETS[cat].filter(x=>x.label===l)[0]).filter(Boolean);
+  t.names=[...new Set(parts.flatMap(x=>x.names))];
 });

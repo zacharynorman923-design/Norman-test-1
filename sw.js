@@ -9,7 +9,7 @@
    straight away.
 
    Keep VERSION in step with APP_VERSION in js/app.js. */
-const VERSION = 'split-v30';
+const VERSION = 'split-v31';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -23,6 +23,7 @@ const SHELL_ASSETS = [
   './js/exercise-info.js',
   './js/scheduler.js',
   './js/app.js',
+  './js/hip-ir.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -114,3 +115,14 @@ async function cacheFirst(request, cacheName) {
   } catch (e) { /* opaque/uncacheable responses — ignore */ }
   return response;
 }
+
+/* Tapping a reminder brings the app forward (or opens it). */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if ('focus' in c) return c.focus(); }
+      return self.clients.openWindow ? self.clients.openWindow('./') : null;
+    })
+  );
+});
