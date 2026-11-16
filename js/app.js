@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v32';
+const APP_VERSION = 'split-v33';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -741,7 +741,7 @@ const TARGET_NOTES = {
   toe:'Habitual toe walking usually comes from tight calves and Achilles holding the heel up, plus a toes-first habit. These stretch the calf and Achilles, open up ankle bend, and strengthen the shins that lift your toes. Hold stretches without bouncing. Toe walking that is persistent, one-sided, or comes with pain, stiffness or weakness can have other causes — have a physical therapist or doctor look at it.',
   desk:'Supportive strengthening for muscles that commonly weaken with desk work. This is general fitness guidance, not treatment — see a clinician for pain that is severe, persistent, or follows an injury.',
   nb:'Neck and back trouble from sitting usually comes from stiffness and muscles that tire, not damage. The neck does better with endurance in the deep neck muscles and a strong upper back holding the head over the shoulders. Back popping or cracking without pain is common and generally harmless: it\u2019s gas releasing as a stiff joint moves, not something slipping out of place. Daily movement and a steadier trunk usually make it feel looser. General fitness guidance, not treatment. See a doctor or physical therapist for pain that is severe or follows an injury; for numbness, tingling or weakness in the arms or legs; for headaches or dizziness with neck movement; or if popping comes with pain, swelling or locking.',
-  irhip:'For limited internal rotation in the right hip: A + B every day (about 12 minutes, best in the evening), C on three days a week, for four weeks. Check your seated rotation angle each Sunday in the progress panel below the week. Stretch to a firm but comfortable end range and never force a pop or click. General fitness guidance, not a diagnosis. See a physical therapist or doctor for groin pain, catching, locking or clicking that hurts, pain at night, or if the gap between sides hasn\u2019t narrowed by week 4.',
+  irhip:'For limited internal rotation in the right hip: A + B every day (about 14 minutes, best in the evening), C on three days a week, for four weeks. Check your seated rotation angle each Sunday in the progress panel below the week. Stretch to a firm but comfortable end range and never force a pop or click. General fitness guidance, not a diagnosis. See a physical therapist or doctor for groin pain, catching, locking or clicking that hurts, pain at night, or if the gap between sides hasn\u2019t narrowed by week 4.',
   apt:'Anterior pelvic tilt is a balance problem: hip flexors and the lower back pull the pelvis forward, and glutes, hamstrings and the deep core don\u2019t pull it back enough. These moves build the side that pulls back, with a cue on each for doing them in a posterior tilt — pair them with hip-flexor stretching. General fitness guidance, not treatment; see a clinician for back pain that is severe, persistent, or follows an injury.',
 };
 function targetNote(label){
@@ -1116,7 +1116,7 @@ function importData(file){
     if(!state.max) state.max={bench:'',squat:'',deadlift:'',press:'',row:''};
     syncBriefUI();
     EDIT=null;
-    if(o.program){ PROGRAM=o.program; WEEK=o.week||1; }
+    if(o.program){ PROGRAM=o.program; WEEK=o.week||1; refreshFixedBlocks(PROGRAM); saveStore(); }
     if(PROGRAM){ saveSession(); renderProgram(false); }
   };
   reader.readAsText(file);
@@ -1161,6 +1161,47 @@ function stripCoreFromMain(program){
   return true;
 }
 
+/* A set routine (`fixed`) is placed exactly as written, so when its moves,
+   doses or cues change, a week saved under the old version is rebuilt to the
+   new one, in place. Logged sets follow their exercise to its new slot. */
+function refreshFixedBlocks(program){
+  if(!program || !program.weeks) return false;
+  let changed=false; const map={};
+  for(const w in program.weeks) program.weeks[w].forEach((day,di)=>{
+    if(!day || day.rest || !Array.isArray(day.lifts)) return;
+    const origin=day.lifts.slice(), repl=new Map();
+    [...new Set(day.lifts.filter(l=>l.addon).map(l=>l.addon))].forEach(label=>{
+      const t=findTarget(label); if(!t || !t.fixed || !t.slots) return;
+      const cur=day.lifts.filter(l=>l.addon===label);
+      const same = cur.length===t.slots.length && cur.every((l,i)=>{ const sl=t.slots[i];
+        return l.name===sl.names[0] && l.lever===i && l.cue===sl.cue && (!sl.rx || (l.base && l.base.sets===sl.rx.s && l.base.reps===sl.rx.r)); });
+      if(same) return;
+      const temp={label:day.label, lifts:[], custom:day.custom, inten:0};
+      placeBlock(temp, label, t);
+      const at=day.lifts.findIndex(l=>l.addon===label);
+      const before=day.lifts.slice(0,at).filter(l=>l.addon!==label), after=day.lifts.slice(at).filter(l=>l.addon!==label);
+      // pair old moves with new ones by name (and which occurrence of it)
+      const seen={};
+      cur.forEach(o=>{ const k=seen[o.name]=(seen[o.name]||0)+1;
+        const nl=temp.lifts.filter(x=>x.name===o.name)[k-1]; if(nl) repl.set(o, nl); });
+      day.lifts=before.concat(temp.lifts, after);
+      changed=true;
+    });
+    if(!repl.size) return;
+    origin.forEach((o,i)=>{
+      const now=day.lifts.indexOf(repl.get(o)||o);
+      if(now!==i) map[`${w}:${di}:${i}:${o.name}`] = now>=0 ? `${w}:${di}:${now}:${o.name}` : null;
+    });
+    retitle(day);
+  });
+  if(!changed) return false;
+  const out={};
+  for(const k in LOG.sets){ if(k in map){ if(map[k]) out[map[k]]=LOG.sets[k]; } else if(!(k in out)) out[k]=LOG.sets[k]; }
+  LOG.sets=out;
+  if(program.weeks[1]) program.weekdays=program.weeks[1];
+  return true;
+}
+
 try{ document.getElementById('appver').textContent = APP_VERSION.replace('split-','version '); }catch(e){}
 
 /* On load: restore logs, then the last session (brief + program + week). */
@@ -1174,6 +1215,7 @@ loadStore();
   if(sess.program){
     PROGRAM = sess.program; WEEK = sess.week || 1;
     if(stripCoreFromMain(PROGRAM)){ saveSession(); saveStore(); }
+    if(refreshFixedBlocks(PROGRAM)){ saveSession(); saveStore(); }
     renderProgram(false);
   }
 })();
