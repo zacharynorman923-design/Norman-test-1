@@ -239,6 +239,12 @@ finisher, but aimed wherever you want.
   (clamshell, side-lying abduction, banded walk), a light-to-heavy hinge for
   the back of the hip, and deep core work against the forward tilt. One move
   from each lever, each with its cue.
+- **Stretching blocks fold away.** A block made only of stretches and
+  mobility drills (Right hip A + B, the deep-glute and neck & back dailies,
+  …) sits under the day's training as one header showing how many of its
+  moves are done. Tap it to open or close. It starts closed on days with
+  training and open on stretch-only days, and the browser remembers each
+  choice separately for those two kinds of day.
 - **Right Hip Mobility (IR Restriction)** is a four-week routine for limited
   internal rotation in the right hip. Picking it installs two blocks:
   **A + B** (seven mobility holds, then two active-control drills) on every day,

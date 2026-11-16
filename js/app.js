@@ -1,6 +1,6 @@
 /* The deployed version, shown in the footer so you can tell which build is
    running. Keep in step with VERSION in sw.js. */
-const APP_VERSION = 'split-v33';
+const APP_VERSION = 'split-v34';
 /* ============================ STATE ============================ */
 const state = { goal:'muscle', split:'auto', days:4, exp:'intermediate', equip:'gym', length:45,
                 abs:false, cardio:'all', unit:'kg', bw:'',
@@ -210,7 +210,9 @@ function renderProgram(animate){
       return;
     }
     delay+=0.06; let finisherShown=false, blockShown=null, cardioShown=null, secShown=null, liftsHTML='';
-    d.lifts.forEach((l,li)=>{
+    d.lifts.forEach(l=>{ const v=weekAdjust(l.base,WEEK,l.compound); if(v.sets) totalSets+=parseInt(v.sets,10); });
+    const folds=foldBlocks(d);                        // stretching blocks: folded, at the bottom
+    const renderLift=(l,li)=>{
       if(l.finisher && !finisherShown){ liftsHTML+=`<div class="finisher-label">＋ Abs finisher</div>`; finisherShown=true; }
       if(l.cardio && !d.cardioDay && l.cardio!==cardioShown){
         cardioShown=l.cardio;
@@ -225,7 +227,6 @@ function renderProgram(animate){
       // a routine's own sections (A · Mobility, B · Active control …)
       if(l.addon && l.sec && l.sec!==secShown){ secShown=l.sec; liftsHTML+=`<div class="sec-label">${l.sec}</div>`; }
       const v=weekAdjust(l.base,WEEK,l.compound);
-      if(v.sets) totalSets+=parseInt(v.sets,10);
       const mode = logMode(l);
       const rxTxt = v.sets ? (mode==='time' ? `${v.sets} × ${/\d\s*s(\s*\/\s*side)?$/.test(v.reps) ? v.reps : 'hold'}` : `${v.sets} × ${v.reps}`) : v.reps;
       const done = LOG.sets[occKey(di,li,l.name)];       // logged on THIS day/week
@@ -360,7 +361,30 @@ function renderProgram(animate){
         const cueHTML = l.cue ? `<div class="cardio-cue">${l.cue}</div>` : '';
         liftsHTML+=`<div class="expando">${cueHTML}${howtoBlock(l, BIGDEMO)}${logHTML}</div>`;
       }
-    });
+    };
+    d.lifts.forEach((l,li)=>{ if(!(l.addon && folds.has(l.addon))) renderLift(l,li); });
+    /* Stretching and mobility blocks get done away from the gym, so they sit
+       under the training as a header you can open and close. Gym days start
+       them closed, stretch-only days open; each remembers what you chose. */
+    if(folds.size){
+      const lifting=d.lifts.some(l=>!(l.addon && folds.has(l.addon)));
+      if(lifting) liftsHTML+=`<div class="finisher-label fold-label">Stretching &amp; mobility · at home</div>`;
+      folds.forEach(label=>{
+        const ctx=lifting?'gym':'home', open=foldOpen(label, ctx);
+        const idx=d.lifts.map((l,li)=>l.addon===label?li:-1).filter(i=>i>=0);
+        const nDone=idx.filter(li=>LOG.sets[occKey(di,li,d.lifts[li].name)]).length;
+        liftsHTML+=`<div class="fold-head${open?' open':''}${nDone===idx.length?' all-done':''}">
+          <button class="foldbtn" type="button" data-label="${label}" data-ctx="${ctx}" aria-expanded="${open}">
+            <span class="fold-car" aria-hidden="true">${open?'▾':'▸'}</span>
+            <span class="fold-t">${label}</span>
+            <span class="fold-n">${nDone===idx.length?'✓ ':''}${nDone}/${idx.length} done</span></button>
+          <button class="blockrm" data-di="${di}" data-title="${label}" title="Remove this block" aria-label="Remove the ${label} block">✕</button></div>`;
+        if(open){
+          blockShown=label; secShown=null;
+          idx.forEach(li=>renderLift(d.lifts[li], li));
+        }
+      });
+    }
     const pct=Math.round(Math.max(.2,Math.min(1,d.inten*factor))*100);
     const style = animate ? `style="animation-delay:${delay.toFixed(2)}s"` : '';
     /* A custom day you haven't built yet says so, and every custom day keeps
@@ -463,6 +487,23 @@ function renderProgram(animate){
   if(typeof refreshAddonUI==='function') refreshAddonUI();   // optional AI add-on panel
   if(typeof irRender==='function') irRender();               // right-hip progress panel
   saveSession();
+}
+
+/* Which of a day's blocks fold away: the ones made only of stretches and
+   mobility drills. */
+function foldBlocks(d){
+  const by={};
+  d.lifts.forEach(l=>{ if(l.addon) (by[l.addon]=by[l.addon]||[]).push(l); });
+  return new Set(Object.keys(by).filter(k=>by[k].every(l=>l.group==='mobility')));
+}
+/* Open or closed, per block, separately for gym days and stretch-only days.
+   A per-browser convenience, so it lives outside the saved session. */
+let FOLD={};
+try{ FOLD=JSON.parse(localStorage.getItem('split_fold_v1')||'{}')||{}; }catch(e){ FOLD={}; }
+function foldOpen(label, ctx){ const k=label+'|'+ctx; return k in FOLD ? !!FOLD[k] : ctx==='home'; }
+function setFold(label, ctx, open){
+  FOLD[label+'|'+ctx]=open;
+  try{ localStorage.setItem('split_fold_v1', JSON.stringify(FOLD)); }catch(e){}
 }
 
 /* ===================== LOGGING + INTERACTIONS ===================== */
@@ -627,6 +668,8 @@ function replaceLift(di, li, name){
 }
 document.getElementById('program').addEventListener('click', e=>{
   const br=e.target.closest('.blockrm'); if(br){ removeBlock(+br.dataset.di, br.dataset.title); return; }
+  const fb=e.target.closest('.foldbtn');
+  if(fb){ const open=fb.getAttribute('aria-expanded')==='true'; setFold(fb.dataset.label, fb.dataset.ctx, !open); EDIT=null; renderProgram(false); return; }
   const aw=e.target.closest('.addwt'); if(aw){ aw.closest('.logbox').classList.toggle('show-weight'); return; }
   const sd=e.target.closest('.lb-done'); if(sd){ logOneSet(sd.closest('.logbox'), +sd.dataset.i); return; }
   const dc=e.target.closest('.dchip'); if(dc){ setDiff(dc.closest('.logbox'), dc.dataset.diff); return; }
